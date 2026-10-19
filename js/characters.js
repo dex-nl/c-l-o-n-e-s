@@ -54,6 +54,15 @@ export function makeCharacter({ shirt = 0x3a86ff, pants = 0x2d3142, skin = 0xffc
   return { group, legs, arms, body, head, hairM };
 }
 
+// De held (de speler), met een rood petje. Clones zien er precies zo uit.
+export function makeHero() {
+  const ch = makeCharacter({ shirt: 0x3a86ff, pants: 0x2d3142, hair: 0x6b3e26 });
+  const capM = mat(0xe63946);
+  ch.head.add(box(0.7, 0.16, 0.66, capM, 0, 0.38, 0));  // petje
+  ch.head.add(box(0.6, 0.06, 0.3, capM, 0, 0.32, 0.42)); // klep
+  return ch;
+}
+
 // Laat het poppetje lopen (fase loopt op met de afstand).
 export function animateWalk(ch, phase, amount) {
   const s = Math.sin(phase) * 0.7 * amount;

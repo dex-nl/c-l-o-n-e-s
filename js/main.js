@@ -6,9 +6,13 @@ import { Npc } from './npc.js';
 import { Controls } from './controls.js';
 import { loadSave, writeSave } from './save.js';
 import { ui } from './ui.js';
-import { NPC_NAME, GEARS_NEEDED, questText, npcLines } from './quest.js';
+import { NPC_NAME, GEARS_NEEDED, MAX_CLONES, questText, npcLines } from './quest.js';
+import { CloneSquad } from './clones.js';
+import { Effects } from './effects.js';
+import { sfx, setMuted } from './sound.js';
 
 const TALK_DISTANCE = 3.2;
+const CLONE_DISTANCE = 2.2; // zo dicht moet je bij de voorkant van de machine staan
 const canvas = document.getElementById('game');
 
 let renderer;
@@ -52,11 +56,16 @@ const world = createWorld(scene);
 const player = new Player(scene);
 const npc = new Npc(scene, { ...world.npcSpot, name: NPC_NAME });
 world.colliders.push({ x: world.npcSpot.x, z: world.npcSpot.z, r: 0.5 });
+const squad = new CloneSquad(scene);
+const fx = new Effects(scene);
 
 // ---------- Spelvoortgang laden ----------
 const state = loadSave();
 player.setPosition(state.player.x, state.player.z, state.player.rot);
 player.resolveCollisions(world);
+squad.restore(state.clones, player);
+setMuted(!state.sound);
+ui.setSoundBtn(state.sound);
 
 // Tandwielen in het dorp
 const gears = world.gearSpots.map((spot) => {
@@ -77,10 +86,12 @@ function refresh() {
     const show = q.state === 'bezig' && !q.gears.includes(g.id);
     g.mesh.visible = g.ring.visible = show;
   }
-  world.machine.setRepaired(q.state === 'klaar');
-  if (q.state !== 'klaar') world.machine.setGearsInside(0);
-  npc.showMarker(q.state === 'nieuw' || (q.state === 'bezig' && q.gears.length >= GEARS_NEEDED));
-  ui.setQuest(questText(q));
+  const repaired = q.state === 'klaar' || q.state === 'aan';
+  world.machine.setRepaired(repaired);
+  world.machine.setOn(q.state === 'aan');
+  if (!repaired) world.machine.setGearsInside(0);
+  npc.showMarker(q.state === 'nieuw' || q.state === 'klaar' || (q.state === 'bezig' && q.gears.length >= GEARS_NEEDED));
+  ui.setQuest(questText(q, state.clones));
 }
 
 let dirty = false;
@@ -96,18 +107,49 @@ function talk() {
   if (npc.distanceTo(player.pos) > TALK_DISTANCE) return;
   const q = state.quest;
   const wasAllFound = q.state === 'bezig' && q.gears.length >= GEARS_NEEDED;
-  ui.showDialog(NPC_NAME, npcLines(q), () => {
+  ui.showDialog(NPC_NAME, npcLines(q, state.clones), () => {
     if (q.state === 'nieuw') {
       q.state = 'bezig';
       ui.toast('Nieuwe opdracht: zoek 3 tandwielen!');
     } else if (wasAllFound) {
       q.state = 'klaar';
       ui.toast('🎉 Opdracht klaar! Goed gedaan! 🎉', 3500);
-      confetti();
+      fx.confetti(npc.mesh.position);
+      sfx.tada();
+    } else if (q.state === 'klaar') {
+      q.state = 'aan';
+      ui.toast('🧬 De clonemachine doet het!', 3000);
+      world.machine.zap();
+      fx.sparkle({ x: world.machine.x, y: 3, z: world.machine.z }, [0x7af7ff, 0xffffff, 0xffd23f], 40, 6);
+      sfx.powerUp();
     }
     refresh();
     save();
   });
+}
+
+ui.onLine = () => sfx.blip();
+
+// ---------- Clonen ----------
+const nearMachine = () => Math.hypot(player.pos.x - world.machine.front.x, player.pos.z - world.machine.front.z) <= CLONE_DISTANCE;
+
+function makeClone() {
+  if (ui.dialogOpen || state.quest.state !== 'aan' || squad.busy) return;
+  if (!nearMachine()) { ui.toast('Ga eerst voor de clonemachine staan!'); return; }
+  if (state.clones >= MAX_CLONES) { ui.toast(`Je hebt al ${MAX_CLONES} clones. Meer passen er niet!`); sfx.nope(); return; }
+  state.clones++;
+  world.machine.zap();
+  squad.spawn(world.machine.x, world.machine.z);
+  fx.sparkle({ x: world.machine.x, y: 1.6, z: world.machine.z }, [0x7af7ff, 0xffffff], 30, 5);
+  sfx.clone();
+  if (state.clones >= MAX_CLONES) {
+    ui.toast(`🎉 Clone-team compleet: ${MAX_CLONES} clones! 🎉`, 3500);
+    setTimeout(() => { fx.confetti(player.pos); sfx.tada(); }, 900);
+  } else {
+    ui.toast(`🧬 Clone ${state.clones} gemaakt!`);
+  }
+  refresh();
+  save();
 }
 
 const raycaster = new THREE.Raycaster();
@@ -118,6 +160,8 @@ function onTap(x, y) {
   if (raycaster.intersectObject(npc.mesh, true).length) {
     if (npc.distanceTo(player.pos) <= TALK_DISTANCE) talk();
     else ui.toast('Loop eerst wat dichterbij!');
+  } else if (state.quest.state === 'aan' && raycaster.intersectObject(world.machine.group, true).length) {
+    makeClone();
   }
 }
 
@@ -126,28 +170,25 @@ const controls = new Controls({
   base: document.getElementById('joy-base'),
   knob: document.getElementById('joy-knob'),
   talkBtn: document.getElementById('talk-btn'),
+  cloneBtn: document.getElementById('clone-btn'),
   onAction: talk,
+  onClone: makeClone,
   onTap,
 });
 
-// ---------- Confetti als de opdracht klaar is ----------
-const confettiBits = [];
-function confetti() {
-  const colors = [0xff6b6b, 0xffd23f, 0x3a86ff, 0x52b788, 0xc77dff];
-  for (let i = 0; i < 60; i++) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.15, 0.04), new THREE.MeshBasicMaterial({ color: colors[i % 5] }));
-    m.position.set(npc.mesh.position.x, 3, npc.mesh.position.z);
-    m.userData.v = new THREE.Vector3((Math.random() - 0.5) * 6, 4 + Math.random() * 4, (Math.random() - 0.5) * 6);
-    m.userData.life = 2.5;
-    scene.add(m);
-    confettiBits.push(m);
-  }
-}
+// Geluid aan/uit
+document.getElementById('sound-btn').addEventListener('pointerdown', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  state.sound = !state.sound;
+  setMuted(!state.sound);
+  ui.setSoundBtn(state.sound);
+  save();
+});
 
 // ---------- Spel-lus ----------
 refresh();
 const clock = new THREE.Clock();
-let t = 0, saveTimer = 0;
+let t = 0, saveTimer = 0, lastStep = 0;
 const camTarget = new THREE.Vector3();
 const lookGoal = new THREE.Vector3();
 let debugCam = null; // alleen voor testen: camera ergens anders neerzetten
@@ -164,6 +205,12 @@ function frame() {
 
   world.update(t, dt);
   npc.update(t, dt, player.pos);
+  squad.update(t, dt, player);
+
+  // Stofwolkje bij elke voetstap
+  const step = Math.floor(player.phase / Math.PI);
+  if (step !== lastStep && player.walkAmount > 0.6) fx.dust(player.pos);
+  lastStep = step;
 
   // Tandwielen draaien en oppakken
   for (const g of gears) {
@@ -173,6 +220,8 @@ function frame() {
     g.ring.scale.setScalar(1 + Math.sin(t * 4) * 0.15);
     if (Math.hypot(player.pos.x - g.x, player.pos.z - g.z) < 1.2) {
       state.quest.gears.push(g.id);
+      fx.sparkle(g.mesh.position, [0xffd23f, 0xffc300, 0xffffff]);
+      sfx.ding();
       const n = state.quest.gears.length;
       ui.toast(n >= GEARS_NEEDED ? '⚙️ Alle 3 gevonden! Terug naar de uitvinder!' : `⚙️ Tandwiel gevonden! (${n}/3)`);
       refresh();
@@ -180,19 +229,14 @@ function frame() {
     }
   }
 
-  // Confetti laten vallen
-  for (let i = confettiBits.length - 1; i >= 0; i--) {
-    const c = confettiBits[i];
-    c.userData.v.y -= 9 * dt;
-    c.position.addScaledVector(c.userData.v, dt);
-    c.rotation.x += dt * 8; c.rotation.y += dt * 6;
-    c.userData.life -= dt;
-    if (c.userData.life <= 0) { scene.remove(c); c.geometry.dispose(); confettiBits.splice(i, 1); }
-  }
+  // Confetti, glinsters en stof
+  fx.update(dt);
 
   // Praat-knop oplichten als je dichtbij bent
   const near = npc.distanceTo(player.pos) <= TALK_DISTANCE;
   ui.setTalkReady(ui.dialogOpen || near, ui.dialogOpen ? 'Verder' : 'Praat');
+  // Clone-knop alleen bij de machine (als hij aan staat)
+  ui.setCloneBtn(!ui.dialogOpen && state.quest.state === 'aan' && nearMachine(), state.clones >= MAX_CLONES ? 'Vol!' : 'Clone!');
 
   // Camera volgt de speler soepel
   // (tijdens een gesprek schuift de camera opzij, zodat je de uitvinder goed ziet)
@@ -230,5 +274,5 @@ window.addEventListener('pagehide', save);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 
 // Handig om te testen (in de console): window.clones
-window.clones = { state, player, npc, talk, save, scene, camera, gears, renderer,
+window.clones = { state, player, npc, talk, save, scene, camera, gears, renderer, squad, makeClone, world,
   setDebugCam: (pos, look) => { debugCam = pos ? { pos, look } : null; } };

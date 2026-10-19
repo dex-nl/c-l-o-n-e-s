@@ -1,18 +1,19 @@
-// Besturing: joystick + Praat-knop op het scherm (iPad) en toetsenbord (laptop).
+// Besturing: joystick + Praat- en Clone-knop op het scherm (iPad) en toetsenbord (laptop).
 const JOY_RADIUS = 60;
 
 export class Controls {
-  constructor({ canvas, base, knob, talkBtn, onAction, onTap }) {
+  constructor({ canvas, base, knob, talkBtn, cloneBtn, onAction, onClone, onTap }) {
     this.keys = new Set();
     this.joy = { id: null, x: 0, y: 0, sx: 0, sy: 0, startT: 0, moved: 0 };
     this.taps = new Map();
     this.base = base; this.knob = knob;
-    this.onAction = onAction; this.onTap = onTap;
+    this.onAction = onAction; this.onClone = onClone; this.onTap = onTap;
 
     // Toetsenbord
     window.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
       if (['e', ' ', 'enter'].includes(k)) { if (!e.repeat) this.onAction(); e.preventDefault(); return; }
+      if (k === 'c') { if (!e.repeat) this.onClone(); return; }
       this.keys.add(k);
       if (k.startsWith('arrow')) e.preventDefault();
     });
@@ -60,6 +61,8 @@ export class Controls {
 
     // Praat-knop
     talkBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); this.onAction(); });
+    // Clone-knop
+    cloneBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); this.onClone(); });
 
     // Geen inzoomen, scrollen of terugveren op de iPad
     const stop = (e) => e.preventDefault();

@@ -4,8 +4,17 @@ const $ = (id) => document.getElementById(id);
 export const ui = {
   dialogOpen: false,
   _lines: [], _i: 0, _done: null, _toastTimer: 0,
+  onLine: null, // wordt aangeroepen bij elke nieuwe zin (voor het piepje)
 
   setQuest(html) { $('quest').innerHTML = html; },
+
+  setCloneBtn(show, label = 'Clone!') {
+    const b = $('clone-btn');
+    b.classList.toggle('hidden', !show);
+    if (b.textContent !== label) b.textContent = label;
+  },
+
+  setSoundBtn(on) { $('sound-btn').textContent = on ? '🔊' : '🔇'; },
 
   setTalkReady(ready, label = 'Praat') {
     const b = $('talk-btn');
@@ -27,6 +36,7 @@ export const ui = {
     $('dialog-name').textContent = name;
     $('dialog-text').textContent = lines[0];
     $('dialog').classList.remove('hidden');
+    if (this.onLine) this.onLine();
   },
 
   nextLine() {
@@ -39,6 +49,7 @@ export const ui = {
       if (done) done();
     } else {
       $('dialog-text').textContent = this._lines[this._i];
+      if (this.onLine) this.onLine();
     }
   },
 

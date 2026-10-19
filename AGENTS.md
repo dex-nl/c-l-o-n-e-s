@@ -32,8 +32,11 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/world.js` – het dorp, de vijver, de clonemachine
 - `js/player.js`, `js/characters.js` – de speler en de poppetjes
 - `js/npc.js` – Professor Bolt
+- `js/clones.js` – de clones die achter je aan lopen (en dansen)
+- `js/effects.js` – confetti, glinsters en stofwolkjes
+- `js/sound.js` – geluidjes, gemaakt met de Web Audio API (geen geluidsbestanden)
 - `js/quest.js` – de opdracht en wat de uitvinder zegt
-- `js/controls.js` – joystick, Praat-knop en toetsenbord
+- `js/controls.js` – joystick, Praat- en Clone-knop en toetsenbord
 - `js/ui.js` – praatwolk en meldingen
 - `js/save.js` – opslaan en oude saves omzetten
 - `.github/workflows/pages.yml` – zet het spel op GitHub Pages

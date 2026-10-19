@@ -1,18 +1,11 @@
 // De speler: lopen, draaien en niet door muren of bomen heen gaan.
-import * as THREE from 'three';
-import { makeCharacter, animateWalk, mat } from './characters.js';
+import { makeHero, animateWalk } from './characters.js';
 
 const RADIUS = 0.45;
 
 export class Player {
   constructor(scene) {
-    this.ch = makeCharacter({ shirt: 0x3a86ff, pants: 0x2d3142, hair: 0x6b3e26 });
-    // Een rood petje voor de held
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.16, 0.66), mat(0xe63946));
-    cap.position.set(0, 0.38, 0); cap.castShadow = true;
-    const klep = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.06, 0.3), mat(0xe63946));
-    klep.position.set(0, 0.32, 0.42); klep.castShadow = true;
-    this.ch.head.add(cap, klep);
+    this.ch = makeHero();
     this.mesh = this.ch.group;
     scene.add(this.mesh);
     this.pos = this.mesh.position;

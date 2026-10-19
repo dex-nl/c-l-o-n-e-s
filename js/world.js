@@ -274,7 +274,9 @@ export function createWorld(scene) {
   return world;
 }
 
+const signCache = new Map();
 function signTexture(text, bg) {
+  if (signCache.has(text)) return signCache.get(text);
   const c = document.createElement('canvas');
   c.width = 256; c.height = 96;
   const g = c.getContext('2d');
@@ -284,6 +286,7 @@ function signTexture(text, bg) {
   g.fillText(text, 128, 50);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
+  signCache.set(text, tex);
   return tex;
 }
 
@@ -314,6 +317,12 @@ function createCloneMachine(scene, x, z, updaters) {
     s.position.set(-0.6 + i * 0.6, 2.9, 1.2);
     s.visible = false; g.add(s); slots.push(s);
   }
+  // lichtstraal en lichtring voor het clonen
+  const glow = { color: 0x7af7ff, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false };
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.88, 0.88, 2.2, 8, 1, true), new THREE.MeshBasicMaterial(glow));
+  beam.position.y = 1.6; g.add(beam);
+  const zapRing = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.08, 4, 12).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial(glow));
+  g.add(zapRing);
   // vonkjes (want hij is kapot)
   const sparks = [];
   for (let i = 0; i < 6; i++) {
@@ -324,19 +333,35 @@ function createCloneMachine(scene, x, z, updaters) {
   g.rotation.y = 0.5;
   scene.add(g);
 
-  const machine = { group: g, repaired: false };
+  // Voor de machine staat een plek waar je moet staan om te clonen
+  const front = new THREE.Vector3(0, 0, 2.2).applyAxisAngle(new THREE.Vector3(0, 1, 0), g.rotation.y);
+  const machine = { group: g, x, z, front: { x: x + front.x, z: z + front.z }, repaired: false, on: false };
+  const paint = () => {
+    const [text, bg] = machine.on ? ['CLONE!', '#3a86ff'] : machine.repaired ? ['BIJNA KLAAR', '#2a9d8f'] : ['KAPOT', '#e63946'];
+    sign.material.map = signTexture(text, bg);
+    sign.material.needsUpdate = true;
+    lamp.material.color.set(machine.repaired ? 0x33ff77 : 0xff3333);
+    glass.material.emissive.set(machine.on ? 0x2a8fd8 : machine.repaired ? 0x1d6f5a : 0x113344);
+  };
   machine.setGearsInside = (n) => slots.forEach((s, i) => { s.visible = i < n; });
   machine.setRepaired = (yes) => {
     machine.repaired = yes;
-    sign.material.map = signTexture(yes ? 'BIJNA KLAAR' : 'KAPOT', yes ? '#2a9d8f' : '#e63946');
-    sign.material.needsUpdate = true;
-    lamp.material.color.set(yes ? 0x33ff77 : 0xff3333);
-    glass.material.emissive.set(yes ? 0x1d6f5a : 0x113344);
+    paint();
     if (yes) machine.setGearsInside(3);
   };
-  updaters.push((t) => {
+  machine.setOn = (yes) => { machine.on = yes; paint(); };
+  let zap = 0;
+  machine.zap = () => { zap = 1; };
+  updaters.push((t, dt) => {
     lamp.visible = machine.repaired || Math.sin(t * 8) > 0;
-    dome.rotation.y = t * (machine.repaired ? 1.5 : 0.2);
+    dome.rotation.y = t * (machine.on ? 6 : machine.repaired ? 1.5 : 0.2);
+    if (machine.on) glass.material.emissiveIntensity = 0.7 + Math.sin(t * 3) * 0.3;
+    // lichtstraal bij het clonen
+    zap = Math.max(0, zap - dt * 1.1);
+    beam.material.opacity = zap * 0.9;
+    beam.scale.set(0.6 + zap * 0.4, 1, 0.6 + zap * 0.4);
+    zapRing.material.opacity = zap > 0 ? Math.min(1, zap * 2) : 0;
+    zapRing.position.y = 0.5 + ((1 - zap) * 4 % 1) * 2.4;
     slots.forEach((s, i) => { s.rotation.z = t * (i % 2 ? -2 : 2); });
     sparks.forEach((s, i) => {
       const k = (t * 1.5 + i / 6) % 1;

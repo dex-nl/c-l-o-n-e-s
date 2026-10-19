@@ -63,6 +63,24 @@ html, body {
 #talk-btn:active { transform: translateY(4px); box-shadow: 0 3px 0 #c25e1b; }
 @keyframes pulse { 50% { transform: scale(1.07); } }
 
+/* Clone-knop */
+#clone-btn {
+  position: fixed; right: calc(48px + env(safe-area-inset-right)); bottom: calc(215px + env(safe-area-inset-bottom));
+  width: 124px; height: 124px; border-radius: 50%; border: none;
+  background: #00b4d8; color: #fff; font-size: 26px; font-weight: bold; font-family: inherit;
+  box-shadow: 0 7px 0 #0077a3, 0 0 24px rgba(122, 247, 255, 0.8); touch-action: none;
+  animation: pulse 1s infinite;
+}
+#clone-btn.hidden { display: none; }
+#clone-btn:active { transform: translateY(4px); box-shadow: 0 3px 0 #0077a3; }
+
+/* Geluid aan/uit */
+#sound-btn {
+  position: fixed; top: calc(14px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right));
+  width: 56px; height: 56px; border-radius: 50%; border: none; font-size: 26px;
+  background: rgba(255, 255, 255, 0.88); box-shadow: 0 4px 0 rgba(0,0,0,0.15); touch-action: none;
+}
+
 /* Praatwolk */
 #dialog {
   position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom)); transform: translateX(-50%);

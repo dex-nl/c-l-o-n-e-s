@@ -3,13 +3,15 @@
 // toe in migrate(), zodat oude saves blijven werken.
 
 export const SAVE_KEY = 'clones-save';
-export const SAVE_VERSION = 1;
+export const SAVE_VERSION = 2;
 
 export function defaultSave() {
   return {
     version: SAVE_VERSION,
     player: { x: 0, z: 5, rot: Math.PI },
-    quest: { state: 'nieuw', gears: [] }, // state: 'nieuw' | 'bezig' | 'klaar'
+    quest: { state: 'nieuw', gears: [] }, // state: 'nieuw' | 'bezig' | 'klaar' | 'aan'
+    clones: 0,   // hoeveel clones je hebt gemaakt
+    sound: true, // geluid aan of uit
   };
 }
 
@@ -23,17 +25,25 @@ export function migrate(data) {
     data = { ...defaultSave(), ...data, version: 1 };
     v = 1;
   }
+  if (v === 1) {
+    // Versie 2: clones en geluid erbij.
+    data = { ...data, clones: 0, sound: true, version: 2 };
+    v = 2;
+  }
   // Voorbeeld voor later:
-  // if (v === 1) { data.inventaris = []; data.version = 2; v = 2; }
+  // if (v === 2) { data.inventaris = []; data.version = 3; v = 3; }
 
   // Vul ontbrekende velden aan met standaardwaarden.
   const def = defaultSave();
   const player = { ...def.player, ...(data.player || {}) };
   const quest = { ...def.quest, ...(data.quest || {}) };
   for (const k of ['x', 'z', 'rot']) if (!Number.isFinite(player[k])) player[k] = def.player[k];
-  if (!['nieuw', 'bezig', 'klaar'].includes(quest.state)) quest.state = 'nieuw';
+  if (!['nieuw', 'bezig', 'klaar', 'aan'].includes(quest.state)) quest.state = 'nieuw';
   if (!Array.isArray(quest.gears)) quest.gears = [];
-  return { ...data, version: Math.max(v, SAVE_VERSION), player, quest };
+  let clones = Number.isInteger(data.clones) ? Math.min(Math.max(data.clones, 0), 5) : 0;
+  if (quest.state !== 'aan') clones = 0;
+  const sound = data.sound !== false;
+  return { ...data, version: Math.max(v, SAVE_VERSION), player, quest, clones, sound };
 }
 
 export function loadSave() {
