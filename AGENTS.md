@@ -20,23 +20,33 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 
 ## Het spel
 - Spelen op de **iPad, liggend**: aanraakbediening (joystick links, grote Praat-knop rechts, tikken op personages), een hint als het scherm rechtop staat, en een **manifest + icoon** zodat "Zet op beginscherm" het spel beeldvullend opent.
-- Ook te spelen met het toetsenbord (WASD/pijltjes + E/spatie).
+- Ook te spelen met het toetsenbord (WASD/pijltjes, E/spatie, C, M, B).
 - Soort spel: avontuur in een wereld (zoals Zelda of Pokémon).
 - Stijl: **low-poly 3D** met echte schaduwen, golvend water en dingen die bewegen.
 - Moet erin: een **clonemachine** waarmee je clones van jezelf maakt.
 
 ## Bestanden
-- `index.html` – de pagina, laadt Three.js via de CDN
-- `css/style.css` – knoppen, praatwolk, opdracht
-- `js/main.js` – start het spel en de spel-lus
-- `js/world.js` – het dorp, de vijver, de clonemachine
-- `js/player.js`, `js/characters.js` – de speler en de poppetjes
-- `js/npc.js` – Professor Bolt
-- `js/clones.js` – de clones die achter je aan lopen (en dansen)
-- `js/effects.js` – confetti, glinsters en stofwolkjes
-- `js/sound.js` – geluidjes, gemaakt met de Web Audio API (geen geluidsbestanden)
-- `js/quest.js` – de opdracht en wat de uitvinder zegt
-- `js/controls.js` – joystick, Praat- en Clone-knop en toetsenbord
-- `js/ui.js` – praatwolk en meldingen
-- `js/save.js` – opslaan en oude saves omzetten
+- `index.html` – de pagina, laadt Three.js via de CDN (en twee lettertypes van Google Fonts)
+- `css/style.css` – knoppen, praatwolk, opdracht, panelen, startscherm
+- `js/main.js` – start het spel, de zones, de spel-lus, praten, vechten, clonen
+- `js/world.js` – het dorp, de vijver, de poort, de kraam en de clonemachine
+- `js/forest.js` – het Slijmbos, de grotdeur en de 3 drukknoppen
+- `js/cave.js` – de Slijmgrot. **De kerker is getekend met letters** (`MAP`): `#` muur, `.` vloer, `K` Koning Slijm, `s`/`b` slijmpjes, `v` vuurschaal, `E` ingang
+- `js/props.js` – borden, paddenstoelen, vuurvliegjes
+- `js/physics.js` – botsen tegen bomen, huizen en muren
+- `js/player.js`, `js/characters.js` – de speler, de poppetjes, het zwaard en de hoedjes
+- `js/npc.js` – Professor Bolt, Koopman Kees, Oma Pien en Knoeper de hond
+- `js/clones.js` – de clones: volgen, dansen, meevechten, op knoppen staan
+- `js/enemies.js` – de slijmpjes en Koning Slijm
+- `js/pickups.js` – kristallen, hartjes en de Superbatterij
+- `js/effects.js` – confetti, glinsters, stofwolkjes, zwaardboog, schokgolf
+- `js/sound.js` – geluidjes én muziek, gemaakt met de Web Audio API (geen geluidsbestanden). Liedjes staan als noten in `SONGS`
+- `js/quest.js` – het verhaal: alle stappen (`QUEST_ORDER`) en wat iedereen zegt
+- `js/shop.js`, `js/backpack.js`, `js/map.js` – de winkel, de rugzak en de kaart
+- `js/controls.js` – joystick, knoppen en toetsenbord
+- `js/ui.js` – praatwolk (letter voor letter), hartjes, meldingen, panelen, startscherm
+- `js/save.js` – opslaan en oude saves omzetten (nu versie 3)
 - `.github/workflows/pages.yml` – zet het spel op GitHub Pages
+
+## Testen
+- In de browser-console staat `window.clones` met handige dingen, bijvoorbeeld `clones.goTo('bos', clones.forest.spawns.fromDorp)` of `clones.state.crystals = 50`.

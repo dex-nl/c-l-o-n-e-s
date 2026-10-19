@@ -1,6 +1,6 @@
-// De wereld: het dorpje met huizen, bomen, vijver, paden, hek en de clonemachine.
+// Het dorp: huizen, bomen, vijver, paden, hek, de poort naar het Slijmbos, de kraam en de clonemachine.
 import * as THREE from 'three';
-import { mat } from './characters.js';
+import { mat, makeHat } from './characters.js';
 
 // Vaste "willekeurige" getallen, zodat het dorp er altijd hetzelfde uitziet.
 let seed = 42;
@@ -17,10 +17,15 @@ function mesh(geo, material, x = 0, y = 0, z = 0, parent = null) {
 
 export const VILLAGE_RADIUS = 24;
 
+// scene is hier de groep van het dorp (die zetten we aan en uit als je naar een andere zone gaat)
 export function createWorld(scene) {
   const colliders = []; // cirkels: { x, z, r }
+  const boxes = [];     // rechthoeken: { x, z, hw, hd }
   const updaters = [];  // functies die elk beeldje iets laten bewegen
-  const world = { colliders, bounds: VILLAGE_RADIUS - 1.2, update: (t, dt) => updaters.forEach((f) => f(t, dt)) };
+  const world = {
+    colliders, boxes, bounds: { x: 0, z: 0, r: VILLAGE_RADIUS - 1.2 },
+    update: (t, dt) => updaters.forEach((f) => f(t, dt)),
+  };
 
   // ---------- Grond met heuvels buiten het hek ----------
   const groundGeo = new THREE.PlaneGeometry(140, 140, 70, 70);
@@ -236,6 +241,7 @@ export function createWorld(scene) {
   const woodM = mat(0xc68b59);
   const posts = 48;
   for (let i = 0; i < posts; i++) {
+    if (i === 35 || i === 36) continue; // hier zit de poort
     const a1 = (i / posts) * Math.PI * 2, a2 = ((i + 1) / posts) * Math.PI * 2;
     const x1 = Math.cos(a1) * VILLAGE_RADIUS, z1 = Math.sin(a1) * VILLAGE_RADIUS;
     const x2 = Math.cos(a2) * VILLAGE_RADIUS, z2 = Math.sin(a2) * VILLAGE_RADIUS;
@@ -246,6 +252,56 @@ export function createWorld(scene) {
       rail.rotation.y = Math.atan2(x2 - x1, z2 - z1);
       scene.add(rail);
     }
+  }
+
+  // ---------- Poort naar het Slijmbos ----------
+  world.gate = createGate(scene, updaters);
+  path(0, -4, 0, -26, 1.8);
+
+  // ---------- Kraam van Koopman Kees ----------
+  createStall(scene, 6.6, -2.2);
+  boxes.push({ x: 6.6, z: -2.2, hw: 0.6, hd: 1.4 });
+
+  // ---------- Grasplukjes ----------
+  const tuftGeo = new THREE.ConeGeometry(0.09, 0.4, 3);
+  const tufts = new THREE.InstancedMesh(tuftGeo, mat(0xffffff), 420);
+  const dummy = new THREE.Object3D(), tuftColors = [0x6fbf5a, 0x5aa84a, 0x8bd36b, 0x4f9a45];
+  let n = 0;
+  while (n < 420) {
+    const a = rand() * Math.PI * 2, r = 4.5 + rand() * 18.5;
+    const x = Math.cos(a) * r, z = Math.sin(a) * r;
+    if (colliders.some((c) => Math.hypot(c.x - x, c.z - z) < c.r + 0.2)) continue;
+    dummy.position.set(x, 0.15, z);
+    dummy.rotation.set((rand() - 0.5) * 0.5, rand() * 6, (rand() - 0.5) * 0.5);
+    dummy.scale.setScalar(0.7 + rand() * 0.8);
+    dummy.updateMatrix();
+    tufts.setMatrixAt(n, dummy.matrix);
+    tufts.setColorAt(n, new THREE.Color(tuftColors[n % 4]));
+    n++;
+  }
+  tufts.receiveShadow = true;
+  scene.add(tufts);
+
+  // ---------- Vlinders ----------
+  const wingColors = [0xffd23f, 0xff8fab, 0x9bf6ff, 0xffffff, 0xc77dff, 0xffb703];
+  for (let i = 0; i < 7; i++) {
+    const bf = new THREE.Group();
+    const wingM = new THREE.MeshBasicMaterial({ color: wingColors[i % 6], side: THREE.DoubleSide });
+    const wings = [-1, 1].map((sgn) => {
+      const pivot = new THREE.Group();
+      const w = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.22).rotateX(-Math.PI / 2), wingM);
+      w.position.x = sgn * 0.15;
+      pivot.add(w); bf.add(pivot);
+      return { pivot, sgn };
+    });
+    scene.add(bf);
+    const cx = (rand() - 0.5) * 30, cz = (rand() - 0.5) * 30, sp = 0.3 + rand() * 0.3, ph = rand() * 6;
+    updaters.push((t) => {
+      const a = t * sp + ph;
+      bf.position.set(cx + Math.sin(a) * 4 + Math.sin(a * 2.3) * 1.5, 1.2 + Math.sin(a * 3.1) * 0.5, cz + Math.cos(a * 0.8) * 4);
+      bf.rotation.y = -a;
+      for (const w of wings) w.pivot.rotation.z = w.sgn * Math.sin(t * 18 + ph) * 0.9;
+    });
   }
 
   // ---------- Wolken ----------
@@ -266,6 +322,14 @@ export function createWorld(scene) {
   path(-4.6, -10.4, -2, -3.4, 1.6);
 
   world.npcSpot = { x: -5.8, z: -9.2 };
+  world.spots = {
+    koopman: { x: 7.6, z: -2.2, rot: -Math.PI / 2 },
+    oma: { x: -8.5, z: 6.5 },
+    hond: { x: 3, z: 3 },
+    start: { x: 0, z: 5, rot: Math.PI },
+    flauw: { x: 0, z: 4.2, rot: 0 },          // hier word je wakker als je flauwvalt
+    uitBos: { x: 0, z: -20.3, rot: 0 },       // hier kom je terug uit het Slijmbos
+  };
   world.gearSpots = [
     { id: 'tandwiel-1', x: 16.5, z: 6.5 },   // achter het blauwe huis
     { id: 'tandwiel-2', x: -0.5, z: 13.5 },  // bij de vijver
@@ -275,7 +339,7 @@ export function createWorld(scene) {
 }
 
 const signCache = new Map();
-function signTexture(text, bg) {
+export function signTexture(text, bg) {
   if (signCache.has(text)) return signCache.get(text);
   const c = document.createElement('canvas');
   c.width = 256; c.height = 96;
@@ -288,6 +352,76 @@ function signTexture(text, bg) {
   tex.colorSpace = THREE.SRGBColorSpace;
   signCache.set(text, tex);
   return tex;
+}
+
+// De poort in het hek. setOpen(true) zwaait de deuren open.
+function createGate(scene, updaters) {
+  const z = -23.79, px = 3.13;
+  const stone = mat(0x9aa0a6), wood = mat(0x8b5a2b);
+  for (const sx of [-px, px]) {
+    scene.add(mesh(new THREE.BoxGeometry(0.8, 3, 0.8), stone, sx, 1.5, z));
+    const top = mesh(new THREE.ConeGeometry(0.6, 0.6, 4), mat(0x6c757d), sx, 3.3, z);
+    top.rotation.y = Math.PI / 4;
+    scene.add(top);
+  }
+  scene.add(mesh(new THREE.BoxGeometry(6.8, 0.4, 0.5), wood, 0, 2.9, z));
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.8), new THREE.MeshBasicMaterial({ map: signTexture('SLIJMBOS', '#2d6a4f') }));
+  sign.position.set(0, 3.5, z + 0.1);
+  scene.add(sign);
+  scene.add(mesh(new THREE.BoxGeometry(0.1, 0.5, 0.1), wood, -0.9, 3.15, z));
+  scene.add(mesh(new THREE.BoxGeometry(0.1, 0.5, 0.1), wood, 0.9, 3.15, z));
+  // twee deuren, elk met een draaipunt bij een pilaar
+  const doors = [-1, 1].map((sgn) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(sgn * (px - 0.4), 0, z);
+    const w = px - 0.4;
+    for (let i = 0; i < 4; i++) {
+      const plank = mesh(new THREE.BoxGeometry(w / 4 - 0.05, 1.8, 0.12), wood, -sgn * (w / 8 + (i * w) / 4), 1.0, 0);
+      pivot.add(plank);
+    }
+    pivot.add(mesh(new THREE.BoxGeometry(w, 0.15, 0.16), mat(0x5c3a21), -sgn * w / 2, 1.5, 0));
+    pivot.add(mesh(new THREE.BoxGeometry(w, 0.15, 0.16), mat(0x5c3a21), -sgn * w / 2, 0.5, 0));
+    scene.add(pivot);
+    return { pivot, sgn };
+  });
+  const lock = mesh(new THREE.BoxGeometry(0.35, 0.4, 0.2), mat(0xffd23f, { metalness: 0.5 }), 0, 1.1, z + 0.15);
+  scene.add(lock);
+  const gate = { open: false, x: 0, z: -22.4 };
+  let k = 0;
+  gate.setOpen = (yes, instant = false) => {
+    gate.open = yes;
+    lock.visible = !yes;
+    if (instant) k = yes ? 1 : 0;
+  };
+  updaters.push((t, dt) => {
+    k += ((gate.open ? 1 : 0) - k) * Math.min(1, dt * 2.5);
+    for (const d of doors) d.pivot.rotation.y = -d.sgn * k * 1.8;
+  });
+  return gate;
+}
+
+// De marktkraam: een tafel met hoedjes en een gestreept dak
+function createStall(scene, x, z) {
+  const g = new THREE.Group();
+  g.add(mesh(new THREE.BoxGeometry(1.1, 0.9, 2.6), mat(0xc68b59), 0, 0.45, 0));
+  g.add(mesh(new THREE.BoxGeometry(1.2, 0.08, 2.7), mat(0xe9cf8f), 0, 0.92, 0));
+  for (const [px, pz] of [[-0.5, -1.25], [-0.5, 1.25], [1.3, -1.25], [1.3, 1.25]]) {
+    g.add(mesh(new THREE.BoxGeometry(0.12, 2.5, 0.12), mat(0x8b5a2b), px, 1.25, pz));
+  }
+  for (let i = 0; i < 6; i++) {
+    const stripe = mesh(new THREE.BoxGeometry(2.3, 0.08, 0.5), mat(i % 2 ? 0xffffff : 0xe63946), 0.4, 2.55 + 0.0, -1.25 + 0.25 + i * 0.5);
+    stripe.rotation.z = 0.25;
+    g.add(stripe);
+  }
+  ['feest', 'cowboy', 'kroon'].forEach((id, i) => {
+    const h = makeHat(id);
+    h.scale.setScalar(0.75);
+    h.position.set(-0.05, 0.6, -0.8 + i * 0.8);
+    g.add(h);
+  });
+  g.add(mesh(new THREE.OctahedronGeometry(0.16, 0), mat(0x7af7ff, { emissive: 0x1b6ca8 }), -0.3, 1.1, 1.0));
+  g.position.set(x, 0, z);
+  scene.add(g);
 }
 
 function createCloneMachine(scene, x, z, updaters) {
@@ -335,13 +469,13 @@ function createCloneMachine(scene, x, z, updaters) {
 
   // Voor de machine staat een plek waar je moet staan om te clonen
   const front = new THREE.Vector3(0, 0, 2.2).applyAxisAngle(new THREE.Vector3(0, 1, 0), g.rotation.y);
-  const machine = { group: g, x, z, front: { x: x + front.x, z: z + front.z }, repaired: false, on: false };
+  const machine = { group: g, x, z, front: { x: x + front.x, z: z + front.z }, repaired: false, on: false, super: false };
   const paint = () => {
-    const [text, bg] = machine.on ? ['CLONE!', '#3a86ff'] : machine.repaired ? ['BIJNA KLAAR', '#2a9d8f'] : ['KAPOT', '#e63946'];
+    const [text, bg] = machine.super ? ['SUPER!', '#e09f00'] : machine.on ? ['CLONE!', '#3a86ff'] : machine.repaired ? ['BIJNA KLAAR', '#2a9d8f'] : ['KAPOT', '#e63946'];
     sign.material.map = signTexture(text, bg);
     sign.material.needsUpdate = true;
     lamp.material.color.set(machine.repaired ? 0x33ff77 : 0xff3333);
-    glass.material.emissive.set(machine.on ? 0x2a8fd8 : machine.repaired ? 0x1d6f5a : 0x113344);
+    glass.material.emissive.set(machine.super ? 0xd99a00 : machine.on ? 0x2a8fd8 : machine.repaired ? 0x1d6f5a : 0x113344);
   };
   machine.setGearsInside = (n) => slots.forEach((s, i) => { s.visible = i < n; });
   machine.setRepaired = (yes) => {
@@ -350,6 +484,7 @@ function createCloneMachine(scene, x, z, updaters) {
     if (yes) machine.setGearsInside(3);
   };
   machine.setOn = (yes) => { machine.on = yes; paint(); };
+  machine.setSuper = (yes) => { machine.super = yes; paint(); }; // met de Superbatterij erin
   let zap = 0;
   machine.zap = () => { zap = 1; };
   updaters.push((t, dt) => {

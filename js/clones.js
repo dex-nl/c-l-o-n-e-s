@@ -1,12 +1,16 @@
 // De clones: kopieën van de speler die in een rij achter je aan lopen.
-// Sta je even stil? Dan gaan ze dansen!
-import { makeHero, animateWalk } from './characters.js';
+// Sta je even stil? Dan gaan ze dansen! Komen er slijmpjes? Dan vechten ze mee.
+import { makeHero, animateWalk, animateSwing, giveSword, setHat } from './characters.js';
+import { collide } from './physics.js';
+import { SWING_TIME } from './player.js';
 
 const SPACING = 1.3;     // afstand tussen de clones in de rij
 const TRAIL_STEP = 0.25; // elke 0,25 meter onthouden we waar de speler liep
 const SPAWN_TIME = 0.9;  // zo lang duurt het om uit de machine te komen
 const DANCE_AFTER = 2;   // na 2 seconden stilstaan gaan de clones dansen
 const MIN_GAP = 0.8;     // zo dicht mogen twee clones bij elkaar staan
+const RADIUS = 0.4;
+const FIGHT_RANGE = 8;   // zo dichtbij moet een slijmpje zijn voordat de clones gaan vechten
 
 // Eerst iets te groot, dan terugveren (voor het verschijnen)
 const popIn = (k) => 1 + 2.7 * (k - 1) ** 3 + 1.7 * (k - 1) ** 2;
@@ -25,18 +29,30 @@ export class CloneSquad {
     this.list = [];
     this.trail = []; // waar de speler liep, nieuwste eerst
     this.idle = 0;
+    this.swordLevel = 0;
+    this.hat = null;
+    this.holds = new Map(); // clone -> plek waar hij moet blijven staan (bijvoorbeeld op een drukknop)
   }
 
   get busy() { return this.list.some((c) => c.spawning > 0); }
 
+  // Alle clones krijgen hetzelfde zwaard en hoedje als de speler
+  setGear(swordLevel, hat) {
+    this.swordLevel = swordLevel;
+    this.hat = hat;
+    for (const c of this.list) { giveSword(c.ch, swordLevel); setHat(c.ch, hat); }
+  }
+
   makeOne() {
     const ch = makeHero();
+    giveSword(ch, this.swordLevel);
+    setHat(ch, this.hat);
     // Clones gloeien een beetje blauw, zodat je ze herkent
     const mats = new Set();
     ch.group.traverse((o) => { if (o.isMesh) mats.add(o.material); });
-    mats.forEach((m) => { m.emissive.set(0x2a8fd8); m.emissiveIntensity = 0.16; });
+    mats.forEach((m) => { if (m.emissive) { m.emissive.set(0x2a8fd8); m.emissiveIntensity = 0.16; } });
     this.scene.add(ch.group);
-    const c = { ch, mesh: ch.group, pos: ch.group.position, rot: 0, phase: Math.random() * 6, walk: 0, spawning: 0 };
+    const c = { ch, mesh: ch.group, pos: ch.group.position, rot: 0, phase: Math.random() * 6, walk: 0, spawning: 0, swingT: 0, cool: Math.random() * 0.5, target: null };
     this.list.push(c);
     return c;
   }
@@ -46,22 +62,31 @@ export class CloneSquad {
     const c = this.makeOne();
     c.pos.set(x, 0, z);
     c.spawning = SPAWN_TIME;
+    c.ghost = 1.5; // even door de machine heen mogen lopen
     c.mesh.scale.setScalar(0.01);
   }
 
   // Clones uit een save: zet ze meteen in de rij achter de speler
   restore(n, player) {
+    for (let i = 0; i < n; i++) this.makeOne();
+    this.regroup(player);
+  }
+
+  // Zet alle clones netjes in een rij achter de speler (na het opladen of in een nieuwe zone)
+  regroup(player) {
     this.trail = [];
+    this.holds.clear();
     const bx = -Math.sin(player.rot), bz = -Math.cos(player.rot);
-    for (let d = TRAIL_STEP; d < SPACING * (n + 2); d += TRAIL_STEP) {
+    for (let d = TRAIL_STEP; d < SPACING * (this.list.length + 2); d += TRAIL_STEP) {
       this.trail.push({ x: player.pos.x + bx * d, z: player.pos.z + bz * d });
     }
-    for (let i = 0; i < n; i++) {
-      const c = this.makeOne();
+    this.list.forEach((c, i) => {
       const p = this.spotInLine(i, player.pos);
       c.pos.set(p.x, 0, p.z);
       c.rot = c.mesh.rotation.y = player.rot;
-    }
+      c.spawning = 0;
+      c.mesh.scale.setScalar(1);
+    });
   }
 
   // Waar hoort clone nummer i te staan? Een stukje terug over het pad van de speler.
@@ -76,15 +101,31 @@ export class CloneSquad {
     return { x: px, z: pz };
   }
 
-  update(t, dt, player) {
+  // Stuur de dichtstbijzijnde vrije clone naar een plek (bijvoorbeeld een drukknop)
+  holdNearest(x, z, maxDist) {
+    let best = null, bestD = maxDist;
+    for (const c of this.list) {
+      if (c.spawning > 0 || this.holds.has(c)) continue;
+      const d = Math.hypot(c.pos.x - x, c.pos.z - z);
+      if (d < bestD) { bestD = d; best = c; }
+    }
+    if (best) this.holds.set(best, { x, z });
+    return !!best;
+  }
+
+  clearHolds() { this.holds.clear(); }
+
+  // ctx: { zone, enemies, onHit(enemy, clone) }
+  update(t, dt, player, ctx) {
     const pp = player.pos;
     const head = this.trail[0];
     if (!head || Math.hypot(head.x - pp.x, head.z - pp.z) > TRAIL_STEP) {
       this.trail.unshift({ x: pp.x, z: pp.z });
-      if (this.trail.length > 100) this.trail.pop();
+      if (this.trail.length > 200) this.trail.pop();
     }
     this.idle = player.walkAmount > 0.1 ? 0 : this.idle + dt;
     const dancing = this.idle > DANCE_AFTER;
+    const enemies = this.swordLevel ? ctx.enemies.filter((e) => !e.dead && Math.hypot(e.pos.x - pp.x, e.pos.z - pp.z) < FIGHT_RANGE + e.r) : [];
 
     this.list.forEach((c, i) => {
       // Uit de machine komen: groeien, draaien en een sprongetje
@@ -97,8 +138,17 @@ export class CloneSquad {
         return;
       }
 
-      // Achter de speler aan lopen
-      const goal = this.spotInLine(i, pp);
+      // Vechten: zoek het dichtstbijzijnde slijmpje
+      let foe = null, foeD = Infinity;
+      for (const e of enemies) {
+        const d = Math.hypot(e.pos.x - c.pos.x, e.pos.z - c.pos.z);
+        if (d < foeD) { foeD = d; foe = e; }
+      }
+
+      let goal;
+      if (foe) goal = { x: foe.pos.x - ((foe.pos.x - c.pos.x) / (foeD || 1)) * (foe.r + 0.6), z: foe.pos.z - ((foe.pos.z - c.pos.z) / (foeD || 1)) * (foe.r + 0.6) };
+      else goal = this.holds.get(c) || this.spotInLine(i, pp);
+
       const dx = goal.x - c.pos.x, dz = goal.z - c.pos.z;
       const d = Math.hypot(dx, dz);
       let walking = false;
@@ -113,8 +163,24 @@ export class CloneSquad {
       c.phase += dt * (walking ? 11 : 4);
       animateWalk(c.ch, c.phase, c.walk);
 
-      // Dansje als de speler stilstaat
-      if (dancing && !walking) {
+      // Zwaard zwaaien als het slijmpje dichtbij is
+      c.cool -= dt;
+      if (foe && foeD < foe.r + 1.3) {
+        turn(c, Math.atan2(foe.pos.x - c.pos.x, foe.pos.z - c.pos.z), dt);
+        if (c.cool <= 0 && c.swingT <= 0) { c.swingT = SWING_TIME; c.hitDone = false; c.cool = 0.75 + Math.random() * 0.35; }
+      }
+      if (c.swingT > 0) {
+        c.swingT = Math.max(0, c.swingT - dt);
+        const k = 1 - c.swingT / SWING_TIME;
+        animateSwing(c.ch, k);
+        if (!c.hitDone && k >= 0.45) {
+          c.hitDone = true;
+          if (foe && Math.hypot(foe.pos.x - c.pos.x, foe.pos.z - c.pos.z) < foe.r + 1.5) ctx.onHit(foe, c);
+        }
+      }
+
+      // Dansje als de speler stilstaat (en er niks te vechten is)
+      if (dancing && !walking && !foe && !this.holds.has(c)) {
         const b = t * 7 + i * 1.3;
         c.pos.y = Math.abs(Math.sin(b)) * 0.35;
         c.ch.arms[0].rotation.x = -Math.PI * 0.85 + Math.sin(b * 2) * 0.35;
@@ -137,6 +203,11 @@ export class CloneSquad {
           q.x += (dx / d) * push; q.z += (dz / d) * push;
         }
       }
+    }
+    // En niemand loopt door muren
+    for (const c of this.list) {
+      if (c.ghost > 0) { c.ghost -= dt; continue; }
+      if (c.spawning <= 0) collide(c.pos, RADIUS, ctx.zone);
     }
   }
 }

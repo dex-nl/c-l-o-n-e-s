@@ -1,0 +1,227 @@
+// Slijmpjes: ze springen rond, en als ze iemand zien springen ze erop af.
+// Koning Slijm is de baas van de grot: hij springt heel hoog en landt met een KLAP.
+import * as THREE from 'three';
+import { mat, makeHat } from './characters.js';
+import { collide } from './physics.js';
+
+const KINDS = {
+  groen: { color: 0x7bd389, size: 0.55, hp: 2, speed: 2.6, aggro: 7, loot: 1 },
+  blauw: { color: 0x5aa9e6, size: 0.6, hp: 3, speed: 3.3, aggro: 8, loot: 2 },
+  koning: { color: 0x4cc96f, size: 1.7, hp: 24, speed: 2.2, aggro: 16, loot: 12 },
+};
+const REST = 0.45, HOP = 0.5; // even stilzitten, dan een sprongetje
+
+export class Slime {
+  constructor(group, x, z, kind = 'groen') {
+    const k = KINDS[kind];
+    this.kind = kind;
+    this.king = kind === 'koning';
+    this.hp = this.maxHp = k.hp;
+    this.r = k.size;
+    this.speed = k.speed;
+    this.aggro = k.aggro;
+    this.loot = k.loot;
+    this.home = { x, z };
+    this.group = group;
+
+    this.mesh = new THREE.Group();
+    this.bodyM = mat(k.color, { transparent: true, opacity: 0.9, roughness: 0.35 });
+    this.body = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), this.bodyM);
+    this.body.castShadow = true;
+    this.mesh.add(this.body);
+    // ogen (kijken naar voren)
+    const face = new THREE.Group();
+    const white = mat(0xffffff), black = mat(0x1d1d1d);
+    for (const sx of [-0.32, 0.32]) {
+      const eye = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.32, 0.08), white);
+      eye.position.set(sx, 0.15, 0.9);
+      const pupil = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.17, 0.06), black);
+      pupil.position.set(sx, 0.11, 0.95);
+      face.add(eye, pupil);
+      if (this.king) {
+        const brow = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.07, 0.06), black);
+        brow.position.set(sx, 0.38, 0.93);
+        brow.rotation.z = sx > 0 ? 0.4 : -0.4;
+        face.add(brow);
+      }
+    }
+    const shine = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.05), mat(0xffffff, { emissive: 0x888888 }));
+    shine.position.set(-0.45, 0.6, 0.72);
+    shine.rotation.z = 0.5;
+    face.add(shine);
+    this.body.add(face);
+    if (this.king) {
+      const crown = makeHat('kroon');
+      crown.scale.setScalar(1.5);
+      crown.position.y = 0.25;
+      this.body.add(crown);
+    }
+    this.mesh.position.set(x, 0, z);
+    this.pos = this.mesh.position;
+    this.rot = Math.random() * 6;
+    group.add(this.mesh);
+
+    this.t = Math.random() * REST; // tijd in de huidige stap
+    this.hopping = false;
+    this.dir = { x: 0, z: 0 };
+    this.kx = 0; this.kz = 0;
+    this.flash = 0;
+    this.invuln = 0;
+    this.dead = false;
+    this.removed = false;
+    this.deadT = 0;
+    this.slamCool = 4;
+    this.jump = null;
+    this.split = false;
+    this.setSize(1, 1);
+  }
+
+  setSize(sxz, sy) {
+    const s = this.r;
+    this.body.scale.set(s * sxz, s * 0.8 * sy, s * sxz);
+    this.body.position.y = s * 0.8 * sy;
+  }
+
+  // Wie is het dichtstbij: de speler of een clone?
+  pickTarget(game) {
+    let best = null, bestD = this.aggro;
+    const check = (p) => {
+      const d = Math.hypot(p.x - this.pos.x, p.z - this.pos.z);
+      if (d < bestD) { bestD = d; best = p; }
+    };
+    check(game.player.pos);
+    for (const c of game.squad.list) if (c.spawning <= 0) check(c.pos);
+    return best;
+  }
+
+  update(t, dt, game) {
+    if (this.dead) {
+      this.deadT += dt;
+      const k = Math.min(1, this.deadT / 0.3);
+      this.setSize(1 + k * 0.6, 1 - k);
+      if (k >= 1 && !this.removed) { this.removed = true; this.group.remove(this.mesh); }
+      return;
+    }
+    this.invuln = Math.max(0, this.invuln - dt);
+    if (this.flash > 0) {
+      this.flash = Math.max(0, this.flash - dt);
+      this.bodyM.emissive.setScalar(this.flash > 0 ? 0.9 : 0);
+    }
+
+    if (this.jump) this.updateJump(dt, game);
+    else this.updateHop(dt, game);
+
+    // teruggeduwd worden
+    if (this.kx || this.kz) {
+      this.pos.x += this.kx * dt; this.pos.z += this.kz * dt;
+      const f = Math.exp(-dt * 8);
+      this.kx *= f; this.kz *= f;
+      if (Math.hypot(this.kx, this.kz) < 0.2) this.kx = this.kz = 0;
+    }
+    collide(this.pos, this.r * 0.8, game.zone);
+
+    // draai naar waar hij heen springt
+    if (this.dir.x || this.dir.z) {
+      let diff = Math.atan2(this.dir.x, this.dir.z) - this.rot;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      this.rot += diff * Math.min(1, dt * 8);
+      this.mesh.rotation.y = this.rot;
+    }
+
+    // Raak je de speler? Au!
+    const p = game.player.pos;
+    if (this.pos.y < 0.6 && Math.hypot(p.x - this.pos.x, p.z - this.pos.z) < this.r * 0.85 + 0.45) {
+      game.hurtPlayer(1, this.pos.x, this.pos.z);
+    }
+
+    // Koning Slijm: bij de helft van zijn leven roept hij hulp
+    if (this.king && !this.split && this.hp <= this.maxHp / 2) {
+      this.split = true;
+      game.spawnSlime(this.pos.x + 2.5, this.pos.z, 'blauw');
+      game.spawnSlime(this.pos.x - 2.5, this.pos.z, 'blauw');
+    }
+  }
+
+  updateHop(dt, game) {
+    this.t += dt;
+    if (!this.hopping) {
+      // stilzitten en een beetje ademen
+      this.pos.y = 0;
+      this.setSize(1 + Math.sin(this.t * 10) * 0.03, 1 - Math.sin(this.t * 10) * 0.04 - (this.t < 0.12 ? 0.18 : 0));
+      if (this.t >= REST * (this.king ? 1.6 : 1)) {
+        this.t = 0;
+        const target = this.pickTarget(game);
+        // Koning Slijm doet soms een superSPRONG
+        this.slamCool -= REST * 1.6 + HOP;
+        if (this.king && target && this.slamCool <= 0) {
+          this.slamCool = 3 + Math.random() * 2;
+          this.jump = { t: 0, from: { x: this.pos.x, z: this.pos.z }, to: { x: target.x, z: target.z } };
+          game.sfx.boing(0.6);
+          return;
+        }
+        let dx, dz;
+        if (target) {
+          dx = target.x - this.pos.x; dz = target.z - this.pos.z;
+        } else if (Math.hypot(this.home.x - this.pos.x, this.home.z - this.pos.z) > 4) {
+          dx = this.home.x - this.pos.x; dz = this.home.z - this.pos.z;
+        } else {
+          const a = Math.random() * Math.PI * 2;
+          dx = Math.cos(a); dz = Math.sin(a);
+        }
+        const d = Math.hypot(dx, dz) || 1;
+        this.dir = { x: dx / d, z: dz / d };
+        this.chasing = !!target;
+        this.hopping = true;
+      }
+    } else {
+      const k = Math.min(1, this.t / HOP);
+      const sp = this.speed * (this.chasing ? 1.8 : 0.8);
+      this.pos.x += this.dir.x * sp * dt;
+      this.pos.z += this.dir.z * sp * dt;
+      this.pos.y = Math.sin(k * Math.PI) * (0.35 + this.r * 0.5);
+      this.setSize(1 - Math.sin(k * Math.PI) * 0.12, 1 + Math.sin(k * Math.PI) * 0.2);
+      if (k >= 1) { this.hopping = false; this.t = 0; this.pos.y = 0; }
+    }
+  }
+
+  // De grote sprong van Koning Slijm
+  updateJump(dt, game) {
+    const j = this.jump;
+    j.t += dt;
+    const T = 1.2, k = Math.min(1, j.t / T);
+    this.pos.x = j.from.x + (j.to.x - j.from.x) * k;
+    this.pos.z = j.from.z + (j.to.z - j.from.z) * k;
+    this.pos.y = Math.sin(k * Math.PI) * 6;
+    this.setSize(1 - Math.sin(k * Math.PI) * 0.15, 1 + Math.sin(k * Math.PI) * 0.25);
+    const dx = j.to.x - j.from.x, dz = j.to.z - j.from.z, d = Math.hypot(dx, dz) || 1;
+    this.dir = { x: dx / d, z: dz / d };
+    // een schaduw op de grond laat zien waar hij landt
+    game.showLanding(j.to.x, j.to.z, k < 1 ? 4.5 : 0);
+    if (k >= 1) {
+      this.jump = null;
+      this.pos.y = 0;
+      this.t = 0;
+      this.hopping = false;
+      this.setSize(1.3, 0.6);
+      game.slam(this.pos.x, this.pos.z, 4.5);
+    }
+  }
+
+  // Geraakt door een zwaard. Geeft true als het raak was.
+  hurt(dmg, fromX, fromZ, game) {
+    if (this.dead || this.invuln > 0) return false;
+    this.hp -= dmg;
+    this.flash = 0.12;
+    this.invuln = this.king ? 0.25 : 0.18;
+    const dx = this.pos.x - fromX, dz = this.pos.z - fromZ, d = Math.hypot(dx, dz) || 1;
+    const power = this.king ? 2.5 : 8;
+    this.kx = (dx / d) * power; this.kz = (dz / d) * power;
+    if (this.hp <= 0) {
+      this.dead = true;
+      this.bodyM.emissive.setScalar(0);
+      game.onSlimeDefeated(this);
+    }
+    return true;
+  }
+}

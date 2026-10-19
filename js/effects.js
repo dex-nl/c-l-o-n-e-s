@@ -1,8 +1,11 @@
-// Deeltjes: confetti, glinsters en stofwolkjes onder je voeten.
+// Deeltjes: confetti, glinsters, stofwolkjes, zwaardzwaaien, poef-wolkjes en schokgolven.
 import * as THREE from 'three';
 
 const cube = new THREE.BoxGeometry(1, 1, 1);
 const puffGeo = new THREE.IcosahedronGeometry(1, 0);
+// Een boog voor het zwaard: van voor-onder, over je hoofd, naar achter
+const arcGeo = new THREE.RingGeometry(0.75, 1.55, 14, 1, -0.6, Math.PI * 0.95).rotateY(-Math.PI / 2);
+const ringGeo = new THREE.RingGeometry(0.85, 1, 32).rotateX(-Math.PI / 2);
 
 export class Effects {
   constructor(scene) {
@@ -10,13 +13,40 @@ export class Effects {
     this.bits = [];
   }
 
-  add(geo, color, pos, size, v, life, { gravity = 9, fade = false, grow = 0, spin = 7 } = {}) {
-    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color, transparent: fade, opacity: 1 }));
+  add(geo, color, pos, size, v, life, { gravity = 9, fade = false, grow = 0, spin = 7, opacity = 1, glow = false } = {}) {
+    const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
+      color, transparent: fade, opacity, side: THREE.DoubleSide,
+      blending: glow ? THREE.AdditiveBlending : THREE.NormalBlending, depthWrite: !glow,
+    }));
     m.position.copy(pos);
     m.scale.setScalar(size);
-    m.userData = { v, life, maxLife: life, gravity, fade, grow, spin, size };
+    m.userData = { v, life, maxLife: life, gravity, fade, grow, spin, size, opacity };
     this.scene.add(m);
     this.bits.push(m);
+    return m;
+  }
+
+  // De boog van een zwaardzwaai
+  swoosh(pos, rot, gold = false) {
+    const m = this.add(arcGeo, gold ? 0xffe066 : 0xffffff, new THREE.Vector3(pos.x, 1.1, pos.z), 1, new THREE.Vector3(), 0.2,
+      { gravity: 0, fade: true, spin: 0, opacity: 0.75, glow: true });
+    m.rotation.y = rot;
+  }
+
+  // Poef! Een slijmpje verdwijnt
+  poof(pos, color, size = 1) {
+    this.sparkle({ x: pos.x, y: 0.6 * size, z: pos.z }, [color, 0xffffff], Math.round(16 * size), 3 + size);
+    for (let i = 0; i < 5 * size; i++) {
+      const v = new THREE.Vector3((Math.random() - 0.5) * 3, 1 + Math.random() * 1.5, (Math.random() - 0.5) * 3);
+      this.add(puffGeo, 0xf1f1f1, new THREE.Vector3(pos.x, 0.5 * size, pos.z), 0.25 * size, v, 0.6, { gravity: 0, fade: true, grow: 0.4 * size, spin: 1 });
+    }
+  }
+
+  // Een ring die over de grond groter wordt (de klap van Koning Slijm)
+  ring(pos, radius, color = 0xffffff, life = 0.5) {
+    const m = this.add(ringGeo, color, new THREE.Vector3(pos.x, 0.15, pos.z), 0.3, new THREE.Vector3(), life,
+      { gravity: 0, fade: true, grow: radius, spin: 0, opacity: 0.9, glow: true });
+    m.rotation.set(0, 0, 0);
   }
 
   // Feest! (als een opdracht klaar is)
@@ -54,7 +84,7 @@ export class Effects {
       b.rotation.x += dt * u.spin; b.rotation.y += dt * u.spin * 0.8;
       u.life -= dt;
       const k = u.life / u.maxLife;
-      if (u.fade) b.material.opacity = Math.max(0, k);
+      if (u.fade) b.material.opacity = Math.max(0, k) * u.opacity;
       if (u.grow) b.scale.setScalar(u.size + (1 - k) * u.grow);
       if (u.life <= 0) {
         this.scene.remove(b);

@@ -2,7 +2,7 @@
 const JOY_RADIUS = 60;
 
 export class Controls {
-  constructor({ canvas, base, knob, talkBtn, cloneBtn, onAction, onClone, onTap }) {
+  constructor({ canvas, base, knob, talkBtn, cloneBtn, onAction, onClone, onTap, onKey }) {
     this.keys = new Set();
     this.joy = { id: null, x: 0, y: 0, sx: 0, sy: 0, startT: 0, moved: 0 };
     this.taps = new Map();
@@ -14,6 +14,7 @@ export class Controls {
       const k = e.key.toLowerCase();
       if (['e', ' ', 'enter'].includes(k)) { if (!e.repeat) this.onAction(); e.preventDefault(); return; }
       if (k === 'c') { if (!e.repeat) this.onClone(); return; }
+      if (['m', 'b', 'i', 'escape'].includes(k)) { if (!e.repeat) onKey(k); return; }
       this.keys.add(k);
       if (k.startsWith('arrow')) e.preventDefault();
     });

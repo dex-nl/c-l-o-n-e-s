@@ -13,6 +13,9 @@
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
   <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Nunito:wght@600;800&display=swap">
   <link rel="stylesheet" href="css/style.css">
   <!-- Three.js komt van een CDN: geen npm en geen build-stap nodig. -->
   <script type="importmap">
@@ -26,14 +29,32 @@
 <body>
   <canvas id="game"></canvas>
 
-  <!-- Opdracht bovenin -->
-  <div id="quest" class="panel"></div>
+  <!-- Opdracht, hartjes en kristallen (linksboven) -->
+  <div id="hud">
+    <div id="quest" class="panel"></div>
+    <div id="stats" class="panel hidden"><span id="hearts"></span><span id="crystals">💎 0</span></div>
+  </div>
+
+  <!-- Knoppen rechtsboven: rugzak, kaart, muziek, geluid -->
+  <div id="top-btns">
+    <button id="bag-btn" class="round" type="button" aria-label="Rugzak">🎒</button>
+    <button id="map-btn" class="round" type="button" aria-label="Kaart">🗺️</button>
+    <button id="music-btn" class="round" type="button" aria-label="Muziek aan of uit">🎵</button>
+    <button id="sound-btn" class="round" type="button" aria-label="Geluid aan of uit">🔊</button>
+  </div>
+
+  <!-- Levensbalk van de baas -->
+  <div id="boss" class="hidden"><div id="boss-name"></div><div id="boss-bar"><div id="boss-fill"></div></div></div>
 
   <!-- Korte meldingen -->
   <div id="toast"></div>
 
-  <!-- Titel bij het starten -->
-  <div id="title">C.L.O.N.E.S</div>
+  <!-- Naam van de zone als je ergens binnenkomt -->
+  <div id="zone-title"></div>
+
+  <!-- Rood randje als je geraakt wordt, en zwart scherm tussen zones -->
+  <div id="hurt"></div>
+  <div id="fade"></div>
 
   <!-- Joystick (links) -->
   <div id="joy-base"><div id="joy-knob"></div></div>
@@ -44,14 +65,28 @@
   <!-- Clone-knop (verschijnt bij de clonemachine) -->
   <button id="clone-btn" type="button" class="hidden">Clone!</button>
 
-  <!-- Geluid aan/uit (rechtsboven) -->
-  <button id="sound-btn" type="button">🔊</button>
-
   <!-- Praatwolk -->
   <div id="dialog" class="hidden">
     <div id="dialog-name"></div>
     <div id="dialog-text"></div>
     <div id="dialog-next">Tik om verder te gaan ▶</div>
+  </div>
+
+  <!-- Paneel voor de winkel, de rugzak en de kaart -->
+  <div id="panel" class="hidden">
+    <div id="panel-box">
+      <button id="panel-close" type="button" aria-label="Sluiten">✕</button>
+      <h2 id="panel-title"></h2>
+      <div id="panel-body"></div>
+    </div>
+  </div>
+
+  <!-- Startscherm -->
+  <div id="start">
+    <div id="logo" aria-label="C.L.O.N.E.S">C.L.O.N.E.S</div>
+    <div id="tagline">Een avontuur met heel veel jou</div>
+    <button id="start-btn" type="button">▶ Spelen</button>
+    <div id="start-help">iPad: sleep links om te lopen · Laptop: WASD, E en C</div>
   </div>
 
   <!-- Hint als het scherm rechtop staat -->
