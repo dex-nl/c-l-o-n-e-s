@@ -3,8 +3,18 @@
 import * as THREE from 'three';
 import { mat } from './characters.js';
 
+// Vormen en kleuren die alle dingen van dezelfde soort delen (scheelt geheugen)
 const crystalGeo = new THREE.OctahedronGeometry(0.2, 0);
 const crystalM = mat(0x7af7ff, { emissive: 0x1b8fd8, emissiveIntensity: 0.8, roughness: 0.2, metalness: 0.3 });
+const heartM = mat(0xff3b5c, { emissive: 0x660011 });
+const heartBall = new THREE.SphereGeometry(0.14, 8, 6);
+const heartTip = new THREE.ConeGeometry(0.21, 0.28, 8);
+const batteryParts = {
+  body: [new THREE.CylinderGeometry(0.35, 0.35, 0.9, 10), mat(0xffd23f, { emissive: 0x996600, metalness: 0.4 })],
+  top: [new THREE.CylinderGeometry(0.15, 0.15, 0.15, 8), mat(0xdddddd, { metalness: 0.6 })],
+  band: [new THREE.CylinderGeometry(0.36, 0.36, 0.25, 10), mat(0x1d1d1d)],
+  glow: [new THREE.RingGeometry(0.7, 0.95, 16).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.7, side: THREE.DoubleSide })],
+};
 
 function makeMesh(type) {
   const g = new THREE.Group();
@@ -14,24 +24,20 @@ function makeMesh(type) {
     m.castShadow = true;
     g.add(m);
   } else if (type === 'hart') {
-    const red = mat(0xff3b5c, { emissive: 0x660011 });
     for (const sx of [-0.11, 0.11]) {
-      const s = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 6), red);
+      const s = new THREE.Mesh(heartBall, heartM);
       s.position.set(sx, 0.08, 0);
       g.add(s);
     }
-    const tip = new THREE.Mesh(new THREE.ConeGeometry(0.21, 0.28, 8), red);
+    const tip = new THREE.Mesh(heartTip, heartM);
     tip.rotation.z = Math.PI; tip.position.y = -0.1;
     g.add(tip);
   } else if (type === 'batterij') {
-    g.add(new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.9, 10), mat(0xffd23f, { emissive: 0x996600, metalness: 0.4 })));
-    const top = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.15, 8), mat(0xdddddd, { metalness: 0.6 }));
-    top.position.y = 0.52; g.add(top);
-    const band = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.25, 10), mat(0x1d1d1d));
-    band.position.y = -0.2; g.add(band);
-    const glow = new THREE.Mesh(new THREE.RingGeometry(0.7, 0.95, 16).rotateX(-Math.PI / 2),
-      new THREE.MeshBasicMaterial({ color: 0xffe066, transparent: true, opacity: 0.7, side: THREE.DoubleSide }));
-    glow.position.y = -0.55; g.add(glow);
+    const part = (name, y) => { const m = new THREE.Mesh(...batteryParts[name]); m.position.y = y; g.add(m); return m; };
+    part('body', 0);
+    part('top', 0.52);
+    part('band', -0.2);
+    const glow = part('glow', -0.55);
     g.userData.glow = glow;
   }
   return g;

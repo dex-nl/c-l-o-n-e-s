@@ -69,7 +69,7 @@ export class Controls {
     const stop = (e) => e.preventDefault();
     document.addEventListener('gesturestart', stop, { passive: false });
     document.addEventListener('gesturechange', stop, { passive: false });
-    document.addEventListener('touchmove', stop, { passive: false });
+    document.addEventListener('touchmove', (e) => { if (!e.target.closest?.('#panel-box')) e.preventDefault(); }, { passive: false });
     document.addEventListener('dblclick', stop, { passive: false });
     document.addEventListener('contextmenu', stop);
   }

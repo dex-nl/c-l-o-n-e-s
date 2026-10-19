@@ -19,7 +19,7 @@ function unlock() {
       musicGain.connect(master);
       if (current) startSong(current);
     }
-    if (ctx.state === 'suspended') ctx.resume();
+    if (ctx.state !== 'running') ctx.resume(); // ook 'interrupted' (iOS na een telefoontje of app-wissel)
   } catch (e) {
     // Geen geluid in deze browser: dan spelen we gewoon zonder.
   }
@@ -27,6 +27,9 @@ function unlock() {
 for (const ev of ['pointerdown', 'pointerup', 'touchend', 'keydown']) {
   window.addEventListener(ev, unlock, { capture: true });
 }
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && ctx && ctx.state !== 'running') ctx.resume().catch(() => {});
+});
 
 export function setSoundOn(yes) {
   sfxOn = yes;

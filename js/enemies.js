@@ -1,7 +1,7 @@
 // Slijmpjes: ze springen rond, en als ze iemand zien springen ze erop af.
 // Koning Slijm is de baas van de grot: hij springt heel hoog en landt met een KLAP.
 import * as THREE from 'three';
-import { mat, makeHat } from './characters.js';
+import { mat, makeHat, disposeTree } from './characters.js';
 import { collide } from './physics.js';
 
 const KINDS = {
@@ -10,6 +10,14 @@ const KINDS = {
   koning: { color: 0x4cc96f, size: 1.7, hp: 24, speed: 2.2, aggro: 16, loot: 12 },
 };
 const REST = 0.45, HOP = 0.5; // even stilzitten, dan een sprongetje
+
+// Vormen en kleuren die alle slijmpjes delen (scheelt geheugen)
+const bodyGeo = new THREE.IcosahedronGeometry(1, 1);
+const eyeGeo = new THREE.BoxGeometry(0.26, 0.32, 0.08);
+const pupilGeo = new THREE.BoxGeometry(0.13, 0.17, 0.06);
+const browGeo = new THREE.BoxGeometry(0.32, 0.07, 0.06);
+const shineGeo = new THREE.BoxGeometry(0.2, 0.12, 0.05);
+const white = mat(0xffffff), black = mat(0x1d1d1d), shineM = mat(0xffffff, { emissive: 0x888888 });
 
 export class Slime {
   constructor(group, x, z, kind = 'groen') {
@@ -26,35 +34,34 @@ export class Slime {
 
     this.mesh = new THREE.Group();
     this.bodyM = mat(k.color, { transparent: true, opacity: 0.9, roughness: 0.35 });
-    this.body = new THREE.Mesh(new THREE.IcosahedronGeometry(1, 1), this.bodyM);
+    this.body = new THREE.Mesh(bodyGeo, this.bodyM);
     this.body.castShadow = true;
     this.mesh.add(this.body);
     // ogen (kijken naar voren)
     const face = new THREE.Group();
-    const white = mat(0xffffff), black = mat(0x1d1d1d);
     for (const sx of [-0.32, 0.32]) {
-      const eye = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.32, 0.08), white);
+      const eye = new THREE.Mesh(eyeGeo, white);
       eye.position.set(sx, 0.15, 0.9);
-      const pupil = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.17, 0.06), black);
+      const pupil = new THREE.Mesh(pupilGeo, black);
       pupil.position.set(sx, 0.11, 0.95);
       face.add(eye, pupil);
       if (this.king) {
-        const brow = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.07, 0.06), black);
+        const brow = new THREE.Mesh(browGeo, black);
         brow.position.set(sx, 0.38, 0.93);
         brow.rotation.z = sx > 0 ? 0.4 : -0.4;
         face.add(brow);
       }
     }
-    const shine = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.12, 0.05), mat(0xffffff, { emissive: 0x888888 }));
+    const shine = new THREE.Mesh(shineGeo, shineM);
     shine.position.set(-0.45, 0.6, 0.72);
     shine.rotation.z = 0.5;
     face.add(shine);
     this.body.add(face);
     if (this.king) {
-      const crown = makeHat('kroon');
-      crown.scale.setScalar(1.5);
-      crown.position.y = 0.25;
-      this.body.add(crown);
+      this.crown = makeHat('kroon');
+      this.crown.scale.setScalar(1.5);
+      this.crown.position.y = 0.25;
+      this.body.add(this.crown);
     }
     this.mesh.position.set(x, 0, z);
     this.pos = this.mesh.position;
@@ -74,6 +81,15 @@ export class Slime {
     this.jump = null;
     this.split = false;
     this.setSize(1, 1);
+  }
+
+  // Weg uit de wereld (en het geheugen opruimen)
+  remove() {
+    if (this.removed) return;
+    this.removed = true;
+    this.group.remove(this.mesh);
+    this.bodyM.dispose();
+    if (this.crown) disposeTree(this.crown);
   }
 
   setSize(sxz, sy) {
@@ -99,7 +115,7 @@ export class Slime {
       this.deadT += dt;
       const k = Math.min(1, this.deadT / 0.3);
       this.setSize(1 + k * 0.6, 1 - k);
-      if (k >= 1 && !this.removed) { this.removed = true; this.group.remove(this.mesh); }
+      if (k >= 1 && !this.removed) this.remove();
       return;
     }
     this.invuln = Math.max(0, this.invuln - dt);

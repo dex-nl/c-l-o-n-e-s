@@ -155,7 +155,6 @@ scene.add(landing);
 // ---------- Het "spel" dat slijmpjes en zones kunnen gebruiken ----------
 let enemies = [];
 let king = null;
-let kingBeaten = false; // in dit potje verslagen (de batterij ligt er nog)
 let shake = 0, hitStop = 0, fainting = false, transition = false;
 let lastHitSound = 0;
 
@@ -183,7 +182,8 @@ const game = {
     pickups.spawn('kristal', s.pos.x, s.pos.z, s.loot + Math.floor(Math.random() * 2));
     if (hearts < state.maxHearts && Math.random() < 0.3) pickups.spawn('hart', s.pos.x, s.pos.z);
     if (s.king) {
-      kingBeaten = true;
+      state.quest.kingBeaten = true; // onthouden, ook als de iPad de pagina opnieuw laadt
+      game.showLanding(0, 0, 0);
       hitStop = 0.35;
       shake = 1;
       fx.confetti(s.pos, 90);
@@ -191,6 +191,7 @@ const game = {
       ui.toast('👑 Koning Slijm is verslagen! 👑', 3500);
       pickups.spawn('batterij', s.pos.x, s.pos.z);
       for (const e of enemies) if (!e.dead) e.hurt(99, s.pos.x, s.pos.z, game);
+      save();
     }
   },
   slam(x, z, r) {
@@ -213,7 +214,7 @@ function spawnEnemies(zone) {
   king = null;
   for (const s of zone.slimeSpots || []) enemies.push(new Slime(zone.group, s.x, s.z, s.kind));
   if (zone.id === 'grot' && state.quest.state === 'grot') {
-    if (kingBeaten) pickups.spawn('batterij', zone.king.x, zone.king.z);
+    if (state.quest.kingBeaten) pickups.spawn('batterij', zone.king.x, zone.king.z);
     else { king = new Slime(zone.group, zone.king.x, zone.king.z, 'koning'); enemies.push(king); }
   }
 }
@@ -244,7 +245,7 @@ function setZone(id, spawn) {
   const old = game.zone;
   if (old) {
     old.group.visible = false;
-    for (const e of enemies) if (!e.removed) old.group.remove(e.mesh);
+    for (const e of enemies) e.remove();
   }
   pickups.clear();
   landing.visible = false;
@@ -328,20 +329,27 @@ function save() {
 }
 
 // ---------- Praten ----------
+let talkPartner = null; // met wie je praat (voor de camera)
+const SIGN_DISTANCE = 1.8; // een bord lees je alleen als je er vlak voor staat
+
 function nearestTalkable() {
-  let best = null, bestD = TALK_DISTANCE;
+  let best = null, bestD = Infinity;
   for (const t of game.zone.talkables) {
     const d = t.distanceTo(player.pos);
-    if (d < bestD) { bestD = d; best = t; }
+    if (d < (t.sign ? SIGN_DISTANCE : TALK_DISTANCE) && d < bestD) { bestD = d; best = t; }
   }
   return best;
 }
+
+// Is er een slijmpje in de buurt? Dan gaat het zwaard voor.
+const enemyNear = () => enemies.some((e) => !e.dead && Math.hypot(e.pos.x - player.pos.x, e.pos.z - player.pos.z) < 5 + e.r);
 
 function talkTo(t) {
   const q = state.quest;
   const wasAllFound = q.state === 'bezig' && q.gears.length >= GEARS_NEEDED;
   const before = q.state;
   const lines = t.lines || linesFor(t.id, state);
+  talkPartner = t;
   ui.showDialog(t.name, lines, () => {
     if (t.id === 'bolt') afterBolt(before, wasAllFound);
     if (t.id === 'koopman') openShop();
@@ -383,9 +391,9 @@ function afterBolt(before, wasAllFound) {
 
 // Actieknop: praten als er iemand is, anders zwaaien met je zwaard
 function action() {
-  if (ui.panelOpen || transition || !started) return;
+  if (ui.panelOpen || transition || fainting || !started) return;
   if (ui.dialogOpen) { ui.nextLine(); return; }
-  const t = nearestTalkable();
+  const t = state.sword && enemyNear() ? null : nearestTalkable();
   if (t) { talkTo(t); return; }
   if (state.sword && player.swing()) {
     sfx.swing();
@@ -509,13 +517,13 @@ function toggleMusic() {
 // ---------- Tikken op het scherm ----------
 const raycaster = new THREE.Raycaster();
 function onTap(x, y) {
-  if (!started || ui.panelOpen) return;
+  if (!started || ui.panelOpen || transition || fainting) return;
   if (ui.dialogOpen) { ui.nextLine(); return; }
   const p = new THREE.Vector2((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(p, camera);
   for (const t of game.zone.talkables) {
     if (raycaster.intersectObject(t.mesh, true).length) {
-      if (t.distanceTo(player.pos) <= TALK_DISTANCE) talkTo(t);
+      if (t.distanceTo(player.pos) <= (t.sign ? SIGN_DISTANCE + 0.6 : TALK_DISTANCE)) talkTo(t);
       else ui.toast('Loop eerst wat dichterbij!');
       return;
     }
@@ -585,7 +593,6 @@ const lookGoal = new THREE.Vector3();
 const lookAt = new THREE.Vector3();
 let debugCam = null; // alleen voor testen: camera ergens anders neerzetten
 const TALK_CAM_OFFSET = new THREE.Vector3(5, 4.5, 7);
-let talkPartner = null;
 
 function snapCamera() {
   camera.position.copy(player.pos).add(CAM_OFFSET);
@@ -621,7 +628,7 @@ function frame() {
     if (type === 'hart') { hearts = Math.min(state.maxHearts, hearts + 1); sfx.heal(); }
     if (type === 'batterij') {
       state.quest.state = 'batterij';
-      kingBeaten = false;
+      delete state.quest.kingBeaten;
       sfx.fanfare();
       fx.confetti(player.pos);
       ui.toast('🔋 Je hebt de Superbatterij! Breng hem naar Professor Bolt!', 4000);
@@ -677,7 +684,7 @@ function frame() {
   } else ui.setBoss('', null);
 
   // Knoppen en hartjes
-  const near = !paused && nearestTalkable();
+  const near = !paused && !(state.sword && enemyNear()) && nearestTalkable();
   if (ui.dialogOpen) ui.setActionBtn('Verder', true, false);
   else if (near) ui.setActionBtn(near.sign ? 'Lees' : 'Praat', true, true);
   else if (state.sword) ui.setActionBtn('⚔️', true, false);
@@ -730,13 +737,6 @@ function frame() {
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
-
-// Onthoud met wie je praat (voor de camera)
-const showDialog = ui.showDialog.bind(ui);
-ui.showDialog = (name, lines, onDone, voice) => {
-  talkPartner = game.zone.talkables.find((x) => x.name === name) || null;
-  showDialog(name, lines, onDone, voice);
-};
 
 // ---------- Starten ----------
 setSoundOn(state.sound);

@@ -149,8 +149,16 @@ export function makeHat(id) {
   return g;
 }
 
+// Ruim een stuk 3D op (vormen en kleuren), zodat het geheugen niet volloopt
+export function disposeTree(obj) {
+  obj.traverse((o) => {
+    if (o.geometry) o.geometry.dispose();
+    if (o.material) o.material.dispose();
+  });
+}
+
 export function setHat(ch, id) {
-  if (ch.hat) ch.head.remove(ch.hat);
+  if (ch.hat) { ch.head.remove(ch.hat); disposeTree(ch.hat); }
   ch.hat = null;
   ch.cap.forEach((m) => { m.visible = !id; });
   if (id) { ch.hat = makeHat(id); ch.head.add(ch.hat); }

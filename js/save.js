@@ -1,7 +1,7 @@
 // Opslaan van de spelvoortgang in localStorage.
 // BELANGRIJK: verander je het formaat? Verhoog SAVE_VERSION en voeg een stap
 // toe in migrate(), zodat oude saves blijven werken.
-import { QUEST_ORDER, reached } from './quest.js';
+import { QUEST_ORDER, reached, maxClones } from './quest.js';
 import { HAT_NAMES } from './characters.js';
 
 export const SAVE_KEY = 'clones-save';
@@ -55,8 +55,9 @@ export function migrate(data) {
   for (const k of ['x', 'z', 'rot']) if (!Number.isFinite(player[k])) player[k] = def.player[k];
   if (!QUEST_ORDER.includes(quest.state)) quest.state = 'nieuw';
   if (!Array.isArray(quest.gears)) quest.gears = [];
+  if (quest.kingBeaten !== true || quest.state !== 'grot') delete quest.kingBeaten; // Koning Slijm verslagen, batterij nog niet gepakt
   const int = (n, lo, hi, d) => (Number.isInteger(n) ? Math.min(Math.max(n, lo), hi) : d);
-  const clones = reached(quest, 'aan') ? int(data.clones, 0, 10, 0) : 0;
+  const clones = reached(quest, 'aan') ? int(data.clones, 0, maxClones(quest), 0) : 0;
   let zone = ['dorp', 'bos', 'grot'].includes(data.zone) ? data.zone : 'dorp';
   if ((zone === 'bos' && !reached(quest, 'zwaard')) || (zone === 'grot' && !reached(quest, 'grot'))) zone = 'dorp';
   let sword = int(data.sword, 0, 2, 0);
