@@ -29,6 +29,12 @@
   <!-- Opdracht bovenin -->
   <div id="quest" class="panel"></div>
 
+  <!-- Hoeveel clones heb je? -->
+  <div id="clone-count" class="panel hidden"></div>
+
+  <!-- Witte flits bij het klonen -->
+  <div id="flash"></div>
+
   <!-- Korte meldingen -->
   <div id="toast"></div>
 
@@ -41,6 +47,16 @@
   <!-- Praat-knop (rechts) -->
   <button id="talk-btn" type="button">Praat</button>
 
+  <!-- Kloon-knop (rechts, boven Praat). Alleen zichtbaar bij de werkende clonemachine. -->
+  <button id="clone-btn" type="button" class="hidden">Kloon!</button>
+
+  <!-- Blijf- en Volg-knoppen voor de clones (links van Praat) -->
+  <button id="stay-btn" type="button" class="small-btn hidden">Blijf</button>
+  <button id="follow-btn" type="button" class="small-btn hidden">Volg</button>
+
+  <!-- Zwart beeld bij het wisselen van gebied -->
+  <div id="fade"></div>
+
   <!-- Praatwolk -->
   <div id="dialog" class="hidden">
     <div id="dialog-name"></div>
@@ -51,7 +67,7 @@
   <!-- Hint als het scherm rechtop staat -->
   <div id="rotate-hint">
     <div class="rotate-icon">📱↻</div>
-    <div>Draai je iPad!</div>
+    <div>Draai je scherm!</div>
     <small>Dit spel speel je liggend.</small>
   </div>
 

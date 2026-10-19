@@ -215,7 +215,9 @@ export function createWorld(scene) {
   villageTrees.forEach(([x, z]) => tree(x, z, 0.9 + rand() * 0.4));
   for (let i = 0; i < 90; i++) {
     const a = rand() * Math.PI * 2, r = VILLAGE_RADIUS + 3 + rand() * 30;
-    tree(Math.cos(a) * r, Math.sin(a) * r, 1 + rand() * 0.8, false);
+    const tx = Math.cos(a) * r, tz = Math.sin(a) * r, ts = 1 + rand() * 0.8;
+    if (Math.abs(tx) < 5 && tz < -20) continue; // pad naar het bos vrij houden
+    tree(tx, tz, ts, false);
   }
 
   // ---------- Bloemetjes ----------
@@ -239,7 +241,8 @@ export function createWorld(scene) {
     const a1 = (i / posts) * Math.PI * 2, a2 = ((i + 1) / posts) * Math.PI * 2;
     const x1 = Math.cos(a1) * VILLAGE_RADIUS, z1 = Math.sin(a1) * VILLAGE_RADIUS;
     const x2 = Math.cos(a2) * VILLAGE_RADIUS, z2 = Math.sin(a2) * VILLAGE_RADIUS;
-    scene.add(mesh(new THREE.BoxGeometry(0.25, 1.2, 0.25), woodM, x1, 0.6, z1));
+    if (i !== 36) scene.add(mesh(new THREE.BoxGeometry(0.25, 1.2, 0.25), woodM, x1, 0.6, z1));
+    if (i === 35 || i === 36) continue; // opening voor de poort naar het bos (noorden)
     const len = Math.hypot(x2 - x1, z2 - z1);
     for (const h of [0.45, 0.9]) {
       const rail = mesh(new THREE.BoxGeometry(0.1, 0.14, len), woodM, (x1 + x2) / 2, h, (z1 + z2) / 2);
@@ -265,6 +268,12 @@ export function createWorld(scene) {
   colliders.push({ x: -4.6, z: -12, r: 1.5 });
   path(-4.6, -10.4, -2, -3.4, 1.6);
 
+  // ---------- Poort naar het bos (noordkant) ----------
+  path(0, -4, 0, -30, 2);
+  world.gate = createForestGate(scene, 0, -VILLAGE_RADIUS);
+  world.gateSpot = { x: 0, z: -22.4 };   // hier loop je het bos in
+  world.returnSpot = { x: 0, z: -20.2 }; // hier kom je terug uit het bos
+
   world.npcSpot = { x: -5.8, z: -9.2 };
   world.gearSpots = [
     { id: 'tandwiel-1', x: 16.5, z: 6.5 },   // achter het blauwe huis
@@ -274,7 +283,34 @@ export function createWorld(scene) {
   return world;
 }
 
-function signTexture(text, bg) {
+// Een houten poortboog met een bordje "HET BOS"
+function createForestGate(scene, x, z) {
+  const g = new THREE.Group();
+  const wood = mat(0x8b5a2b), leaf = mat(0x40916c);
+  for (const px of [-1.8, 1.8]) mesh(new THREE.BoxGeometry(0.45, 3.4, 0.45), wood, px, 1.7, 0, g);
+  mesh(new THREE.BoxGeometry(4.4, 0.5, 0.6), wood, 0, 3.5, 0, g);
+  for (const lx of [-1.6, 0, 1.6]) mesh(new THREE.IcosahedronGeometry(0.7, 0), leaf, lx, 3.95, 0, g);
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.8), new THREE.MeshBasicMaterial({ map: signTexture('HET BOS', '#40916c') }));
+  sign.position.set(0, 2.85, 0.32); g.add(sign);
+  // Deurtjes die opengaan als de clonemachine werkt
+  const doors = [-1, 1].map((side) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(side * 1.6, 0, 0);
+    mesh(new THREE.BoxGeometry(1.6, 1.4, 0.15), mat(0xc68b59), -side * 0.8, 0.8, 0, pivot);
+    g.add(pivot);
+    return { pivot, side };
+  });
+  g.position.set(x, 0, z);
+  scene.add(g);
+  const gate = { group: g, open: false };
+  gate.setOpen = (yes) => {
+    gate.open = yes;
+    doors.forEach((d) => { d.pivot.rotation.y = yes ? d.side * 1.6 : 0; });
+  };
+  return gate;
+}
+
+export function signTexture(text, bg) {
   const c = document.createElement('canvas');
   c.width = 256; c.height = 96;
   const g = c.getContext('2d');
@@ -287,7 +323,8 @@ function signTexture(text, bg) {
   return tex;
 }
 
-function createCloneMachine(scene, x, z, updaters) {
+function createCloneMachine(scene, x, z0, updaters) {
+  const z = z0;
   const g = new THREE.Group();
   const metal = mat(0x8d99ae, { metalness: 0.4, roughness: 0.5 });
   mesh(new THREE.CylinderGeometry(1.3, 1.4, 0.5, 8), metal, 0, 0.25, 0, g);
@@ -324,17 +361,49 @@ function createCloneMachine(scene, x, z, updaters) {
   g.rotation.y = 0.5;
   scene.add(g);
 
-  const machine = { group: g, repaired: false };
+  // Gloeiende ring op de grond (alleen als hij gerepareerd is)
+  const glow = new THREE.Mesh(new THREE.RingGeometry(1.5, 2.1, 16).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x7cf7ff, transparent: true, opacity: 0.5, depthWrite: false }));
+  glow.position.y = 0.04; glow.visible = false; g.add(glow);
+  // Lichtstraal in het glas (bij het klonen)
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 2.2, 8, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+  beam.position.y = 1.6; g.add(beam);
+  // Glitters bij het klonen (vaste groep, wordt steeds opnieuw gebruikt)
+  const glitterColors = [0xffffff, 0x7cf7ff, 0xffd23f, 0xc77dff];
+  const glitter = [];
+  for (let i = 0; i < 24; i++) {
+    const s = new THREE.Mesh(new THREE.OctahedronGeometry(0.12, 0), new THREE.MeshBasicMaterial({ color: glitterColors[i % 4] }));
+    s.visible = false; g.add(s);
+    glitter.push({ mesh: s, v: new THREE.Vector3(), life: 0 });
+  }
+
+  const machine = { group: g, repaired: false, x, z, zapT: 0 };
+  // Plek voor de machine waar nieuwe clones verschijnen
+  machine.front = { x: x + Math.sin(0.5) * 2.4, z: z + Math.cos(0.5) * 2.4 };
   machine.setGearsInside = (n) => slots.forEach((s, i) => { s.visible = i < n; });
   machine.setRepaired = (yes) => {
+    if (machine.repaired === yes && sign.material.map) return;
     machine.repaired = yes;
-    sign.material.map = signTexture(yes ? 'BIJNA KLAAR' : 'KAPOT', yes ? '#2a9d8f' : '#e63946');
+    if (sign.material.map) sign.material.map.dispose();
+    sign.material.map = signTexture(yes ? 'KLAAR!' : 'KAPOT', yes ? '#2a9d8f' : '#e63946');
     sign.material.needsUpdate = true;
     lamp.material.color.set(yes ? 0x33ff77 : 0xff3333);
-    glass.material.emissive.set(yes ? 0x1d6f5a : 0x113344);
+    glow.visible = yes;
     if (yes) machine.setGearsInside(3);
   };
-  updaters.push((t) => {
+  // Pats! Flits, glitters en de machine schudt.
+  machine.zap = () => {
+    machine.zapT = 1;
+    glitter.forEach((p, i) => {
+      p.mesh.position.set(0, 1.6, 0);
+      const a = (i / glitter.length) * Math.PI * 2;
+      p.v.set(Math.cos(a) * (2 + Math.random() * 2), 3 + Math.random() * 4, Math.sin(a) * (2 + Math.random() * 2));
+      p.life = 1 + Math.random() * 0.5;
+      p.mesh.visible = true;
+    });
+  };
+  updaters.push((t, dt) => {
     lamp.visible = machine.repaired || Math.sin(t * 8) > 0;
     dome.rotation.y = t * (machine.repaired ? 1.5 : 0.2);
     slots.forEach((s, i) => { s.rotation.z = t * (i % 2 ? -2 : 2); });
@@ -343,6 +412,30 @@ function createCloneMachine(scene, x, z, updaters) {
       s.visible = !machine.repaired && Math.sin(t * 3 + i) > 0.2;
       s.position.set(1.25 + Math.cos(i * 2) * k * 0.8, 2.6 + k * 0.7 - k * k * 1.2, -0.4 + Math.sin(i * 2) * k * 0.8);
     });
+    // Blij gloeien als hij werkt
+    const zp = machine.zapT;
+    if (machine.repaired) {
+      const pulse = 0.5 + Math.sin(t * 3) * 0.5;
+      glass.material.emissive.setRGB(0.1 + pulse * 0.15 + zp, 0.4 + pulse * 0.3 + zp, 0.5 + pulse * 0.3 + zp);
+      glow.material.opacity = 0.35 + pulse * 0.3;
+      glow.scale.setScalar(1 + pulse * 0.08);
+    } else {
+      glass.material.emissive.set(0x113344);
+    }
+    // Schudden + lichtstraal tijdens het klonen
+    beam.material.opacity = zp * 0.9;
+    g.position.x = x + (zp > 0 ? Math.sin(t * 60) * 0.08 * zp : 0);
+    g.position.z = z0 + (zp > 0 ? Math.cos(t * 53) * 0.08 * zp : 0);
+    g.scale.y = 1 + zp * 0.08 * Math.sin(t * 40);
+    machine.zapT = Math.max(0, zp - (dt || 0.016) * 1.2);
+    for (const p of glitter) {
+      if (p.life <= 0) continue;
+      p.life -= dt || 0.016;
+      p.v.y -= 9 * (dt || 0.016);
+      p.mesh.position.addScaledVector(p.v, dt || 0.016);
+      p.mesh.rotation.x += 0.2; p.mesh.rotation.y += 0.15;
+      if (p.life <= 0 || p.mesh.position.y < 0) { p.life = 0; p.mesh.visible = false; }
+    }
   });
   return machine;
 }

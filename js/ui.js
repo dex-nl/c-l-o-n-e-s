@@ -5,7 +5,7 @@ export const ui = {
   dialogOpen: false,
   _lines: [], _i: 0, _done: null, _toastTimer: 0,
 
-  setQuest(html) { $('quest').innerHTML = html; },
+  setQuest(html) { const q = $('quest'); if (q.innerHTML !== html) q.innerHTML = html; },
 
   setTalkReady(ready, label = 'Praat') {
     const b = $('talk-btn');
@@ -40,6 +40,32 @@ export const ui = {
     } else {
       $('dialog-text').textContent = this._lines[this._i];
     }
+  },
+
+  setCloneButton(show, full) {
+    const b = $('clone-btn');
+    b.classList.toggle('hidden', !show);
+    b.classList.toggle('full', !!full);
+  },
+
+  setSquadButtons(stay, follow) {
+    $('stay-btn').classList.toggle('hidden', !stay);
+    $('follow-btn').classList.toggle('hidden', !follow);
+  },
+
+  fade(on) { $('fade').classList.toggle('on', on); },
+
+  setCloneCount(show, n, max, mapPieces = 0) {
+    const c = $('clone-count');
+    c.classList.toggle('hidden', !show);
+    const text = `👥 Clones: ${n}/${max}` + (mapPieces ? ` · 🗺️ ${mapPieces}` : '');
+    if (c.textContent !== text) c.textContent = text;
+  },
+
+  flash() {
+    const f = $('flash');
+    f.classList.add('on');
+    requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove('on')));
   },
 
   hideTitle() { $('title').classList.add('gone'); },
