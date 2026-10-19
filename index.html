@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <title>C.L.O.N.E.S</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#7ec8e3">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="C.L.O.N.E.S">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="css/style.css">
+  <!-- Three.js komt van een CDN: geen npm en geen build-stap nodig. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"
+    }
+  }
+  </script>
+</head>
+<body>
+  <canvas id="game"></canvas>
+
+  <!-- Opdracht bovenin -->
+  <div id="quest" class="panel"></div>
+
+  <!-- Korte meldingen -->
+  <div id="toast"></div>
+
+  <!-- Titel bij het starten -->
+  <div id="title">C.L.O.N.E.S</div>
+
+  <!-- Joystick (links) -->
+  <div id="joy-base"><div id="joy-knob"></div></div>
+
+  <!-- Praat-knop (rechts) -->
+  <button id="talk-btn" type="button">Praat</button>
+
+  <!-- Praatwolk -->
+  <div id="dialog" class="hidden">
+    <div id="dialog-name"></div>
+    <div id="dialog-text"></div>
+    <div id="dialog-next">Tik om verder te gaan ▶</div>
+  </div>
+
+  <!-- Hint als het scherm rechtop staat -->
+  <div id="rotate-hint">
+    <div class="rotate-icon">📱↻</div>
+    <div>Draai je scherm!</div>
+    <small>Dit spel speel je liggend.</small>
+  </div>
+
+  <!-- Melding als 3D niet werkt -->
+  <div id="error" class="hidden"></div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
