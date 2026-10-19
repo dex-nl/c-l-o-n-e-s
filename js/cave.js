@@ -176,7 +176,7 @@ export function createCave(group) {
     id: 'grot', name: 'De Slijmgrot', group, colliders: [], boxes, talkables,
     bounds: { minX: tx(0), maxX: tx(W - 1), minZ: tz(0), maxZ: tz(H - 1) },
     music: 'grot',
-    env: { sky: null, background: 0x0d0a14, fog: [0x0d0a14, 12, 34], hemi: [0x8d7fc2, 0x1a1426, 0.75], sun: [0x9db4ff, 0.45], cam: [0, 12.5, 7] },
+    env: { sky: null, background: 0x0d0a14, fog: [0x0d0a14, 17, 40], hemi: [0x8d7fc2, 0x1a1426, 0.75], sun: [0x9db4ff, 0.45], cam: [0, 14, 6.5] },
     spawns: { fromBos: { x: entrance.x, z: entrance.z - 2.4, rot: Math.PI } },
     exit: { x: entrance.x, z: entrance.z + 0.3 },
     slimeSpots, king,
