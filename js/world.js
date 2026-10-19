@@ -287,7 +287,8 @@ function signTexture(text, bg) {
   return tex;
 }
 
-function createCloneMachine(scene, x, z, updaters) {
+function createCloneMachine(scene, x, z0, updaters) {
+  const z = z0;
   const g = new THREE.Group();
   const metal = mat(0x8d99ae, { metalness: 0.4, roughness: 0.5 });
   mesh(new THREE.CylinderGeometry(1.3, 1.4, 0.5, 8), metal, 0, 0.25, 0, g);
@@ -324,17 +325,49 @@ function createCloneMachine(scene, x, z, updaters) {
   g.rotation.y = 0.5;
   scene.add(g);
 
-  const machine = { group: g, repaired: false };
+  // Gloeiende ring op de grond (alleen als hij gerepareerd is)
+  const glow = new THREE.Mesh(new THREE.RingGeometry(1.5, 2.1, 16).rotateX(-Math.PI / 2),
+    new THREE.MeshBasicMaterial({ color: 0x7cf7ff, transparent: true, opacity: 0.5, depthWrite: false }));
+  glow.position.y = 0.04; glow.visible = false; g.add(glow);
+  // Lichtstraal in het glas (bij het klonen)
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 2.2, 8, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false }));
+  beam.position.y = 1.6; g.add(beam);
+  // Glitters bij het klonen (vaste groep, wordt steeds opnieuw gebruikt)
+  const glitterColors = [0xffffff, 0x7cf7ff, 0xffd23f, 0xc77dff];
+  const glitter = [];
+  for (let i = 0; i < 24; i++) {
+    const s = new THREE.Mesh(new THREE.OctahedronGeometry(0.12, 0), new THREE.MeshBasicMaterial({ color: glitterColors[i % 4] }));
+    s.visible = false; g.add(s);
+    glitter.push({ mesh: s, v: new THREE.Vector3(), life: 0 });
+  }
+
+  const machine = { group: g, repaired: false, x, z, zapT: 0 };
+  // Plek voor de machine waar nieuwe clones verschijnen
+  machine.front = { x: x + Math.sin(0.5) * 2.4, z: z + Math.cos(0.5) * 2.4 };
   machine.setGearsInside = (n) => slots.forEach((s, i) => { s.visible = i < n; });
   machine.setRepaired = (yes) => {
+    if (machine.repaired === yes && sign.material.map) return;
     machine.repaired = yes;
-    sign.material.map = signTexture(yes ? 'BIJNA KLAAR' : 'KAPOT', yes ? '#2a9d8f' : '#e63946');
+    if (sign.material.map) sign.material.map.dispose();
+    sign.material.map = signTexture(yes ? 'KLAAR!' : 'KAPOT', yes ? '#2a9d8f' : '#e63946');
     sign.material.needsUpdate = true;
     lamp.material.color.set(yes ? 0x33ff77 : 0xff3333);
-    glass.material.emissive.set(yes ? 0x1d6f5a : 0x113344);
+    glow.visible = yes;
     if (yes) machine.setGearsInside(3);
   };
-  updaters.push((t) => {
+  // Pats! Flits, glitters en de machine schudt.
+  machine.zap = () => {
+    machine.zapT = 1;
+    glitter.forEach((p, i) => {
+      p.mesh.position.set(0, 1.6, 0);
+      const a = (i / glitter.length) * Math.PI * 2;
+      p.v.set(Math.cos(a) * (2 + Math.random() * 2), 3 + Math.random() * 4, Math.sin(a) * (2 + Math.random() * 2));
+      p.life = 1 + Math.random() * 0.5;
+      p.mesh.visible = true;
+    });
+  };
+  updaters.push((t, dt) => {
     lamp.visible = machine.repaired || Math.sin(t * 8) > 0;
     dome.rotation.y = t * (machine.repaired ? 1.5 : 0.2);
     slots.forEach((s, i) => { s.rotation.z = t * (i % 2 ? -2 : 2); });
@@ -343,6 +376,30 @@ function createCloneMachine(scene, x, z, updaters) {
       s.visible = !machine.repaired && Math.sin(t * 3 + i) > 0.2;
       s.position.set(1.25 + Math.cos(i * 2) * k * 0.8, 2.6 + k * 0.7 - k * k * 1.2, -0.4 + Math.sin(i * 2) * k * 0.8);
     });
+    // Blij gloeien als hij werkt
+    const zp = machine.zapT;
+    if (machine.repaired) {
+      const pulse = 0.5 + Math.sin(t * 3) * 0.5;
+      glass.material.emissive.setRGB(0.1 + pulse * 0.15 + zp, 0.4 + pulse * 0.3 + zp, 0.5 + pulse * 0.3 + zp);
+      glow.material.opacity = 0.35 + pulse * 0.3;
+      glow.scale.setScalar(1 + pulse * 0.08);
+    } else {
+      glass.material.emissive.set(0x113344);
+    }
+    // Schudden + lichtstraal tijdens het klonen
+    beam.material.opacity = zp * 0.9;
+    g.position.x = x + (zp > 0 ? Math.sin(t * 60) * 0.08 * zp : 0);
+    g.position.z = z0 + (zp > 0 ? Math.cos(t * 53) * 0.08 * zp : 0);
+    g.scale.y = 1 + zp * 0.08 * Math.sin(t * 40);
+    machine.zapT = Math.max(0, zp - (dt || 0.016) * 1.2);
+    for (const p of glitter) {
+      if (p.life <= 0) continue;
+      p.life -= dt || 0.016;
+      p.v.y -= 9 * (dt || 0.016);
+      p.mesh.position.addScaledVector(p.v, dt || 0.016);
+      p.mesh.rotation.x += 0.2; p.mesh.rotation.y += 0.15;
+      if (p.life <= 0 || p.mesh.position.y < 0) { p.life = 0; p.mesh.visible = false; }
+    }
   });
   return machine;
 }

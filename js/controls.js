@@ -1,18 +1,20 @@
 // Besturing: joystick + Praat-knop op het scherm (iPad) en toetsenbord (laptop).
-const JOY_RADIUS = 60;
+// De joystick groeit mee met het scherm, dus we meten hem op.
+const joyRadius = (base) => Math.max(36, (base.offsetWidth || 150) * 0.4);
 
 export class Controls {
-  constructor({ canvas, base, knob, talkBtn, onAction, onTap }) {
+  constructor({ canvas, base, knob, talkBtn, cloneBtn, onAction, onClone, onTap }) {
     this.keys = new Set();
     this.joy = { id: null, x: 0, y: 0, sx: 0, sy: 0, startT: 0, moved: 0 };
     this.taps = new Map();
     this.base = base; this.knob = knob;
-    this.onAction = onAction; this.onTap = onTap;
+    this.onAction = onAction; this.onTap = onTap; this.onClone = onClone;
 
     // Toetsenbord
     window.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
       if (['e', ' ', 'enter'].includes(k)) { if (!e.repeat) this.onAction(); e.preventDefault(); return; }
+      if (k === 'c') { if (!e.repeat && this.onClone) this.onClone(); return; }
       this.keys.add(k);
       if (k.startsWith('arrow')) e.preventDefault();
     });
@@ -36,9 +38,10 @@ export class Controls {
       let dx = e.clientX - this.joy.sx, dy = e.clientY - this.joy.sy;
       const d = Math.hypot(dx, dy);
       this.joy.moved = Math.max(this.joy.moved, d);
-      if (d > JOY_RADIUS) { dx *= JOY_RADIUS / d; dy *= JOY_RADIUS / d; }
-      this.joy.x = dx / JOY_RADIUS;
-      this.joy.y = -dy / JOY_RADIUS;
+      const R = joyRadius(this.base);
+      if (d > R) { dx *= R / d; dy *= R / d; }
+      this.joy.x = dx / R;
+      this.joy.y = -dy / R;
       knob.style.transform = `translate(${dx}px, ${dy}px)`;
     });
     const end = (e) => {
@@ -60,6 +63,8 @@ export class Controls {
 
     // Praat-knop
     talkBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); this.onAction(); });
+    // Kloon-knop
+    if (cloneBtn) cloneBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); this.onClone(); });
 
     // Geen inzoomen, scrollen of terugveren op de iPad
     const stop = (e) => e.preventDefault();
@@ -71,8 +76,9 @@ export class Controls {
   }
 
   placeBase(x, y) {
-    this.base.style.left = `${x - 75}px`;
-    this.base.style.top = `${y - 75}px`;
+    const h = (this.base.offsetWidth || 150) / 2;
+    this.base.style.left = `${x - h}px`;
+    this.base.style.top = `${y - h}px`;
     this.base.style.bottom = 'auto';
   }
 

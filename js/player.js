@@ -2,17 +2,43 @@
 import * as THREE from 'three';
 import { makeCharacter, animateWalk, mat } from './characters.js';
 
-const RADIUS = 0.45;
+export const RADIUS = 0.45;
+
+// Het poppetje van de held (ook gebruikt voor de clones).
+export function makeHeroModel() {
+  const ch = makeCharacter({ shirt: 0x3a86ff, pants: 0x2d3142, hair: 0x6b3e26 });
+  // Een rood petje voor de held
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.16, 0.66), mat(0xe63946));
+  cap.position.set(0, 0.38, 0); cap.castShadow = true;
+  const klep = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.06, 0.3), mat(0xe63946));
+  klep.position.set(0, 0.32, 0.42); klep.castShadow = true;
+  ch.head.add(cap, klep);
+  return ch;
+}
+
+// Duwt een positie uit huizen, bomen en de vijver, en houdt hem binnen het hek.
+export function collide(pos, world, radius = RADIUS) {
+  for (let i = 0; i < 3; i++) {
+    for (const c of world.colliders) {
+      const dx = pos.x - c.x, dz = pos.z - c.z;
+      const d = Math.hypot(dx, dz), min = c.r + radius;
+      if (d < min) {
+        if (d < 1e-4) { pos.x += min; continue; }
+        pos.x = c.x + (dx / d) * min;
+        pos.z = c.z + (dz / d) * min;
+      }
+    }
+    const r = Math.hypot(pos.x, pos.z);
+    if (r > world.bounds) {
+      pos.x *= world.bounds / r;
+      pos.z *= world.bounds / r;
+    }
+  }
+}
 
 export class Player {
   constructor(scene) {
-    this.ch = makeCharacter({ shirt: 0x3a86ff, pants: 0x2d3142, hair: 0x6b3e26 });
-    // Een rood petje voor de held
-    const cap = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.16, 0.66), mat(0xe63946));
-    cap.position.set(0, 0.38, 0); cap.castShadow = true;
-    const klep = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.06, 0.3), mat(0xe63946));
-    klep.position.set(0, 0.32, 0.42); klep.castShadow = true;
-    this.ch.head.add(cap, klep);
+    this.ch = makeHeroModel();
     this.mesh = this.ch.group;
     scene.add(this.mesh);
     this.pos = this.mesh.position;
@@ -54,22 +80,5 @@ export class Player {
     animateWalk(this.ch, this.phase, this.walkAmount);
   }
 
-  resolveCollisions(world) {
-    for (let i = 0; i < 3; i++) {
-      for (const c of world.colliders) {
-        const dx = this.pos.x - c.x, dz = this.pos.z - c.z;
-        const d = Math.hypot(dx, dz), min = c.r + RADIUS;
-        if (d < min) {
-          if (d < 1e-4) { this.pos.x += min; continue; }
-          this.pos.x = c.x + (dx / d) * min;
-          this.pos.z = c.z + (dz / d) * min;
-        }
-      }
-      const r = Math.hypot(this.pos.x, this.pos.z);
-      if (r > world.bounds) {
-        this.pos.x *= world.bounds / r;
-        this.pos.z *= world.bounds / r;
-      }
-    }
-  }
+  resolveCollisions(world) { collide(this.pos, world); }
 }

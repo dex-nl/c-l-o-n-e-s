@@ -19,8 +19,8 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - Gaat er iets stuk? Ga terug naar een **eerdere commit**.
 
 ## Het spel
-- Spelen op de **iPad, liggend**: aanraakbediening (joystick links, grote Praat-knop rechts, tikken op personages), een hint als het scherm rechtop staat, en een **manifest + icoon** zodat "Zet op beginscherm" het spel beeldvullend opent.
-- Ook te spelen met het toetsenbord (WASD/pijltjes + E/spatie).
+- Spelen op de **iPad, liggend** (en ook iPhone liggend en MacBook): aanraakbediening (joystick links, grote Praat- en Kloon-knop rechts, tikken op personages; alles schaalt mee met het scherm), een hint als het scherm rechtop staat, en een **manifest + icoon** zodat "Zet op beginscherm" het spel beeldvullend opent.
+- Ook te spelen met het toetsenbord (WASD/pijltjes + E/spatie, C = klonen).
 - Soort spel: avontuur in een wereld (zoals Zelda of Pokémon).
 - Stijl: **low-poly 3D** met echte schaduwen, golvend water en dingen die bewegen.
 - Moet erin: een **clonemachine** waarmee je clones van jezelf maakt.
@@ -33,7 +33,8 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/player.js`, `js/characters.js` – de speler en de poppetjes
 - `js/npc.js` – Professor Bolt
 - `js/quest.js` – de opdracht en wat de uitvinder zegt
-- `js/controls.js` – joystick, Praat-knop en toetsenbord
+- `js/controls.js` – joystick, Praat- en Kloon-knop en toetsenbord
+- `js/clones.js` – de clones die je volgen
 - `js/ui.js` – praatwolk en meldingen
 - `js/save.js` – opslaan en oude saves omzetten
 - `.github/workflows/pages.yml` – zet het spel op GitHub Pages

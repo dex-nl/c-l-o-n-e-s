@@ -3,12 +3,14 @@ import * as THREE from 'three';
 import { createWorld, makeGear } from './world.js';
 import { Player } from './player.js';
 import { Npc } from './npc.js';
+import { CloneSquad, MAX_CLONES } from './clones.js';
 import { Controls } from './controls.js';
 import { loadSave, writeSave } from './save.js';
 import { ui } from './ui.js';
 import { NPC_NAME, GEARS_NEEDED, questText, npcLines } from './quest.js';
 
 const TALK_DISTANCE = 3.2;
+const CLONE_DISTANCE = 3.4; // hoe dichtbij de clonemachine je moet staan
 const canvas = document.getElementById('game');
 
 let renderer;
@@ -58,6 +60,10 @@ const state = loadSave();
 player.setPosition(state.player.x, state.player.z, state.player.rot);
 player.resolveCollisions(world);
 
+// Clones terugzetten (die volgen de speler)
+const squad = new CloneSquad(scene, world);
+squad.restore(state.clones || 0, player);
+
 // Tandwielen in het dorp
 const gears = world.gearSpots.map((spot) => {
   const g = makeGear(0.45);
@@ -81,19 +87,44 @@ function refresh() {
   if (q.state !== 'klaar') world.machine.setGearsInside(0);
   npc.showMarker(q.state === 'nieuw' || (q.state === 'bezig' && q.gears.length >= GEARS_NEEDED));
   ui.setQuest(questText(q));
+  ui.setCloneCount(q.state === 'klaar', squad.count, MAX_CLONES);
 }
 
 let dirty = false;
 function save() {
   state.player = { x: +player.pos.x.toFixed(2), z: +player.pos.z.toFixed(2), rot: +player.rot.toFixed(2) };
+  state.clones = squad.count;
   writeSave(state);
   dirty = false;
+}
+
+// ---------- Klonen ----------
+function nearMachine() {
+  return state.quest.state === 'klaar' &&
+    Math.hypot(player.pos.x - world.machine.x, player.pos.z - world.machine.z) <= CLONE_DISTANCE;
+}
+
+let lastCloneAt = -1e9; // echte tijd (ms), zodat je niet per ongeluk dubbel kloont
+function makeClone() {
+  if (ui.dialogOpen || !nearMachine() || performance.now() - lastCloneAt < 400) return;
+  if (squad.count >= MAX_CLONES) {
+    ui.toast(`Je hebt al ${MAX_CLONES} clones! Meer passen er nog niet in het dorp 😄`, 2800);
+    return;
+  }
+  lastCloneAt = performance.now();
+  world.machine.zap();
+  ui.flash();
+  squad.add(world.machine.front.x, world.machine.front.z);
+  const n = squad.count;
+  ui.toast(n >= MAX_CLONES ? `✨ Clone ${n}! Nu heb je er ${MAX_CLONES}: je hele team! ✨` : `✨ Pats! Een clone! (${n}/${MAX_CLONES}) ✨`);
+  refresh();
+  save();
 }
 
 // ---------- Praten ----------
 function talk() {
   if (ui.dialogOpen) { ui.nextLine(); return; }
-  if (npc.distanceTo(player.pos) > TALK_DISTANCE) return;
+  if (npc.distanceTo(player.pos) > TALK_DISTANCE) { if (nearMachine()) makeClone(); return; }
   const q = state.quest;
   const wasAllFound = q.state === 'bezig' && q.gears.length >= GEARS_NEEDED;
   ui.showDialog(NPC_NAME, npcLines(q), () => {
@@ -126,7 +157,9 @@ const controls = new Controls({
   base: document.getElementById('joy-base'),
   knob: document.getElementById('joy-knob'),
   talkBtn: document.getElementById('talk-btn'),
+  cloneBtn: document.getElementById('clone-btn'),
   onAction: talk,
+  onClone: makeClone,
   onTap,
 });
 
@@ -164,6 +197,7 @@ function frame() {
 
   world.update(t, dt);
   npc.update(t, dt, player.pos);
+  squad.update(t, dt, player);
 
   // Tandwielen draaien en oppakken
   for (const g of gears) {
@@ -193,6 +227,8 @@ function frame() {
   // Praat-knop oplichten als je dichtbij bent
   const near = npc.distanceTo(player.pos) <= TALK_DISTANCE;
   ui.setTalkReady(ui.dialogOpen || near, ui.dialogOpen ? 'Verder' : 'Praat');
+  // Kloon-knop alleen bij de werkende machine
+  ui.setCloneButton(!ui.dialogOpen && nearMachine(), squad.count >= MAX_CLONES);
 
   // Camera volgt de speler soepel
   // (tijdens een gesprek schuift de camera opzij, zodat je de uitvinder goed ziet)
@@ -230,5 +266,5 @@ window.addEventListener('pagehide', save);
 document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
 
 // Handig om te testen (in de console): window.clones
-window.clones = { state, player, npc, talk, save, scene, camera, gears, renderer,
+window.clones = { state, player, npc, talk, save, squad, machine: world.machine, makeClone, scene, camera, gears, renderer,
   setDebugCam: (pos, look) => { debugCam = pos ? { pos, look } : null; } };

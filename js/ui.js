@@ -42,6 +42,25 @@ export const ui = {
     }
   },
 
+  setCloneButton(show, full) {
+    const b = $('clone-btn');
+    b.classList.toggle('hidden', !show);
+    b.classList.toggle('full', !!full);
+  },
+
+  setCloneCount(show, n, max) {
+    const c = $('clone-count');
+    c.classList.toggle('hidden', !show);
+    const text = `👥 Clones: ${n}/${max}`;
+    if (c.textContent !== text) c.textContent = text;
+  },
+
+  flash() {
+    const f = $('flash');
+    f.classList.add('on');
+    requestAnimationFrame(() => requestAnimationFrame(() => f.classList.remove('on')));
+  },
+
   hideTitle() { $('title').classList.add('gone'); },
 
   showError(text) { const e = $('error'); e.textContent = text; e.classList.remove('hidden'); },

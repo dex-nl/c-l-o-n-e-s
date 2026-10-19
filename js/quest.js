@@ -9,7 +9,7 @@ export function questText(quest) {
     if (n >= GEARS_NEEDED) return '⚙️ Alle tandwielen gevonden! Breng ze naar <b>Professor Bolt</b>';
     return `⚙️ Opdracht: zoek 3 gouden tandwielen <b>(${n}/3)</b>`;
   }
-  return '⭐ Opdracht klaar! De clonemachine is bijna gerepareerd';
+  return '⭐ De clonemachine werkt! Ga ernaast staan en druk op <b>Kloon!</b>';
 }
 
 // Wat zegt de uitvinder? Hangt af van hoe ver je bent.
@@ -28,10 +28,14 @@ export function npcLines(quest) {
       return [
         'Wauw! Je hebt alle 3 de tandwielen gevonden!',
         'Even inzetten... klik... klak... KLONK!',
-        'De clonemachine doet het bijna weer. Jij bent een echte held!',
+        'De clonemachine doet het weer! Jij bent een echte held!',
+        'Ga naast de machine staan en druk op de blauwe Kloon!-knop. Dan maakt hij een clone van jou!',
       ];
     }
     return [`Je hebt er nu ${n} van de 3. Kijk goed rond: bij de huizen, de bomen en de vijver!`];
   }
-  return ['De machine moet nog even opwarmen. Kom snel terug, dan gaan we hem samen testen!'];
+  return [
+    'Hij werkt! Mijn clonemachine doet het weer, dankzij jou!',
+    'Ga naast de machine staan en druk op Kloon! Je mag er wel 5 maken.',
+  ];
 }
