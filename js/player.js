@@ -16,10 +16,13 @@ export function makeHeroModel() {
   return ch;
 }
 
-// Duwt een positie uit huizen, bomen en de vijver, en houdt hem binnen het hek.
-export function collide(pos, world, radius = RADIUS) {
+// Duwt een positie uit huizen, bomen, muren en water, en houdt hem binnen het gebied.
+// zone.colliders bevat cirkels { x, z, r } en rechthoeken { box: true, minX, maxX, minZ, maxZ, off }.
+// zone.clamp(pos) houdt je binnen het gebied (anders: een cirkel met straal zone.bounds).
+export function collide(pos, zone, radius = RADIUS) {
   for (let i = 0; i < 3; i++) {
-    for (const c of world.colliders) {
+    for (const c of zone.colliders) {
+      if (c.box) { if (!c.off) pushOutOfBox(pos, c, radius); continue; }
       const dx = pos.x - c.x, dz = pos.z - c.z;
       const d = Math.hypot(dx, dz), min = c.r + radius;
       if (d < min) {
@@ -28,12 +31,30 @@ export function collide(pos, world, radius = RADIUS) {
         pos.z = c.z + (dz / d) * min;
       }
     }
+    if (zone.clamp) { zone.clamp(pos, radius); continue; }
     const r = Math.hypot(pos.x, pos.z);
-    if (r > world.bounds) {
-      pos.x *= world.bounds / r;
-      pos.z *= world.bounds / r;
+    if (r > zone.bounds) {
+      pos.x *= zone.bounds / r;
+      pos.z *= zone.bounds / r;
     }
   }
+}
+
+function pushOutOfBox(pos, b, radius) {
+  const cx = Math.max(b.minX, Math.min(pos.x, b.maxX));
+  const cz = Math.max(b.minZ, Math.min(pos.z, b.maxZ));
+  const dx = pos.x - cx, dz = pos.z - cz;
+  const d = Math.hypot(dx, dz);
+  if (d > 1e-4) {
+    if (d < radius) { pos.x = cx + (dx / d) * radius; pos.z = cz + (dz / d) * radius; }
+    return;
+  }
+  // Helemaal binnen de rechthoek: duw eruit langs de kortste kant
+  const opts = [
+    [b.minX - radius - pos.x, 0], [b.maxX + radius - pos.x, 0],
+    [0, b.minZ - radius - pos.z], [0, b.maxZ + radius - pos.z],
+  ].sort((p, q) => Math.abs(p[0] + p[1]) - Math.abs(q[0] + q[1]));
+  pos.x += opts[0][0]; pos.z += opts[0][1];
 }
 
 export class Player {

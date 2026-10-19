@@ -17,6 +17,7 @@ html, body {
   --joy: clamp(100px, 26vmin, 150px);
   --btn-font: clamp(16px, 4.2vmin, 30px);
   --hud-font: clamp(14px, 3.6vmin, 20px);
+  --btn2: clamp(56px, 14vmin, 112px);
   --sl: env(safe-area-inset-left, 0px); --sr: env(safe-area-inset-right, 0px);
   --st: env(safe-area-inset-top, 0px); --sb: env(safe-area-inset-bottom, 0px);
 }
@@ -84,6 +85,22 @@ html, body {
 #clone-btn:active { transform: translateY(4px); box-shadow: 0 3px 0 #1f5fc4; }
 #clone-btn.full { background: #8d99ae; box-shadow: 0 7px 0 #5c677d; animation: none; }
 #clone-btn.hidden { display: none; }
+
+/* Blijf / Volg: kleinere knoppen links van Praat */
+.small-btn {
+  position: fixed; bottom: calc(var(--gap) + var(--sb) + (var(--btn) - var(--btn2)) / 2);
+  width: var(--btn2); height: var(--btn2); border-radius: 50%; border: none; padding: 0;
+  color: #fff; font-size: clamp(14px, 3.6vmin, 24px); font-weight: bold; font-family: inherit; touch-action: none;
+  transition: transform .1s;
+}
+.small-btn.hidden { display: none; }
+.small-btn:active { transform: translateY(4px); }
+#stay-btn { right: calc(var(--gap) * 1.6 + var(--btn) + var(--sr)); background: #2a9d8f; box-shadow: 0 6px 0 #1b6b61; }
+#follow-btn { right: calc(var(--gap) * 2.2 + var(--btn) + var(--btn2) + var(--sr)); background: #9b5de5; box-shadow: 0 6px 0 #6a3aa8; }
+
+/* Zwart beeld bij een overgang */
+#fade { position: fixed; inset: 0; background: #10261a; opacity: 0; pointer-events: none; transition: opacity .35s; z-index: 40; }
+#fade.on { opacity: 1; }
 
 /* Teller met clones */
 #clone-count {

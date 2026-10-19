@@ -19,3 +19,14 @@
 - De draai-melding zegt nu **"Draai je scherm!"** (voor iPad én iPhone).
 - Dex heeft gekozen hoe je wint: een **schat aan het einde van de wereld**, en het wordt steeds moeilijker. Dat bouwen we later.
 - Getest in een testbrowser op iPad-, iPhone- en MacBook-formaat.
+
+## 19 oktober 2026 (deel 3): het bos!
+- Gebouwd: **gebied 1, het Fluisterbos**. Je komt erin via een nieuwe poort ("HET BOS") in het noorden van het dorp. Het beeld wordt even zwart en dan sta je in het bos.
+- Het bos is groter dan het dorp: veel hoekige bomen, paddenstoelen, struiken, een beekje met golvend water en een bruggetje, vuurvliegjes, vallende blaadjes en zonnestralen tussen de bomen.
+- **Uil Wijsje** zit op een boomstronk bij de ingang en legt uit hoe het werkt. Heb je te weinig clones? Dan zegt ze dat je terug moet naar de clonemachine.
+- Nieuw: de knoppen **Blijf** (toets F) en **Volg** (toets V). Met Blijf blijft een clone wachten, met Volg komen ze weer achter je aan.
+- **3 poorten met drukknoppen**, steeds een beetje moeilijker: 1 clone, dan 2 clones tegelijk, dan 3 clones. Ben je door een open poort gelopen, dan blijft hij open.
+- Aan het einde van het bos ligt **stuk 1 van de schatkaart**. Het pad naar het volgende gebied is nog dicht ("BINNENKORT").
+- Opslaan: nieuwe **versie 3** met waar je bent (dorp of bos), de poorten, de uil en de stukken schatkaart. Oude saves (versie 1, 2 of zonder versie) werken nog.
+- Werkwijze: elke stap komt nu op een **eigen branch** met een pull request. Dex of papa merget.
+- Getest in een testbrowser op iPad-, iPhone- en MacBook-formaat.

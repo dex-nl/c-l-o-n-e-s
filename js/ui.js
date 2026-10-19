@@ -5,7 +5,7 @@ export const ui = {
   dialogOpen: false,
   _lines: [], _i: 0, _done: null, _toastTimer: 0,
 
-  setQuest(html) { $('quest').innerHTML = html; },
+  setQuest(html) { const q = $('quest'); if (q.innerHTML !== html) q.innerHTML = html; },
 
   setTalkReady(ready, label = 'Praat') {
     const b = $('talk-btn');
@@ -48,10 +48,17 @@ export const ui = {
     b.classList.toggle('full', !!full);
   },
 
-  setCloneCount(show, n, max) {
+  setSquadButtons(stay, follow) {
+    $('stay-btn').classList.toggle('hidden', !stay);
+    $('follow-btn').classList.toggle('hidden', !follow);
+  },
+
+  fade(on) { $('fade').classList.toggle('on', on); },
+
+  setCloneCount(show, n, max, mapPieces = 0) {
     const c = $('clone-count');
     c.classList.toggle('hidden', !show);
-    const text = `👥 Clones: ${n}/${max}`;
+    const text = `👥 Clones: ${n}/${max}` + (mapPieces ? ` · 🗺️ ${mapPieces}` : '');
     if (c.textContent !== text) c.textContent = text;
   },
 

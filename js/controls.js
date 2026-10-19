@@ -3,18 +3,20 @@
 const joyRadius = (base) => Math.max(36, (base.offsetWidth || 150) * 0.4);
 
 export class Controls {
-  constructor({ canvas, base, knob, talkBtn, cloneBtn, onAction, onClone, onTap }) {
+  constructor({ canvas, base, knob, talkBtn, cloneBtn, stayBtn, followBtn, onAction, onClone, onStay, onFollow, onTap }) {
     this.keys = new Set();
     this.joy = { id: null, x: 0, y: 0, sx: 0, sy: 0, startT: 0, moved: 0 };
     this.taps = new Map();
     this.base = base; this.knob = knob;
-    this.onAction = onAction; this.onTap = onTap; this.onClone = onClone;
+    this.onAction = onAction; this.onTap = onTap; this.onClone = onClone; this.onStay = onStay; this.onFollow = onFollow;
 
     // Toetsenbord
     window.addEventListener('keydown', (e) => {
       const k = e.key.toLowerCase();
       if (['e', ' ', 'enter'].includes(k)) { if (!e.repeat) this.onAction(); e.preventDefault(); return; }
       if (k === 'c') { if (!e.repeat && this.onClone) this.onClone(); return; }
+      if (k === 'f') { if (!e.repeat && this.onStay) this.onStay(); return; }
+      if (k === 'v') { if (!e.repeat && this.onFollow) this.onFollow(); return; }
       this.keys.add(k);
       if (k.startsWith('arrow')) e.preventDefault();
     });
@@ -64,6 +66,9 @@ export class Controls {
     // Praat-knop
     talkBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); this.onAction(); });
     // Kloon-knop
+    const press = (btn, fn) => btn && btn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); fn(); });
+    press(stayBtn, () => this.onStay());
+    press(followBtn, () => this.onFollow());
     if (cloneBtn) cloneBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); this.onClone(); });
 
     // Geen inzoomen, scrollen of terugveren op de iPad
