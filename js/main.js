@@ -3,6 +3,10 @@ import * as THREE from 'three';
 import { createWorld, makeGear } from './world.js';
 import { createForest } from './forest.js';
 import { createCave } from './cave.js';
+import { createCity } from './city.js';
+import { buildCityShop, itemInfo, SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } from './cityshop.js';
+import { makeSignpost } from './props.js';
+import { Robot } from './robot.js';
 import { Player } from './player.js';
 import { makeBolt, makeKoopman, makeOma, Dog } from './npc.js';
 import { Controls } from './controls.js';
@@ -93,6 +97,7 @@ const world = addZone((g) => Object.assign(createWorld(g), {
 }));
 const forest = addZone(createForest);
 const cave = addZone(createCave);
+const city = addZone(createCity); // De Stad (idee van Joshua)
 
 // Dorpelingen
 const bolt = makeBolt(world.group, world.npcSpot);
@@ -101,13 +106,16 @@ const oma = makeOma(world.group, world.spots.oma);
 const hond = new Dog(world.group, world.spots.hond);
 world.colliders.push({ x: world.npcSpot.x, z: world.npcSpot.z, r: 0.5 }, { x: koopman.pos.x, z: koopman.pos.z, r: 0.45 });
 world.npcs = [bolt, koopman, oma, hond];
-world.talkables = [...world.npcs];
+world.talkables = [...world.npcs, makeSignpost(world.group, {
+  id: 'bord-stad', x: 10.6, z: -1.6, rot: -0.25, title: 'DE STAD →', color: '#e76f51',
+  lines: ['NAAR DE STAD', 'Loop rechtdoor naar de regenboogpoort.', 'In De Stad: een speelgoedwinkel, een snoepwinkel, een kledingwinkel en een boekwinkel!'],
+})];
 
 // Op de kaart
 world.mapItems = [{ x: 5, z: 10, r: 4.2, color: '#4fb3e8' }, { x: 0, z: 0, r: 1.3, color: '#9aa0a6' }];
 world.labels = [
   { x: -4.6, z: -14.5, text: 'Clonemachine' }, { x: 0, z: -21, text: 'Poort' },
-  { x: 7, z: 0.2, text: 'Kraam' }, { x: 5, z: 10, text: 'Vijver' },
+  { x: 7, z: 0.2, text: 'Kraam' }, { x: 5, z: 10, text: 'Vijver' }, { x: 20.5, z: 0, text: 'De Stad' },
 ];
 forest.labels = [{ x: 0, z: -20, text: 'Grotdeur' }, { x: 0, z: 21, text: 'Naar het dorp' }];
 cave.labels = [{ x: 0, z: 15, text: 'Ingang' }, { x: 0, z: -15, text: 'Koningszaal' }];
@@ -116,7 +124,10 @@ cave.labels = [{ x: 0, z: 15, text: 'Ingang' }, { x: 0, z: -15, text: 'Koningsza
 world.exits = [{
   x: 0, z: -22.4, r: 1.6, to: 'bos', spawn: () => forest.spawns.fromDorp,
   open: () => reached(state.quest, 'zwaard'), closedMsg: 'De poort is op slot. Misschien weet Professor Bolt meer...',
+}, {
+  x: 22.4, z: 0, r: 1.6, to: 'stad', spawn: () => city.spawns.fromDorp, open: () => true, // De Stad is altijd open
 }];
+city.exits = [{ x: city.exit.x, z: city.exit.z, r: 1.4, to: 'dorp', spawn: () => world.spots.uitStad, open: () => true }];
 forest.exits = [
   { x: 0, z: 22.6, r: 1.4, to: 'dorp', spawn: () => world.spots.uitBos, open: () => true },
   { x: 0, z: -22.3, r: 1.1, to: 'grot', spawn: () => cave.spawns.fromBos, open: () => forest.doorOpen },
@@ -128,9 +139,20 @@ const player = new Player(scene);
 const squad = new CloneSquad(scene);
 const fx = new Effects(scene);
 const pickups = new Pickups(scene);
+const robot = new Robot(scene);
 const state = loadSave();
 const hadSave = (() => { try { return !!localStorage.getItem(SAVE_KEY); } catch (e) { return false; } })();
 let hearts = state.maxHearts;
+let boost = 0; // hoe lang het Raketsnoep nog werkt (seconden)
+
+// De autootjes in De Stad stoppen voor de speler, de clones en Robotje Bliep
+city.getPeople = () => [player.pos, ...squad.list.map((c) => c.pos), ...(robot.g.visible ? [robot.pos] : [])];
+let lastHonk = 0;
+city.onHonk = () => {
+  sfx.toet();
+  const now = performance.now();
+  if (now - lastHonk > 8000) { ui.toast('🚗 Toet toet! Even opzij, alsjeblieft!', 2000); lastHonk = now; }
+};
 
 // Tandwielen in het dorp
 const gears = world.gearSpots.map((spot) => {
@@ -258,6 +280,7 @@ function setZone(id, spawn) {
   player.setPosition(spawn.x, spawn.z, spawn.rot ?? player.rot);
   player.resolveCollisions(zone);
   squad.regroup(player);
+  robot.snap(player);
   spawnEnemies(zone);
   if (id === 'dorp') hearts = state.maxHearts; // thuis word je weer helemaal beter
   playMusic(zone.music);
@@ -295,10 +318,14 @@ function faint() {
 }
 
 // ---------- Alles bijwerken als er iets verandert ----------
+const shirtColor = () => (state.shirt ? SHIRTS[state.shirt].color : DEFAULT_SHIRT.color);
 function applyGear() {
   if (player.swordLevel !== state.sword) player.setSword(state.sword);
   if (player.hatId !== state.hat) { player.setHat(state.hat); player.hatId = state.hat; }
-  if (squad.swordLevel !== state.sword || squad.hat !== state.hat) squad.setGear(state.sword, state.hat);
+  const shirt = shirtColor();
+  if (player.shirtColor !== shirt) { player.setShirt(shirt); player.shirtColor = shirt; }
+  if (squad.swordLevel !== state.sword || squad.hat !== state.hat || squad.shirt !== shirt) squad.setGear(state.sword, state.hat, shirt);
+  robot.show(state.toys.includes('robot'));
 }
 
 function refresh() {
@@ -316,6 +343,7 @@ function refresh() {
   forest.setDoorOpen(reached(q, 'grot'));
   bolt.showMarker(boltHasNews(state));
   koopman.showMarker(reached(q, 'zwaard') && state.crystals >= 5 && state.hats.length === 0);
+  city.mayor.showMarker(!state.cityGift);
   applyGear();
   const batteryHere = pickups.list.some((p) => p.type === 'batterij');
   ui.setQuest(batteryHere ? '🔋 Pak de <b>Superbatterij</b>!' : questText(state, game.zone.id));
@@ -353,6 +381,14 @@ function talkTo(t) {
   ui.showDialog(t.name, lines, () => {
     if (t.id === 'bolt') afterBolt(before, wasAllFound);
     if (t.id === 'koopman') openShop();
+    if (t.shop) openCityShop(t);
+    if (t.id === 'burgemeester' && !state.cityGift) {
+      state.cityGift = true;
+      state.crystals += 10;
+      fx.sparkle({ x: player.pos.x, y: 1.5, z: player.pos.z }, [0x7af7ff, 0xffffff], 30, 4);
+      sfx.tada();
+      ui.toast('🎁 Je kreeg 10 kristallen 💎 van Burgemeester Bert!', 3000);
+    }
     refresh();
     save();
   }, t.voice);
@@ -464,6 +500,60 @@ function openShop() {
   ui.openPanel('Kraam van Koopman Kees', build);
 }
 
+// De winkels in De Stad: betalen met dezelfde kristallen als bij Koopman Kees
+function openCityShop(keeper) {
+  const build = (body) => buildCityShop(body, keeper.shop, state, (item) => {
+    if (state.crystals < item.price) return; // (kan niet, maar voor de zekerheid)
+    const d = itemInfo(item);
+    state.crystals -= item.price;
+    if (item.kind === 'toy') state.toys.push(item.id);
+    if (item.kind === 'shirt') { state.shirts.push(item.id); state.shirt = item.id; }
+    if (item.kind === 'book') state.books.push(item.id);
+    if (item.kind === 'candy') state.candy[item.id] = (state.candy[item.id] || 0) + 1;
+    sfx.buy();
+    if (item.kind === 'toy' && item.id === 'robot') setTimeout(() => robot.hop(), 400);
+    const where = item.kind === 'shirt' ? 'Je hebt hem meteen aan!' : 'Hij zit in je rugzak 🎒';
+    ui.toast(`${d.icon} ${d.name} ${item.price ? 'gekocht' : 'gekregen'}! ${where}`, 2600);
+    refresh();
+    save();
+    ui.refreshPanel(build);
+  }, (item) => {
+    const d = itemInfo(item);
+    const short = item.price - state.crystals;
+    sfx.nope();
+    ui.toast(`Oei, je hebt nog net niet genoeg kristallen voor ${d.name}. Nog ${short} 💎 nodig!`, 3000);
+  });
+  ui.openPanel(CITY_TITLES[keeper.shop], build);
+}
+const CITY_TITLES = { speelgoed: 'Speelgoedwinkel', snoep: 'Snoepwinkel', kleding: 'Kledingwinkel', boek: 'Boekwinkel' };
+
+// Snoep eten, met speelgoed spelen en boeken lezen (vanuit de rugzak)
+const cityActions = {
+  onShirt(id) { state.shirt = id; sfx.click(); refresh(); save(); },
+  onCandy(id) {
+    if (!(state.candy[id] > 0)) return;
+    state.candy[id]--;
+    sfx.slurp();
+    if (id === 'raket') { boost = 20; ui.toast('🚀 Zoef! 20 seconden supersnel!', 2500); }
+    if (id === 'lolly') { hearts = state.maxHearts; sfx.heal(); ui.toast('🍭 Mmm! Al je hartjes zijn weer vol.', 2500); }
+    if (id === 'knal') { fx.confetti(player.pos, 70); sfx.tada(); ui.toast('🎉 PATS! Confetti!', 2000); }
+    save();
+  },
+  onToy(id) {
+    ui.closePanel();
+    if (id === 'robot') robot.hop();
+    if (id === 'jojo' || id === 'bal') fx.sparkle({ x: player.pos.x, y: 1.6, z: player.pos.z }, [0xffd23f, 0xffffff], 14, 3);
+    if (id === 'beer') fx.sparkle({ x: player.pos.x, y: 1.8, z: player.pos.z }, [0xff8fab, 0xffffff], 18, 2);
+    sfx.ding();
+    ui.toast(`${TOYS[id].icon} ${TOYS[id].fun}`, 2800);
+  },
+  onBook(id) {
+    ui.closePanel();
+    talkPartner = null;
+    ui.showDialog(`${BOOKS[id].icon} ${BOOKS[id].name}`, BOOKS[id].lines, null, 1.0);
+  },
+};
+
 function openBackpack() {
   if (ui.dialogOpen || ui.panelOpen || !started) return;
   const build = (body) => buildBackpack(body, state, hearts, (id) => {
@@ -472,6 +562,10 @@ function openBackpack() {
     refresh();
     save();
     ui.refreshPanel(build);
+  }, {
+    ...cityActions,
+    onShirt(id) { cityActions.onShirt(id); ui.refreshPanel(build); },
+    onCandy(id) { cityActions.onCandy(id); ui.refreshPanel(build); },
   });
   ui.openPanel('Rugzak', build);
 }
@@ -479,6 +573,7 @@ function openBackpack() {
 // Waar moet je heen? (de ster op de kaart)
 function questTarget() {
   const q = state.quest, z = game.zone.id;
+  if (z === 'stad') return state.cityGift ? null : city.mayor.pos;
   const toVillageExit = { x: 0, z: 22 }, toForestFromCave = cave.exit;
   if (q.state === 'bezig') {
     if (q.gears.length >= GEARS_NEEDED) return bolt.pos;
@@ -608,6 +703,12 @@ function frame() {
   const paused = !started || ui.dialogOpen || ui.panelOpen;
 
   const move = paused || transition || fainting ? { x: 0, y: 0 } : controls.move;
+  // Raketsnoep: even supersnel
+  if (boost > 0 && !paused) {
+    boost = Math.max(0, boost - realDt);
+    if (boost === 0) ui.toast('Het Raketsnoep is op. Weer gewoon lopen!');
+  }
+  player.speed = boost > 0 ? 9.5 : 6;
   const before = player.pos.clone();
   player.update(dt, move, zone);
   if (before.distanceToSquared(player.pos) > 1e-6) dirty = true;
@@ -675,6 +776,8 @@ function frame() {
   }
 
   fx.update(realDt);
+  robot.update(t, realDt, player);
+  if (boost > 0 && player.walkAmount > 0.5 && Math.random() < 0.3) fx.sparkle({ x: player.pos.x, y: 0.5, z: player.pos.z }, [0xff8c42, 0xffd23f], 2, 1.5);
 
   // Baas: levensbalk en spannende muziek in de koningszaal
   if (zone === cave) {
@@ -760,7 +863,8 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 // Handig om te testen (in de console): window.clones
 window.clones = {
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
-  forest, cave, zones, game, goTo, setZone, openShop, openMap, openBackpack, pickups,
+  forest, cave, city, zones, game, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
+  get boost() { return boost; },
   get enemies() { return enemies; }, get hearts() { return hearts; }, set hearts(v) { hearts = v; },
   get started() { return started; }, start: () => { if (!started) document.getElementById('start').dispatchEvent(new PointerEvent('pointerup')); },
   setDebugCam: (pos, look) => { debugCam = pos ? { pos, look } : null; },

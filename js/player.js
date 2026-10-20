@@ -1,5 +1,5 @@
 // De speler: lopen, draaien, zwaaien met het zwaard en niet door muren of bomen heen gaan.
-import { makeHero, animateWalk, animateSwing, giveSword, setHat } from './characters.js';
+import { makeHero, animateWalk, animateSwing, giveSword, setHat, setShirt } from './characters.js';
 import { collide } from './physics.js';
 
 export const RADIUS = 0.45;
@@ -31,6 +31,7 @@ export class Player {
 
   setSword(level) { this.swordLevel = level; giveSword(this.ch, level); }
   setHat(id) { setHat(this.ch, id); }
+  setShirt(color) { setShirt(this.ch, color); }
 
   // Begin een zwaai. Geeft false als dat nu niet kan.
   swing() {

@@ -157,6 +157,11 @@ export function disposeTree(obj) {
   });
 }
 
+// Een ander shirt aan (de armen hebben hetzelfde shirt-materiaal als het lijf)
+export function setShirt(ch, color) {
+  ch.body.material.color.set(color);
+}
+
 export function setHat(ch, id) {
   if (ch.hat) { ch.head.remove(ch.hat); disposeTree(ch.hat); }
   ch.hat = null;

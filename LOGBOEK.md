@@ -27,3 +27,13 @@
 - Na Koning Slijm kan de clonemachine 10 clones maken.
 - Save naar versie 3. Oude saves blijven werken (getest met saves van versie 1 en 2).
 - Getest in een browser op de computer: het hele spel doorgespeeld, ook op een klein (iPhone-)scherm. Nog niet getest op een echte iPad.
+
+## 20 oktober 2026: De Stad met winkels (idee van Joshua)
+- Joshua, de vriend van Dex, had een idee: een poort naar een stad met winkels. Gemaakt met een AI-helper op de tak `stad`. **Dex of papa beslist of het erin komt.**
+- Nieuw: een regenboogpoort aan de oostkant van het dorp, en De Stad met een fontein, huizen, een parkje en vlaggetjes.
+- Vier winkels: speelgoed, snoep, kleding en boeken. Elke winkel heeft een eigen winkelier om mee te praten.
+- Betalen met de kristallen die er al waren. Te weinig? Dan zegt het spel lief hoeveel je nog nodig hebt.
+- Autootjes op een weg met zebrapaden. Ze stoppen altijd voor jou en je clones.
+- Robotje Bliep, Raketsnoep, nieuwe shirts (ook voor je clones) en boeken met tips.
+- Save naar versie 4. Oude saves blijven werken (getest met saves van versie 0, 1, 2, 3 en 4).
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.

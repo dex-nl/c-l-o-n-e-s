@@ -1,6 +1,6 @@
 // De clones: kopieën van de speler die in een rij achter je aan lopen.
 // Sta je even stil? Dan gaan ze dansen! Komen er slijmpjes? Dan vechten ze mee.
-import { makeHero, animateWalk, animateSwing, giveSword, setHat } from './characters.js';
+import { makeHero, animateWalk, animateSwing, giveSword, setHat, setShirt } from './characters.js';
 import { collide } from './physics.js';
 import { SWING_TIME } from './player.js';
 
@@ -31,22 +31,25 @@ export class CloneSquad {
     this.idle = 0;
     this.swordLevel = 0;
     this.hat = null;
+    this.shirt = null; // kleur van het shirt (uit de Kledingwinkel)
     this.holds = new Map(); // clone -> plek waar hij moet blijven staan (bijvoorbeeld op een drukknop)
   }
 
   get busy() { return this.list.some((c) => c.spawning > 0); }
 
   // Alle clones krijgen hetzelfde zwaard en hoedje als de speler
-  setGear(swordLevel, hat) {
+  setGear(swordLevel, hat, shirt = this.shirt) {
     this.swordLevel = swordLevel;
     this.hat = hat;
-    for (const c of this.list) { giveSword(c.ch, swordLevel); setHat(c.ch, hat); }
+    this.shirt = shirt;
+    for (const c of this.list) { giveSword(c.ch, swordLevel); setHat(c.ch, hat); if (shirt != null) setShirt(c.ch, shirt); }
   }
 
   makeOne() {
     const ch = makeHero();
     giveSword(ch, this.swordLevel);
     setHat(ch, this.hat);
+    if (this.shirt != null) setShirt(ch, this.shirt);
     // Clones gloeien een beetje blauw, zodat je ze herkent
     const mats = new Set();
     ch.group.traverse((o) => { if (o.isMesh) mats.add(o.material); });

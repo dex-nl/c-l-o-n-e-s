@@ -112,6 +112,8 @@ export const sfx = {
   rumble() { noise(0, 1.6, 0.35, 120, 60); tone(55, 0, 1.6, 'sawtooth', 0.08, 40); },
   faint() { [523, 466, 392, 330, 262].forEach((f, i) => tone(f, i * 0.15, 0.2, 'triangle', 0.15)); },
   whoosh() { noise(0, 0.4, 0.15, 300, 2500); },
+  toet() { tone(523, 0, 0.12, 'square', 0.07); tone(523, 0.18, 0.16, 'square', 0.07); }, // vriendelijk toeteren
+  slurp() { tone(600, 0, 0.18, 'sine', 0.15, 1200); tone(900, 0.2, 0.15, 'sine', 0.12, 1500); },
 };
 
 // ---------- Muziek ----------
@@ -140,6 +142,14 @@ const SONGS = {
     melody: [
       'D5 ~ ~ ~ - - A4 ~', 'Bb4 ~ ~ ~ - - - -', 'G4 ~ A4 ~ Bb4 ~ D5 ~', 'C#5 ~ ~ ~ - - - -',
       'F5 ~ ~ E5 D5 ~ ~ ~', 'F5 ~ G5 ~ F5 ~ D5 ~', 'E5 ~ ~ ~ C5 ~ ~ ~', 'A4 ~ ~ ~ - - - -',
+    ],
+  },
+  stad: {
+    bpm: 126, lead: 'square', drums: true,
+    chords: ['F', 'C', 'Dm', 'Bb', 'F', 'C', 'Bb', 'C'],
+    melody: [
+      'A5 - C6 - A5 G5 F5 ~', 'G5 - E5 - C5 ~ - -', 'F5 - A5 - D6 ~ C6 A5', 'Bb5 ~ A5 ~ G5 ~ F5 ~',
+      'A5 - C6 - F6 ~ E6 D6', 'C6 ~ G5 ~ E5 ~ G5 ~', 'D6 ~ C6 ~ Bb5 ~ D5 ~', 'C5 ~ E5 ~ G5 ~ - -',
     ],
   },
   baas: {

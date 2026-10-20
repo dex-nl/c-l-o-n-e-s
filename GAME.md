@@ -29,6 +29,19 @@ Het spel van Dex (11 jaar).
 - **Koopman Kees** heeft een kraam: koop hoedjes (voor jou én al je clones), extra hartjes en het gouden **Superzwaard**.
 - **Oma Pien** wandelt rond en vertelt grappige dingen. **Knoeper** de hond rent over het plein.
 
+### De Stad (idee van Joshua!)
+- Aan de **oostkant van het dorp** (rechts van de kraam van Koopman Kees) staat een **regenboogpoort**. Een bord wijst de weg. De poort is altijd open.
+- In De Stad: een plein met een fontein, huizen, een parkje, lantaarnpalen met vlaggetjes en een **autoweg met zebrapaden**.
+- **Autootjes** rijden rustig rondjes. Sta je (of een clone) voor een auto? Dan stopt hij en toetert vriendelijk. Niemand raakt hartjes kwijt.
+- **Burgemeester Bert** bij de fontein geeft je één keer een cadeautje van **10 kristallen**.
+- Vier winkels. Je betaalt met dezelfde **kristallen** 💎 als bij Koopman Kees:
+  - **Speelgoedwinkel** (Toby Tol): bal voor Knoeper, jojo, knuffelbeer en **Robotje Bliep** die met je meezweeft.
+  - **Snoepwinkel** (Tante Toffee): **Raketsnoep** (20 seconden supersnel), Hartjeslolly (hartjes vol), Knalsnoepje (confetti).
+  - **Kledingwinkel** (Madame Mouw): shirts in rood, groen, paars, ninjazwart en goud. Je clones dragen hetzelfde!
+  - **Boekwinkel** (Meester Bladwijzer): Clones voor beginners (gratis), Moppenboek, Het Slijmboek en **De verborgen schat**.
+- Je spullen zitten in je **rugzak**: tik op snoep om te eten, op speelgoed om te spelen en op een boek om te lezen.
+- Lotte en Opa Duif wandelen over het plein.
+
 ### Overal
 - **Hartjes** ❤️: raakt een slijmpje je, dan ben je er een kwijt. Alle hartjes op? Dan word je wakker in het dorp (je verliest niks).
 - **Rugzak** 🎒: zie je spullen en kies welk hoedje je draagt.
@@ -47,6 +60,7 @@ Het spel van Dex (11 jaar).
 - [x] Grote kaart
 - [x] Kerkers (de Slijmgrot)
 - [x] Clonemachine: clones van jezelf maken
+- [x] Een stad met winkels (idee van Joshua)
 - [ ] Hoofdstuk 3: wat wordt het? (Dex bedenkt het!)
 
 ## Ideeën voor later (Dex kiest!)
@@ -57,3 +71,5 @@ Het spel van Dex (11 jaar).
 - Een huisdier dat je kunt kopen bij Koopman Kees.
 - Dag en nacht, met lantaarns in het dorp.
 - Een boot op de vijver, of een eiland.
+- Zelf autorijden in De Stad.
+- De verborgen schat zoeken met een kaart in stukjes (het boek in de Boekwinkel verklapt al iets...).
