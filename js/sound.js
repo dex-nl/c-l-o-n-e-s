@@ -112,6 +112,7 @@ export const sfx = {
   rumble() { noise(0, 1.6, 0.35, 120, 60); tone(55, 0, 1.6, 'sawtooth', 0.08, 40); },
   faint() { [523, 466, 392, 330, 262].forEach((f, i) => tone(f, i * 0.15, 0.2, 'triangle', 0.15)); },
   whoosh() { noise(0, 0.4, 0.15, 300, 2500); },
+  bump() { tone(110, 0, 0.12, 'sine', 0.25, 70); noise(0, 0.08, 0.08, 400, 200); }, // zachte bots
   toet() { tone(523, 0, 0.12, 'square', 0.07); tone(523, 0.18, 0.16, 'square', 0.07); }, // vriendelijk toeteren
   slurp() { tone(600, 0, 0.18, 'sine', 0.15, 1200); tone(900, 0.2, 0.15, 'sine', 0.12, 1500); },
 };

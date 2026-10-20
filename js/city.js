@@ -7,6 +7,7 @@ import { makePortal } from './world.js';
 import { Npc } from './npc.js';
 import { makeHat } from './characters.js';
 import { createCars, roundedLoop } from './cars.js';
+import { createShowroom } from './autowinkel.js';
 
 // Een bord met tekst dat zelf de letters kleiner maakt als de tekst lang is
 function wideSign(text, bg, w = 512, h = 112) {
@@ -298,6 +299,7 @@ export function createCity(group) {
     const a = rand() * Math.PI * 2, r = 30 + rand() * 20;
     const x = Math.cos(a) * r, z = Math.sin(a) * r;
     if (z < -15) continue;
+    if (x > 17 && z > -9 && z < 26) continue; // daar staat de Autowinkel
     tree(x, z, 1.2 + rand() * 0.8, false);
   }
 
@@ -377,7 +379,10 @@ export function createCity(group) {
     look: { shirt: 0x6d597a, pants: 0x495057, skin: 0xf1c27d, hair: 0xe5e5e5, coat: 0x8d99ae },
   });
 
-  const npcs = [...keepers, mayor, lotte, opa];
+  // ---------- De Autowinkel (oostkant): een showroom waar je echt in kunt lopen ----------
+  const showroom = createShowroom(group, { colliders, boxes, updaters, wideSign });
+
+  const npcs = [...keepers, mayor, lotte, opa, showroom.dealer];
 
   // ---------- Autootjes (stoppen voor iedereen die voor ze staat) ----------
   const loop = roundedLoop(ROAD.minX, ROAD.maxX, ROAD.minZ, ROAD.maxZ, 2.5);
@@ -387,7 +392,8 @@ export function createCity(group) {
   const zone = {
     id: 'stad', name: 'De Stad', group, colliders, boxes, fadeables, npcs, talkables: [...npcs],
     keepers, mayor,
-    bounds: { minX: -20.5, maxX: 20.5, minZ: -6.1, maxZ: 22.6 },
+    bounds: { minX: -20.5, maxX: 36.3, minZ: -6.1, maxZ: 22.6 },
+    showroom,
     music: 'stad',
     env: { sky: [0x6ec3f4, 0xe3f4ff], fog: [0xe3f4ff, 40, 95], hemi: [0xf1f8ff, 0x9a8c74, 1.25], sun: [0xfff2d6, 2.2], cam: [0, 9, 11] },
     spawns: { fromDorp: { x: 0, z: 19.6, rot: Math.PI } },
@@ -396,12 +402,12 @@ export function createCity(group) {
       { x: 0, z: -2.5, w: 46, d: 13, color: '#e8dcc4' }, { x: 0, z: 13, w: 7, d: 18, color: '#e8dcc4' },
       { x: 0, z: ROAD.minZ, w: 37.4, d: 3.4, color: '#6c727a' }, { x: 0, z: ROAD.maxZ, w: 37.4, d: 3.4, color: '#6c727a' },
       { x: ROAD.minX, z: 11.75, w: 3.4, d: 11.5, color: '#6c727a' }, { x: ROAD.maxX, z: 11.75, w: 3.4, d: 11.5, color: '#6c727a' },
-      { x: 10, z: 11.8, w: 10, d: 7, color: '#74c69d' }, { x: fx, z: fz, r: 1.8, color: '#4fb3e8' },
+      { x: 10, z: 11.8, w: 10, d: 7, color: '#74c69d' }, { x: 27.6, z: 15.65, w: 18.5, d: 7.3, color: '#8d939c' }, { x: fx, z: fz, r: 1.8, color: '#4fb3e8' },
     ],
     labels: [
       { x: -13.2, z: -9.5, text: 'Speelgoed' }, { x: -4.4, z: -9.5, text: 'Snoep' },
       { x: 4.4, z: -9.5, text: 'Kleding' }, { x: 13.2, z: -9.5, text: 'Boeken' },
-      { x: 0, z: 21, text: 'Naar het dorp' }, { x: fx, z: fz + 3, text: 'Fontein' },
+      { x: 0, z: 21, text: 'Naar het dorp' }, { x: 28.5, z: 5, text: 'Autowinkel' }, { x: fx, z: fz + 3, text: 'Fontein' },
     ],
     cars: traffic.cars,
     getPeople: null, // main.js zet hier een functie in: waar staan de speler, de clones en de mensen?

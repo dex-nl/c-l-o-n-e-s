@@ -16,7 +16,8 @@ export function questText(state, zoneId) {
   const q = state.quest, n = state.clones, max = maxClones(q);
   if (zoneId === 'stad') {
     if (!state.cityGift) return '🎁 Praat met <b>Burgemeester Bert</b> bij de fontein';
-    return '🛍️ Shoppen in <b>De Stad</b>! Terug naar het dorp: de <b>regenboogpoort</b>';
+    if (state.cars && state.cars.length) return '🚗 Stap in je auto en rij een rondje door <b>De Stad</b>!';
+    return '🛍️ Shoppen in <b>De Stad</b>! Nieuw: de <b>Autowinkel</b> (rechts)';
   }
   switch (q.state) {
     case 'nieuw': return '💡 Tip: loop naar de uitvinder bij de <b>clonemachine</b>';
@@ -104,6 +105,20 @@ function cityLines(id, state) {
       return [pick(['Bonjour! Ik ben Madame Mouw. Jij hebt een nieuwe look nodig!', 'Een nieuw shirt? Je clones dragen het meteen ook. Trés chic!', 'Goud staat iedereen goed. Vooral helden!']), ...noMoney];
     case 'boek':
       return [pick(['Goedendag. Ik ben Meester Bladwijzer. Lezen is een avontuur!', 'In boeken staan geheimen... en heel veel tips.', 'Het eerste boek krijg je van mij gratis. Lezen is belangrijk!']), ...noMoney];
+    case 'dealer':
+      if (!state.cars || !state.cars.length) {
+        return [
+          'Vroem vroem! Welkom in de Autowinkel! Ik ben Vera Vroem.',
+          'Kijk maar rond: de Mini Muis, de Jungle Jeep, de Bliksem Sport en de Rode Raket!',
+          'Je betaalt met kristallen. Daarna rij je zelf door de garagedeur naar buiten.',
+          ...(state.crystals < 12 ? ['Nog niet genoeg kristallen? In het Slijmbos laten slijmpjes ze vallen!'] : []),
+        ];
+      }
+      return [pick([
+        'Hoe rijdt hij? Lekker, hè! Toet toet!',
+        'Rij voorzichtig, hoor. De autootjes in De Stad stoppen gelukkig altijd voor je.',
+        'Binnenkort krijg ik misschien een vliegende auto binnen... sssst, geheim!',
+      ])];
     case 'lotte':
       if (state.clones > 0) return ['Wauw, zijn dat allemaal clones van jou?', 'Ik wil ook een clone! Dan kan die mijn huiswerk maken.'];
       return ['Hoi! Ik ben Lotte. Ik woon in De Stad.', 'Wist je dat de autootjes altijd stoppen als je ervoor staat? Superveilig!'];

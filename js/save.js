@@ -4,9 +4,10 @@
 import { QUEST_ORDER, reached, maxClones } from './quest.js';
 import { HAT_NAMES } from './characters.js';
 import { SHIRTS, TOYS, CANDIES, BOOKS, MAX_CANDY } from './cityshop.js';
+import { CARS } from './autowinkel.js';
 
 export const SAVE_KEY = 'clones-save';
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 export const MAX_HEARTS = 8;
 
 export function defaultSave() {
@@ -30,6 +31,9 @@ export function defaultSave() {
     candy: { raket: 0, lolly: 0, knal: 0 }, // snoepjes in je rugzak (Snoepwinkel)
     books: [],          // boeken (Boekwinkel)
     cityGift: false,    // heeft Burgemeester Bert je al 10 kristallen gegeven?
+    // Versie 5: de Autowinkel
+    cars: [],           // auto's die je hebt gekocht ('mini', 'jeep', 'sport', 'race')
+    car: null,          // met welke auto je rijdt
   };
 }
 
@@ -58,8 +62,13 @@ export function migrate(data) {
     data = { ...data, shirts: [], shirt: null, toys: [], candy: { raket: 0, lolly: 0, knal: 0 }, books: [], cityGift: false, version: 4 };
     v = 4;
   }
+  if (v === 4) {
+    // Versie 5: de Autowinkel. Kristallen blijven precies hetzelfde.
+    data = { ...data, cars: [], car: null, version: 5 };
+    v = 5;
+  }
   // Voorbeeld voor later:
-  // if (v === 4) { data.huisdier = null; data.version = 5; v = 5; }
+  // if (v === 5) { data.huisdier = null; data.version = 6; v = 6; }
 
   // Vul ontbrekende velden aan en controleer of alles klopt.
   const def = defaultSave();
@@ -80,11 +89,13 @@ export function migrate(data) {
   const known = (list, obj) => (Array.isArray(list) ? [...new Set(list.filter((id) => id in obj))] : []);
   const shirts = known(data.shirts, SHIRTS), toys = known(data.toys, TOYS), books = known(data.books, BOOKS);
   const shirt = shirts.includes(data.shirt) ? data.shirt : null;
+  const cars = known(data.cars, CARS);
+  const car = cars.includes(data.car) ? data.car : (cars[0] || null);
   const candy = {};
   for (const id of Object.keys(CANDIES)) candy[id] = int(data.candy && data.candy[id], 0, MAX_CANDY, 0);
   return {
     ...data, version: Math.max(v, SAVE_VERSION), zone, player, quest, clones, sword, hats, hat,
-    shirts, shirt, toys, books, candy, cityGift: data.cityGift === true,
+    shirts, shirt, toys, books, candy, cityGift: data.cityGift === true, cars, car,
     sound: data.sound !== false, music: data.music !== false,
     crystals: int(data.crystals, 0, 99999, 0), maxHearts: int(data.maxHearts, 5, MAX_HEARTS, 5),
   };

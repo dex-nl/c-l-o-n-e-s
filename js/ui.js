@@ -15,6 +15,7 @@ export const ui = {
     b.classList.toggle('ready', ready);
     b.classList.toggle('pulse', pulse);
     b.classList.toggle('sword', label === '⚔️');
+    b.classList.toggle('long', label.length > 6); // Instappen / Uitstappen
     if (b.textContent !== label) b.textContent = label;
   },
 

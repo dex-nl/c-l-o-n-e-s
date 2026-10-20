@@ -37,3 +37,12 @@
 - Robotje Bliep, Raketsnoep, nieuwe shirts (ook voor je clones) en boeken met tips.
 - Save naar versie 4. Oude saves blijven werken (getest met saves van versie 0, 1, 2, 3 en 4).
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
+
+## 20 oktober 2026: autowinkel en zelf rijden, idee van Dex
+- Gemaakt met een AI-helper op de tak `autowinkel` (bouwt verder op de tak `stad`). **Dex of papa beslist of het erin komt.**
+- Nieuw: de Autowinkel in De Stad, een showroom waar je echt in kunt lopen. Binnen gaat het dak weg, zodat je alles goed ziet.
+- Verkoopster Vera Vroem verkoopt 4 auto's voor kristallen: Mini Muis (12), Jungle Jeep (25), Bliksem Sport (40) en Rode Raket (60).
+- Instappen, zelf rijden met de joystick of de toetsen, en door de garagedeur naar buiten. Zachtjes botsen, geen schade.
+- Op de wensenlijst: een vliegende auto (er staat al een plekje met BINNENKORT!).
+- Save naar versie 5. Oude saves blijven werken (getest met saves van versie 0 t/m 5).
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
