@@ -44,6 +44,7 @@ Het spel van Dex (11 jaar).
 - **Waar staat de code?** Diep in de **Grote Piramide**: in de grote hal ga je links (west) een smal doodlopend gangetje in, langs een vaas, helemaal naar het eind. Daar hangt een **oude muur met tekens**. Lees hem (sta er vlak voor) en je ziet: `KRISTAL100`.
 - **Waar typ je de code?** Tik (of klik) **5 keer snel** (binnen 2,5 seconde) op je **kristallen** 💎 linksboven. Dan komt er een vakje.
 - Foute code: *"Die code klopt niet."* Al gebruikt: *"Deze code heb je al gebruikt!"*
+- Er is ook een **geheime auto-code**: die zet de **Wolkenflitser gratis** voor je klaar (zo vaak je wilt, hoofdletters maken niet uit). Ben je in De Stad? Dan staat hij meteen naast je. Ben je ergens anders (daar kun je niet rijden)? Dan wacht hij bij de ingang van De Stad: *"De Wolkenflitser staat voor je klaar in De Stad!"*. Ook deze code staat nergens opgeschreven (alleen een hash). Zit je al in een auto? Dan eerst uitstappen.
 - Er is ook **Dex zijn eigen code (geheim)**: die geeft **elke keer +1.000 kristallen** (hoofdletters maken niet uit). Hij staat nergens: niet in het spel, niet in deze tekst en niet in de code (alleen een geheime vingerafdruk, een *hash*). Alleen Dex weet hem. Je typt hem in hetzelfde vakje.
 
 ### In het dorp
@@ -102,6 +103,8 @@ Het spel van Dex (11 jaar).
 - Stap je uit in de lucht (of druk je op **Landen**)? Dan land je eerst zachtjes en stap je daarna vanzelf uit. Met Omlaag land je ook zachtjes (en blijf je zitten).
 - Ook vliegend mag je niet door de poort: *"Stap eerst uit!"*. De andere autootjes rijden gewoon door.
 - Onder de auto gloeien blauwe straalmotoren, de vleugeltjes klappen uit en er waaien windwolkjes.
+- **🔄 Kickflip** (idee van Dex): vlieg je minstens 1,5 meter hoog? Druk op **🔄 Kickflip** (of **F** op de MacBook). Dan maakt de auto een supersnelle rol van 360° (in 0,8 seconde), met een *woesj* en een glitterspoor: *"Kickflip! 😎"*. Je blijft gewoon zitten en vliegt daarna recht verder. Het werkt stilstaand in de lucht en tijdens het vliegen. Daarna even wachten (1,2 s) voor de volgende. Te laag? *"Vlieg eerst wat hoger voor een kickflip!"*
+- **🚀 Boost** (idee van Dex): druk op **🚀 Boost** (of **R** op de MacBook). Dan ga je 2 seconden ongeveer **twee keer zo snel**, op de grond en in de lucht (ook zonder te sturen schiet je vooruit). Blauwe vlammen uit de achterkant, een *woesj* en de camera zoomt heel even uit. Daarna laadt de boost 4 seconden op: het ringetje om de knop loopt weer vol. Je botst nog steeds gewoon tegen flats, muren en andere auto's (je schiet er nooit doorheen), en mensen blijven veilig.
 - 10.000 kristallen is heel veel! Grote getallen staan overal met een punt: 💎 10.000.
 
 ### Overal
@@ -116,7 +119,7 @@ Het spel van Dex (11 jaar).
 - **iPad:** sleep met je vinger op de linkerkant van het scherm om te lopen. De grote knop rechts is **Praat** (bij iemand), **Lees** (bij een bord) of **⚔️** (zwaard). Bij de machine: druk op **Clone!**
 - **Laptop:** lopen met **W A S D** of de **pijltjes**. **E** of **spatie** = praten of zwaaien. **C** = clonen. **M** = kaart. **B** = rugzak. **H** = clones weg/terug.
 - **Autorijden:** sta bij je auto en druk op **Instappen** (of **E**, of tik op de auto). Stuur met de joystick of **W A S D**/pijltjes: de auto rijdt de kant op waar je naartoe duwt. **Uitstappen** (of **E**) om uit te stappen.
-- **Vliegen (Wolkenflitser):** **⬆️ Omhoog** / **⬇️ Omlaag** ingedrukt houden, of **spatie** / **Shift** op de laptop. **E** of **Enter** = landen en uitstappen.
+- **Vliegen (Wolkenflitser):** **⬆️ Omhoog** / **⬇️ Omlaag** ingedrukt houden, of **spatie** / **Shift** op de laptop. **🔄 Kickflip** = **F**, **🚀 Boost** = **R**. **E** of **Enter** = landen en uitstappen.
 
 ## Wensenlijst
 - [x] Zwaard en gevechten

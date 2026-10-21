@@ -5,8 +5,15 @@ import { collide } from './physics.js';
 import { makeCarModel, CARS, FLY_CEILING } from './autowinkel.js';
 
 const CAR_H = 1.25; // zo hoog is de auto (voor daken als je vliegt)
-const CAR_R = 1.05; // de auto is (voor botsen) een cirkel van deze grootte
+export const CAR_R = 1.05; // de auto is (voor botsen) een cirkel van deze grootte
 const angleDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
+
+export const KICKFLIP_MIN_ALT = 1.5; // zo hoog moet je minstens vliegen
+export const KICKFLIP_TIME = 0.8;    // seconden voor één rondje
+export const KICKFLIP_COOLDOWN = 1.2; // daarna even wachten
+export const BOOST_TIME = 2;          // Boost: zo lang ga je (ongeveer) twee keer zo snel
+export const BOOST_COOLDOWN = 4;      // daarna laadt hij weer op
+const BOOST_SPEED = 2;
 
 export class MyCar {
   constructor(group, colliders) {
@@ -23,6 +30,10 @@ export class MyCar {
     this.alt = 0;     // hoe hoog je vliegt (alleen de Wolkenflitser)
     this.vy = 0;
     this.landing = false; // aan het landen (bij uitstappen)
+    this.flipT = 0;       // kickflip: 0 = niet, daarna 0..1 (hoe ver de draai is)
+    this.flipCool = 0;    // even wachten voor de volgende kickflip
+    this.boostT = 0;      // Boost: hoe lang nog
+    this.boostCool = 0;   // Boost: hoe lang nog opladen
     // als de auto geparkeerd staat, kun je er niet doorheen lopen
     this.parkedA = { x: 9999, z: 9999, r: 0.8 };
     this.parkedB = { x: 9999, z: 9999, r: 0.8 };
@@ -45,7 +56,7 @@ export class MyCar {
     this.pos = { x: spot.x, z: spot.z };
     this.rot = spot.rot || 0;
     this.speed = 0;
-    this.alt = 0; this.vy = 0; this.landing = false;
+    this.alt = 0; this.vy = 0; this.landing = false; this.flipT = 0;
     this.syncMesh();
     this.syncParked();
   }
@@ -53,7 +64,34 @@ export class MyCar {
   syncMesh() {
     if (!this.model) return;
     this.model.g.position.set(this.pos.x, this.alt, this.pos.z);
-    this.model.g.rotation.set(0, this.rot, this.tilt);
+    this.model.g.rotation.set(0, this.rot, this.tilt + this.roll);
+  }
+
+  // Kickflip (idee van Dex): een snelle rol van 360° om de lange as, alleen in de lucht
+  get roll() { if (!this.flipT) return 0; const k = this.flipT; return -Math.PI * 2 * (k < 0.5 ? 2 * k * k : 1 - 2 * (1 - k) * (1 - k)); }
+  get canKickflip() { return this.canFly && this.alt >= KICKFLIP_MIN_ALT && !this.flipT && this.flipCool <= 0 && !this.landing; }
+  kickflip() {
+    if (!this.canKickflip) return false;
+    this.flipT = 1e-4;
+    return true;
+  }
+  // Boost (alleen de Wolkenflitser): even dubbel zo snel, op de grond en in de lucht
+  get canBoost() { return this.canFly && this.boostT <= 0 && this.boostCool <= 0 && !this.landing; }
+  get boostReady() { return this.boostT > 0 ? 0 : 1 - this.boostCool / BOOST_COOLDOWN; } // 0..1 (voor het ringetje)
+  boost() {
+    if (!this.canBoost) return false;
+    this.boostT = BOOST_TIME;
+    return true;
+  }
+  updateBoost(dt) {
+    if (this.boostT > 0) { this.boostT = Math.max(0, this.boostT - dt); if (this.boostT === 0) this.boostCool = BOOST_COOLDOWN; }
+    else this.boostCool = Math.max(0, this.boostCool - dt);
+  }
+  updateFlip(dt) {
+    this.flipCool = Math.max(0, this.flipCool - dt);
+    if (!this.flipT) return;
+    this.flipT += dt / KICKFLIP_TIME;
+    if (this.flipT >= 1) { this.flipT = 0; this.flipCool = KICKFLIP_COOLDOWN; }
   }
 
   syncParked() {
@@ -71,6 +109,7 @@ export class MyCar {
   // Vliegen: lift = 1 (omhoog), -1 (omlaag) of 0 (blijven zweven). Geeft de nieuwe hoogte terug.
   fly(dt, lift, zone) {
     if (!this.canFly) { this.alt = 0; return 0; }
+    this.updateFlip(dt);
     let want = this.landing ? -2.6 : lift * 4.5;
     if (want < 0 && this.alt < 1.6) want *= Math.max(0.3, this.alt / 1.6); // vlak boven de grond: zachtjes landen
     this.vy += (want - this.vy) * Math.min(1, dt * 4);
@@ -119,9 +158,11 @@ export class MyCar {
   // Geeft true terug als je ergens tegenaan botste.
   update(dt, move, zone, people) {
     const c = CARS[this.id];
-    const max = this.flying && c.flySpeed ? c.flySpeed : c.speed;
+    this.updateBoost(dt);
+    const boosting = this.boostT > 0;
+    const max = (this.flying && c.flySpeed ? c.flySpeed : c.speed) * (boosting ? BOOST_SPEED : 1);
     const len = Math.min(1, Math.hypot(move.x, move.y));
-    let want = 0;
+    let want = boosting ? max : 0; // boost: ook zonder joystick schiet je vooruit
     if (len > 0.1) {
       const target = Math.atan2(move.x, -move.y);
       const diff = angleDiff(target, this.rot);
@@ -131,13 +172,20 @@ export class MyCar {
       want = max * len * (Math.abs(diff) > 2 ? 0.25 : Math.max(0.3, Math.cos(diff)));
       this.tilt += (-Math.sign(diff) * Math.min(0.08, Math.abs(diff) * 0.05) * (this.speed / max) - this.tilt) * Math.min(1, dt * 6);
     } else this.tilt *= 0.9;
-    this.speed += (want - this.speed) * Math.min(1, dt * (want > this.speed ? 1.4 : 3));
+    this.speed += (want - this.speed) * Math.min(1, dt * (want > this.speed ? (boosting ? 4 : 1.4) : 3));
     const d = this.dir;
     const before = { x: this.pos.x, z: this.pos.z };
-    this.pos.x += d.x * this.speed * dt;
-    this.pos.z += d.z * this.speed * dt;
-    const goal = { x: this.pos.x, z: this.pos.z };
-    collide(this.pos, CAR_R, this.flying ? this.airZone(zone) : zone);
+    // in kleine stapjes, zodat je (ook met boost) nooit door een muur heen schiet
+    const steps = Math.max(1, Math.ceil(Math.abs(this.speed * dt) / 0.4));
+    const solid = this.flying ? this.airZone(zone) : zone;
+    let goal = null;
+    for (let s = 0; s < steps; s++) {
+      this.pos.x += (d.x * this.speed * dt) / steps;
+      this.pos.z += (d.z * this.speed * dt) / steps;
+      goal = { x: this.pos.x, z: this.pos.z };
+      collide(this.pos, CAR_R, solid);
+      if (Math.hypot(this.pos.x - goal.x, this.pos.z - goal.z) > 0.01) break; // ergens tegenaan: stoppen met stappen
+    }
     if (this.flying && this.alt > 1.5) people = []; // hoog in de lucht bots je niet tegen mensen
     // mensen: zachtjes om ze heen / ertegen stoppen
     for (const q of people) {
@@ -156,7 +204,7 @@ export class MyCar {
     }
     for (const w of this.model.wheels) w.rotation.x += (this.speed * dt) / 0.32;
     this.syncMesh();
-    if (this.flying) this.model.g.position.y = this.alt + Math.sin(performance.now() / 400) * 0.08; // zachtjes zweven
+    if (this.flying) this.model.g.position.y = this.alt + Math.sin(performance.now() / 400) * 0.08 + Math.sin(Math.PI * this.flipT) * 0.6; // zachtjes zweven (en een hupje bij een kickflip)
     else this.model.g.position.y = Math.abs(Math.sin(performance.now() / 70)) * 0.02 * Math.min(1, Math.abs(this.speed) / 3);
     this.animateFly(dt);
     return bumped;
@@ -169,7 +217,8 @@ export class MyCar {
     const k = Math.min(1, this.alt / 1.2);
     m.wings.forEach((w, i) => { const s = i ? 1 : -1; w.rotation.z += ((s * 1.35) * (1 - k) - w.rotation.z) * Math.min(1, dt * 5); });
     const t = performance.now() / 1000;
-    m.thrusters.forEach((c, i) => { const l = (this.driving ? 0.5 : 0.15) + k * (0.9 + Math.sin(t * 30 + i) * 0.15); c.scale.set(1, l, 1); c.position.y = 0.16 - 0.3 * l; });
+    const b = this.boostT > 0 ? 1.6 : 0;
+    m.thrusters.forEach((c, i) => { const l = (this.driving ? 0.5 : 0.15) + k * (0.9 + Math.sin(t * 30 + i) * 0.15) + b; c.scale.set(1 + b * 0.3, l, 1 + b * 0.3); c.position.y = 0.16 - 0.3 * l; });
     m.glowM.opacity = this.driving ? 0.6 + k * 0.35 : 0.3;
   }
 }
