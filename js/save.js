@@ -1,13 +1,13 @@
 // Opslaan van de spelvoortgang in localStorage.
 // BELANGRIJK: verander je het formaat? Verhoog SAVE_VERSION en voeg een stap
 // toe in migrate(), zodat oude saves blijven werken.
-import { QUEST_ORDER, MAP_PIECES, SUN_STONE_IDS, reached, maxClones } from './quest.js';
+import { QUEST_ORDER, MAP_PIECES, SUN_STONE_IDS, JOB_IDS, reached, maxClones } from './quest.js';
 import { HAT_NAMES } from './characters.js';
 import { SHIRTS, TOYS, CANDIES, BOOKS, MAX_CANDY } from './cityshop.js';
 import { CARS } from './autowinkel.js';
 
 export const SAVE_KEY = 'clones-save';
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 export const SECRET_CODES = ['KRISTAL100']; // geheime codes (zie GAME.md, niet verder vertellen!)
 export const MAX_HEARTS = 8;
 
@@ -39,6 +39,8 @@ export function defaultSave() {
     mapPieces: [],      // stukjes van de schatkaart ('woestijn', ...)
     codes: [],          // geheime codes die je al hebt gebruikt
     clonesHidden: false, // clones even weg (👻-knop)
+    // Versie 7: de klusjes van Burgemeester Bert (na alle klusjes is De Stad uitgespeeld)
+    jobs: { done: [], active: null, step: 0 },
   };
 }
 
@@ -77,11 +79,23 @@ export function migrate(data) {
     data = { ...data, mapPieces: [], codes: [], clonesHidden: false, version: 6 };
     v = 6;
   }
+  if (v === 6) {
+    // Versie 7: de klusjes van Burgemeester Bert. "De Stad uitgespeeld" is nu: alle klusjes gedaan (was: een auto gekocht).
+    // Had deze save de woestijnpoort al (auto gekocht of al in de woestijn geweest)? Dan houdt hij hem (desertEarly).
+    // De klusjes kun je dan nog steeds allemaal doen.
+    const q = data.quest || {};
+    const hadPortal = (Array.isArray(data.cars) && data.cars.length > 0 && ['held', 'woestijn', 'piramide', 'kaart', 'schat'].includes(q.state))
+      || ['woestijn', 'piramide', 'kaart', 'schat'].includes(q.state) || (Array.isArray(data.mapPieces) && data.mapPieces.length > 0);
+    data = { ...data, jobs: { done: [], active: null, step: 0 }, version: 7 };
+    if (hadPortal) data.desertEarly = true;
+    v = 7;
+  }
   // Voorbeeld voor later:
-  // if (v === 6) { data.huisdier = null; data.version = 7; v = 7; }
+  // if (v === 7) { data.huisdier = null; data.version = 8; v = 8; }
 
   // Vul ontbrekende velden aan en controleer of alles klopt.
   delete data._desertForced; // alleen voor testen, niet bewaren
+  if (data.desertEarly !== true) delete data.desertEarly;
   const def = defaultSave();
   const player = { ...def.player, ...(data.player || {}) };
   const quest = { ...def.quest, ...(data.quest || {}) };
@@ -98,6 +112,17 @@ export function migrate(data) {
   let mapPieces = Array.isArray(data.mapPieces) ? [...new Set(data.mapPieces.filter((id) => MAP_PIECES.includes(id)))] : [];
   if (reached(quest, 'kaart') && !mapPieces.includes('woestijn')) mapPieces.push('woestijn');
   const codes = Array.isArray(data.codes) ? [...new Set(data.codes.filter((c) => SECRET_CODES.includes(c)))] : [];
+  // klusjes: altijd op volgorde, en pas na het welkomstcadeautje van Bert
+  const rawJobs = data.jobs && typeof data.jobs === 'object' ? data.jobs : {};
+  const doneIn = Array.isArray(rawJobs.done) ? rawJobs.done : [];
+  let nDone = 0;
+  while (nDone < JOB_IDS.length && doneIn.includes(JOB_IDS[nDone])) nDone++;
+  const jobs = { done: JOB_IDS.slice(0, nDone), active: null, step: 0 };
+  if (rawJobs.active && rawJobs.active === JOB_IDS[nDone]) {
+    jobs.active = rawJobs.active;
+    jobs.step = rawJobs.step === 1 && jobs.active !== 'rondje' ? 1 : 0;
+  }
+  if (data.cityGift !== true) { jobs.done = []; jobs.active = null; jobs.step = 0; }
   const int = (n, lo, hi, d) => (Number.isInteger(n) ? Math.min(Math.max(n, lo), hi) : d);
   const clones = reached(quest, 'aan') ? int(data.clones, 0, maxClones(quest), 0) : 0;
   let zone = ['dorp', 'bos', 'grot', 'stad', 'woestijn', 'piramide'].includes(data.zone) ? data.zone : 'dorp';
@@ -117,7 +142,7 @@ export function migrate(data) {
   return {
     ...data, version: Math.max(v, SAVE_VERSION), zone, player, quest, clones, sword, hats, hat,
     shirts, shirt, toys, books, candy, cityGift: data.cityGift === true, cars, car,
-    mapPieces, codes, clonesHidden: data.clonesHidden === true,
+    mapPieces, codes, clonesHidden: data.clonesHidden === true, jobs,
     sound: data.sound !== false, music: data.music !== false,
     crystals: int(data.crystals, 0, 99999, 0), maxHearts: int(data.maxHearts, 5, MAX_HEARTS, 5),
   };

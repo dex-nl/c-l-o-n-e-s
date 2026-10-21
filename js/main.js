@@ -8,6 +8,7 @@ import { createDesert } from './desert.js';
 import { createPyramid } from './pyramid.js';
 import { Scorpion } from './scorpion.js';
 import { buildTreasureMap } from './treasure.js';
+import { createJobs } from './jobs.js';
 import { buildCityShop, itemInfo, SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } from './cityshop.js';
 import { makeSignpost } from './props.js';
 import { Robot } from './robot.js';
@@ -18,7 +19,8 @@ import { makeBolt, makeKoopman, makeOma, Dog } from './npc.js';
 import { Controls } from './controls.js';
 import { loadSave, writeSave, SAVE_KEY, SECRET_CODES } from './save.js';
 import { ui } from './ui.js';
-import { GEARS_NEEDED, TEAM_SIZE, reached, maxClones, questText, boltHasNews, linesFor, isCityDone, SUN_STONE_IDS, MAP_PIECES_TOTAL } from './quest.js';
+import { GEARS_NEEDED, TEAM_SIZE, reached, maxClones, questText, boltHasNews, linesFor, isCityDone, SUN_STONE_IDS, MAP_PIECES_TOTAL,
+  JOBS, jobInfo, nextJob, bertHasNews } from './quest.js';
 import { CloneSquad } from './clones.js';
 import { Effects } from './effects.js';
 import { Slime, SLIME_COLORS } from './enemies.js';
@@ -104,6 +106,7 @@ const world = addZone((g) => Object.assign(createWorld(g), {
 const forest = addZone(createForest);
 const cave = addZone(createCave);
 const city = addZone(createCity); // De Stad (idee van Joshua)
+const cityJobs = createJobs(city); // de klusjes van Burgemeester Bert (idee van Dex)
 const desert = addZone(createDesert); // De Grote Woestijn (hoofdstuk 3, idee van Dex)
 const pyramid = addZone(createPyramid); // binnen in de Grote Piramide
 
@@ -337,6 +340,7 @@ function setZone(id, spawn) {
     for (const e of enemies) e.remove();
   }
   pickups.clear();
+  cityJobs.resetLap(); // een half rondje telt niet meer als je weggaat
   landing.visible = false;
   const zone = zones[id];
   game.zone = zone;
@@ -426,7 +430,8 @@ function refresh() {
   forest.setDoorOpen(reached(q, 'grot'));
   bolt.showMarker(boltHasNews(state));
   koopman.showMarker(reached(q, 'zwaard') && state.crystals >= 5 && state.hats.length === 0);
-  city.mayor.showMarker(!state.cityGift);
+  city.mayor.showMarker(bertHasNews(state));
+  cityJobs.sync(state, player);
   city.showroom.setOwned(state.cars);
   applyGear();
   const batteryHere = pickups.list.some((p) => p.type === 'batterij');
@@ -435,7 +440,7 @@ function refresh() {
 }
 
 // ---------- De woestijnpoort verschijnt (als De Stad uitgespeeld is) ----------
-let desertGateShown = false, desertAppearPending = false;
+let desertGateShown = false, desertAppearPending = false, portalToastAt = 0;
 function updateDesertGate() {
   const vis = desertVisible();
   if (vis === desertGateShown) return;
@@ -443,8 +448,8 @@ function updateDesertGate() {
   world.setDesertVisible(vis, false);
   if (vis && started) {
     desertAppearPending = true; // de glitters zie je als je in het dorp bent
-    ui.toast('✨ Er is een nieuwe poort verschenen! Kijk aan de westkant van het dorp.', 4500);
-    sfx.tada();
+    // (net een klusje klaar? dan komt deze melding daarna)
+    setTimeout(() => { ui.toast('✨ Er is een nieuwe poort verschenen! Kijk aan de westkant van het dorp.', 4500); sfx.tada(); }, Math.max(0, portalToastAt - performance.now()));
   }
 }
 function desertAppear() {
@@ -486,6 +491,7 @@ function talkTo(t) {
   const wasAllFound = q.state === 'bezig' && q.gears.length >= GEARS_NEEDED;
   const before = q.state;
   const lines = t.lines || linesFor(t.id, state);
+  const newJob = t.id === 'burgemeester' && state.cityGift ? nextJob(state) : null; // Bert geeft je een nieuw klusje
   talkPartner = t;
   ui.showDialog(t.name, lines, () => {
     if (t.id === 'bolt') afterBolt(before, wasAllFound);
@@ -499,9 +505,96 @@ function talkTo(t) {
       sfx.tada();
       ui.toast('🎁 Je kreeg 10 kristallen 💎 van Burgemeester Bert!', 3000);
     }
+    if (newJob) startJob(newJob);
     refresh();
     save();
   }, t.voice);
+}
+
+// ---------- De klusjes van Burgemeester Bert ----------
+function startJob(id) {
+  state.jobs.active = id;
+  state.jobs.step = 0;
+  sfx.ding();
+  const n = state.jobs.done.length + 1;
+  ui.toast(`📋 Nieuw klusje! ${jobInfo(id).icon} ${jobInfo(id).name} (klusje ${n} van ${JOBS.length})`, 3200);
+  setTimeout(() => { if (!ui.panelOpen && !ui.dialogOpen && started) openJobs(); }, 700);
+}
+const JOB_GOT = {
+  eend: '🦆 Kwak! Eendje Ed loopt achter je aan. Breng hem naar de vijver!',
+  pakje: '📦 Je hebt het pakje! Breng het naar Toby Tol (speelgoedwinkel).',
+  bril: '👓 Gevonden: de bril van Opa Duif! Breng hem naar Opa op het plein.',
+};
+const JOB_DONE = {
+  eend: '🦆 Kwak kwak! Eendje Ed zwemt weer in de vijver.',
+  pakje: '📦 Toby Tol: "Joepie, nieuwe jojo\'s!"',
+  bril: '👓 Opa Duif: "Hoera, ik zie weer alles!"',
+  rondje: '🏁 Wat een coureur!',
+};
+function jobStep(id) {
+  if (state.jobs.active !== id || state.jobs.step === 1) return;
+  state.jobs.step = 1;
+  sfx.ding();
+  fx.sparkle({ x: player.pos.x, y: 1.5, z: player.pos.z }, [0xffd23f, 0xffffff], 20, 3);
+  ui.toast(JOB_GOT[id], 3200);
+  refresh();
+  save();
+}
+function finishJob(id, lapTime = 0) {
+  const j = state.jobs;
+  if (j.active !== id) return;
+  j.done.push(id); j.active = null; j.step = 0;
+  const info = jobInfo(id), n = j.done.length, all = n >= JOBS.length;
+  state.crystals += info.reward;
+  fx.confetti(player.pos, 70);
+  fx.sparkle({ x: player.pos.x, y: 1.5, z: player.pos.z }, [0x7af7ff, 0xffffff], 30, 4);
+  sfx.tada();
+  const extra = id === 'rondje' ? `🏁 Rondje in ${Math.round(lapTime)} seconden!` : JOB_DONE[id];
+  ui.toast(`${extra} Klusje ${n} van ${JOBS.length} klaar! +${info.reward} 💎${all ? '' : ' Ga terug naar Burgemeester Bert.'}`, 3800);
+  if (all) {
+    portalToastAt = performance.now() + 8000;
+    setTimeout(() => { ui.toast('🏆 Alle klusjes van Bert klaar! De Stad is uitgespeeld!', 4000); sfx.fanfare(); fx.confetti(player.pos, 120); }, 4000);
+  }
+  refresh();
+  save();
+}
+let lastHud = null;
+const jobCtx = () => ({
+  who: driving ? myCar.pos : player.pos, driving,
+  back: driving ? myCar.dir : { x: Math.sin(player.rot), z: Math.cos(player.rot) },
+  toby: city.keepers[0].pos, opa: city.npcs.find((n) => n.id === 'opa').pos,
+  onStep: jobStep, onDone: finishJob,
+  toast: (txt, ms = 2600) => ui.toast(txt, ms),
+  gate: (n) => { sfx.ding(); ui.toast(n < 3 ? `✅ Poortje! (${n}/3)` : '✅ Alle 3 de poortjes! Snel terug naar de START!', 2000); },
+  start: () => sfx.whoosh(),
+  fail: () => sfx.nope(),
+});
+// Het lijstje met klusjes (uit de rugzak, of meteen als Bert je een klusje geeft)
+function openJobs() {
+  if (ui.dialogOpen || ui.panelOpen || !started) return;
+  ui.openPanel('📋 Klusjes van Burgemeester Bert', (body) => {
+    const j = state.jobs, n = j.done.length;
+    const top = document.createElement('p');
+    top.className = 'jobs-progress';
+    top.id = 'jobs-progress';
+    top.innerHTML = n >= JOBS.length ? '🏆 <b>Alle klusjes klaar!</b> De Stad is uitgespeeld.'
+      : j.active ? `Bezig met <b>klusje ${n + 1} van ${JOBS.length}</b>` : `<b>${n} van ${JOBS.length}</b> klaar. Praat met Burgemeester Bert voor het volgende klusje!`;
+    body.appendChild(top);
+    const list = document.createElement('div');
+    list.className = 'jobs-list';
+    list.id = 'jobs-list';
+    JOBS.forEach((job, i) => {
+      const done = j.done.includes(job.id), now = j.active === job.id, open = done || now;
+      const row = document.createElement('div');
+      row.className = 'job-row' + (done ? ' done' : now ? ' now' : ' locked');
+      row.innerHTML = `<div class="job-ico">${done ? '✅' : open ? job.icon : '🔒'}</div>`
+        + `<div class="job-txt"><div class="job-name">${i + 1}. ${open ? job.name : 'Nog geheim...'}</div>`
+        + `<div class="job-info">${open ? job.info : 'Eerst het klusje hiervoor doen!'}</div></div>`
+        + `<div class="job-prize">${done ? 'Klaar!' : `+${job.reward} 💎`}</div>`;
+      list.appendChild(row);
+    });
+    body.appendChild(list);
+  });
 }
 
 function afterBolt(before, wasAllFound) {
@@ -797,6 +890,7 @@ function openBackpack() {
     onShirt(id) { cityActions.onShirt(id); ui.refreshPanel(build); },
     onCandy(id) { cityActions.onCandy(id); ui.refreshPanel(build); },
     onMap() { ui.closePanel(); openTreasure(); },
+    onJobs() { ui.closePanel(); openJobs(); },
   });
   ui.openPanel('Rugzak', build);
 }
@@ -804,7 +898,10 @@ function openBackpack() {
 // Waar moet je heen? (de ster op de kaart)
 function questTarget() {
   const q = state.quest, z = game.zone.id;
-  if (z === 'stad') return state.cityGift ? null : city.mayor.pos;
+  if (z === 'stad') {
+    if (!state.cityGift) return city.mayor.pos;
+    return cityJobs.target(state, jobCtx()) || (nextJob(state) ? city.mayor.pos : null);
+  }
   const toDesertGate = { x: -22, z: 0 };
   if (q.state === 'woestijn') {
     if (z === 'dorp') return toDesertGate;
@@ -1137,6 +1234,13 @@ function frame() {
 
   fx.update(realDt);
   if (zone === city) city.showroom.update(t, realDt, player.pos, driving);
+  if (zone === city && started && !paused && !transition) {
+    cityJobs.update(t, realDt, jobCtx());
+    const hud = cityJobs.hud();
+    if (hud) ui.setQuest(hud);
+    else if (lastHud) refresh();
+    lastHud = hud;
+  }
   robot.update(t, realDt, player);
   if (boost > 0 && player.walkAmount > 0.5 && Math.random() < 0.3) fx.sparkle({ x: player.pos.x, y: 0.5, z: player.pos.z }, [0xff8c42, 0xffd23f], 2, 1.5);
 
@@ -1237,7 +1341,7 @@ window.clones = {
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
   forest, cave, city, desert, pyramid, zones, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
-  unlockDesert: () => { state._desertForced = true; refresh(); }, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
+  unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
   get boost() { return boost; }, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop,
   get enemies() { return enemies; }, get hearts() { return hearts; }, set hearts(v) { hearts = v; },
   get started() { return started; }, start: () => { if (!started) document.getElementById('start').dispatchEvent(new PointerEvent('pointerup')); },

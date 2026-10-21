@@ -13,13 +13,34 @@ export const MAP_PIECES = ['woestijn']; // de stukjes van de schatkaart die er a
 export const MAP_PIECES_TOTAL = 4;
 export const SUN_STONE_IDS = ['west', 'oost', 'tempel']; // de zonnestenen in de woestijn (zie desert.js)
 
+// ---------- De klusjes van Burgemeester Bert (De Stad) ----------
+// Je krijgt ze een voor een. Na het laatste klusje is De Stad "uitgespeeld" (wens van Dex).
+// state.jobs = { done: [...ids], active: id | null, step: 0 | 1 }
+//   step 0 = nog zoeken/ophalen, step 1 = je hebt het bij je (eendje, pakje, bril)
+export const LAP_TIME = 90; // seconden voor het rondje Grote Stad
+export const JOBS = [
+  { id: 'eend', icon: '🦆', name: 'Eendje Ed', info: 'Breng het weggelopen eendje terug naar de vijver in het Stadspark.', reward: 3 },
+  { id: 'pakje', icon: '📦', name: 'Pakje voor Toby Tol', info: 'Haal het pakje op bij de parkeerplaats en breng het naar de speelgoedwinkel.', reward: 3 },
+  { id: 'bril', icon: '👓', name: 'De bril van Opa Duif', info: 'Opa Duif is zijn bril kwijt. Zoek hem ergens in De Grote Stad!', reward: 4 },
+  { id: 'rondje', icon: '🏁', name: 'Rondje Grote Stad', info: `Rij met je auto in ${LAP_TIME} seconden een rondje over de ringweg (door alle 3 de poortjes).`, reward: 5 },
+];
+export const JOB_IDS = JOBS.map((j) => j.id);
+export const jobInfo = (id) => JOBS.find((j) => j.id === id);
+const jobs = (state) => state.jobs || { done: [], active: null, step: 0 };
+export const jobsDone = (state) => jobs(state).done.length;
+export const activeJob = (state) => jobs(state).active;
+// Heeft Bert een nieuw klusje voor je? (dan staat er een ! boven zijn hoofd)
+export const nextJob = (state) => (state.cityGift && !jobs(state).active && jobsDone(state) < JOBS.length ? JOBS[jobsDone(state)].id : null);
+export const bertHasNews = (state) => !state.cityGift || !!nextJob(state);
+
 // Is De Stad "uitgespeeld"? Dan verschijnt de poort naar De Grote Woestijn in het dorp.
-// VOORLOPIG: je hebt een auto gekocht. (Dex kiest nog wat het precies wordt: pas het alleen HIER aan.)
+// = alle klusjes van Burgemeester Bert gedaan. (Dit is de enige plek waar dat staat.)
+// state.desertEarly: een oude save (v6) die de woestijnpoort al had, die houdt hem.
 // state._desertForced is alleen voor het testen (window.clones.unlockDesert()).
 export function isCityDone(state) {
-  return state._desertForced === true || (Array.isArray(state.cars) && state.cars.length > 0);
+  return state._desertForced === true || state.desertEarly === true || jobsDone(state) >= JOBS.length;
 }
-export const CITY_DONE_HINT = 'koop een auto in de <b>Autowinkel</b> in De Stad';
+export const cityDoneHint = (state) => `help <b>Burgemeester Bert</b> in De Stad met zijn klusjes <b>(${jobsDone(state)}/${JOBS.length})</b>`;
 
 // Ben je al bij deze stap (of verder)?
 export const reached = (quest, step) => QUEST_ORDER.indexOf(quest.state) >= QUEST_ORDER.indexOf(step);
@@ -29,6 +50,16 @@ export function questText(state, zoneId) {
   const q = state.quest, n = state.clones, max = maxClones(q);
   if (zoneId === 'stad') {
     if (!state.cityGift) return '🎁 Praat met <b>Burgemeester Bert</b> bij de fontein';
+    const job = activeJob(state), step = state.jobs ? state.jobs.step : 0, k = `Klusje ${jobsDone(state) + 1} van ${JOBS.length}`;
+    if (job === 'eend') return step ? '🦆 Breng <b>Eendje Ed</b> naar de vijver in het <b>Stadspark</b>' : `🦆 ${k}: zoek <b>Eendje Ed</b> bij de <b>flats</b>`;
+    if (job === 'pakje') return step ? '📦 Breng het pakje naar <b>Toby Tol</b> (speelgoedwinkel)' : `📦 ${k}: haal het <b>pakje</b> op bij de <b>parkeerplaats</b>`;
+    if (job === 'bril') return step ? '👓 Breng de bril naar <b>Opa Duif</b> op het plein' : `👓 ${k}: zoek de <b>bril van Opa Duif</b> (bij de hoge flats?)`;
+    if (job === 'rondje') {
+      if (!state.cars || !state.cars.length) return `🏁 ${k}: koop eerst een auto in de <b>Autowinkel</b>`;
+      return `🏁 ${k}: rij met je auto door de <b>START</b> op de lange weg`;
+    }
+    if (nextJob(state)) return `❗ <b>Burgemeester Bert</b> heeft een klusje voor je! <b>(${jobsDone(state)}/${JOBS.length} klaar)</b>`;
+    if (q.state === 'held' && isCityDone(state)) return '🏆 Alle klusjes klaar! Ga naar <b>Professor Bolt</b> in het dorp';
     if (state.cars && state.cars.length) return '🚗 Stap in je auto en rij een rondje door <b>De Stad</b>!';
     return '🛍️ Shoppen in <b>De Stad</b>! Nieuw: de <b>Autowinkel</b> (rechts)';
   }
@@ -52,7 +83,7 @@ export function questText(state, zoneId) {
     case 'batterij': return '🔋 Breng de Superbatterij naar <b>Professor Bolt</b>';
     case 'held':
       if (isCityDone(state)) return '❗ <b>Professor Bolt</b> heeft nieuws voor je!';
-      return `⭐ Held van het dorp! Volgende avontuur? Tip: ${CITY_DONE_HINT}`;
+      return `⭐ Held van het dorp! Volgende avontuur? Tip: ${cityDoneHint(state)}`;
     case 'woestijn': {
       const lit = (q.stones || []).length;
       if (zoneId === 'woestijn') return `☀️ Sla de 3 <b>zonnestenen</b> met je zwaard <b>(${lit}/3)</b>`;
@@ -86,7 +117,8 @@ export function linesFor(id, state) {
     if (q.state === 'held' && !isCityDone(state)) {
       return [
         'De machine kan nu 10 clones maken. Probeer maar!',
-        'Ben je al in De Stad geweest? Ik hoor dat je daar een eigen auto kunt kopen... Vroem!',
+        'Ben je al in De Stad geweest? Burgemeester Bert zoekt een handige helper voor een paar klusjes!',
+        'Als De Stad klaar is met jou... dan heb ik misschien een nieuw avontuur. Hihi!',
       ];
     }
     return boltLines(q, clones);
@@ -134,26 +166,60 @@ function camelLines(state) {
   ])];
 }
 
+// Burgemeester Bert: het welkomstcadeautje, en daarna de klusjes een voor een
+function bertLines(state) {
+  if (!state.cityGift) {
+    return [
+      'Welkom, welkom in De Stad! Ik ben Burgemeester Bert.',
+      'Wij hebben hier vier winkels: speelgoed, snoep, kleding en boeken.',
+      'In De Stad betaal je met kristallen. Hier, een welkomstcadeautje van de stad: 10 kristallen!',
+      'Let op bij het oversteken: loop over het zebrapad. De autootjes stoppen altijd voor je!',
+      'O, en als je zin hebt: ik heb een paar klusjes voor je. Kom straks nog eens met me praten!',
+    ];
+  }
+  const job = activeJob(state), n = jobsDone(state), total = JOBS.length;
+  const noCar = !state.cars || !state.cars.length;
+  if (job === 'eend') return [`Klusje ${n + 1} van ${total}: Eendje Ed is weggelopen uit de vijver!`, 'Ik zag hem waggelen bij de hoge flats. Loop naar hem toe, dan loopt hij achter je aan.', 'Breng hem terug naar de vijver in het Stadspark. Kwak!'];
+  if (job === 'pakje') return [`Klusje ${n + 1} van ${total}: het pakje voor Toby Tol.`, 'Het ligt op de parkeerplaats aan de westkant. Lopen of met de auto, dat mag jij kiezen!'];
+  if (job === 'bril') return [`Klusje ${n + 1} van ${total}: Opa Duif is zijn bril kwijt.`, 'Hij liep vanochtend bij de hoge flats aan de westkant. Kijk goed: er glinstert vast iets!'];
+  if (job === 'rondje') {
+    return [`Klusje ${n + 1} van ${total}: rij een rondje over de grote ringweg!`, `Begin bij de START op de lange weg. Rij door alle 3 de poortjes en weer terug naar de START, binnen ${LAP_TIME} seconden.`,
+      ...(noCar ? ['Heb je nog geen auto? In de Autowinkel (rechts) kun je er een kopen. De Mini Muis is niet duur!'] : ['Rustig aan bij de rotonde, hoor!'])];
+  }
+  const next = nextJob(state);
+  if (next === 'eend') {
+    return [`Klusje 1 van ${total}! Oh jee, oh jee...`, 'Eendje Ed is weggelopen uit de vijver in het Stadspark. Ik zag hem bij de hoge flats.', 'Wil jij hem terugbrengen? Dan krijg je 3 kristallen!'];
+  }
+  if (next === 'pakje') {
+    return [`Goed gedaan! Klusje 2 van ${total}:`, 'De bezorger heeft een pakje voor Toby Tol op de parkeerplaats laten staan. Typisch!', 'Breng jij het naar zijn speelgoedwinkel? Te voet of met de auto. Ook 3 kristallen!'];
+  }
+  if (next === 'bril') {
+    return [`Super! Klusje 3 van ${total}:`, 'Opa Duif is zijn bril kwijt. Hij ziet alles wazig, de arme man.', 'Hij was vanochtend bij de hoge flats aan de westkant. Vind jij hem? 4 kristallen!'];
+  }
+  if (next === 'rondje') {
+    return [`Bijna klaar! Klusje 4 van ${total}, het laatste:`, `Rij met je auto een rondje over de grote ringweg, door alle 3 de poortjes, binnen ${LAP_TIME} seconden.`,
+      'De START is op de lange weg. Lukt het niet meteen? Gewoon opnieuw proberen! 5 kristallen!',
+      ...(noCar ? ['Heb je nog geen auto? In de Autowinkel (rechts) kun je er een kopen. De Mini Muis is niet duur!'] : [])];
+  }
+  // alles klaar!
+  if (state.quest.state === 'held') {
+    return ['Alle klusjes gedaan! Jij bent de held van De Stad!', 'O, en Professor Bolt in het dorp wil je iets laten zien. Er is daar iets nieuws verschenen...'];
+  }
+  return [pick([
+    'Dankzij jou is iedereen in De Stad blij. Eendje Ed zwemt weer en Opa Duif ziet weer alles!',
+    'Fijne dag in De Stad! Heb je de lolly op het dak van de snoepwinkel al gezien?',
+    'Op is op, maar meer kristallen vind je bij de slijmpjes in het Slijmbos!',
+  ])];
+}
+
 // Wat zeggen de mensen in De Stad?
 function cityLines(id, state) {
   const poor = state.crystals < 2;
   const noMoney = poor ? ['Heb je niet zoveel kristallen? Geen zorgen, kijken is gratis!'] : [];
   switch (id) {
-    case 'burgemeester':
-      if (!state.cityGift) {
-        return [
-          'Welkom, welkom in De Stad! Ik ben Burgemeester Bert.',
-          'Wij hebben hier vier winkels: speelgoed, snoep, kleding en boeken.',
-          'In De Stad betaal je met kristallen. Hier, een welkomstcadeautje van de stad: 10 kristallen!',
-          'Let op bij het oversteken: loop over het zebrapad. De autootjes stoppen altijd voor je!',
-        ];
-      }
-      return [pick([
-        'Fijne dag in De Stad! Heb je de lolly op het dak van de snoepwinkel al gezien?',
-        'Op is op, maar meer kristallen vind je bij de slijmpjes in het Slijmbos!',
-        'De autootjes rijden rustig rondjes. Ze stoppen netjes als je ervoor staat.',
-      ])];
+    case 'burgemeester': return bertLines(state);
     case 'speelgoed':
+      if (activeJob(state) === 'pakje') return ['Hallo! Ik ben Toby Tol.', 'Er zou vandaag een pakje voor mij komen... Heb jij het misschien gezien?'];
       return [pick(['Hallo! Ik ben Toby Tol. Welkom in mijn speelgoedwinkel!', 'Speelgoed, speelgoed! Kom maar kijken!', 'Robotje Bliep is mijn allerbeste uitvinding. Nou ja, na de jojo.']), ...noMoney];
     case 'snoep':
       return [pick(['Dag schatje! Ik ben Tante Toffee. Zin in iets lekkers?', 'Raketsnoep maakt je supersnel. Maar niet te veel, hoor!', 'Mmm, ruik je dat? Verse lollies!']), ...noMoney];
@@ -179,6 +245,8 @@ function cityLines(id, state) {
       if (state.clones > 0) return ['Wauw, zijn dat allemaal clones van jou?', 'Ik wil ook een clone! Dan kan die mijn huiswerk maken.'];
       return ['Hoi! Ik ben Lotte. Ik woon in De Stad.', 'Wist je dat de autootjes altijd stoppen als je ervoor staat? Superveilig!'];
     case 'opa':
+      if (activeJob(state) === 'bril') return ['Ik ben Opa Duif. Oei, ik zie alles wazig...', 'Mijn bril! Vanochtend wandelde ik nog bij de hoge flats aan de westkant. Daar ligt hij vast!'];
+      if (jobsDone(state) > 2) return [pick(['Met mijn bril zie ik weer alles scherp! Dankjewel!', 'Kijk, daar vliegt een duif! Die zag ik vroeger nooit.'])];
       return [pick([
         'Ik ben Opa Duif. Ik voer altijd de duiven. Maar waar zijn ze nou?',
         'Vroeger was hier alleen maar gras. Nu is het een hele stad!',

@@ -293,3 +293,22 @@ body.title #hud, body.title #top-btns, body.title #joy-base, body.title #talk-bt
   .round.pill { width: 44px; padding: 0; border-radius: 50%; }
   .round.pill .lbl { display: none; }
 }
+
+/* Klusjes van Burgemeester Bert */
+.jobs-progress { font-size: 18px; margin: 4px 0 10px; text-align: center; }
+.jobs-list { display: flex; flex-direction: column; gap: 8px; }
+.job-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 16px; background: #f1f3f8; border: 3px solid transparent; }
+.job-row.now { background: #fff6d6; border-color: #ffd23f; }
+.job-row.done { background: #e3f6ea; }
+.job-row.locked { opacity: 0.6; }
+.job-ico { font-size: 30px; width: 40px; text-align: center; flex: none; }
+.job-txt { flex: 1; min-width: 0; }
+.job-name { font-weight: 800; font-size: 17px; }
+.job-info { font-size: 14px; color: #555; }
+.job-prize { font-weight: 800; font-size: 15px; white-space: nowrap; flex: none; }
+@media (max-height: 500px) {
+  .job-row { padding: 5px 10px; gap: 8px; }
+  .job-ico { font-size: 22px; width: 30px; }
+  .job-name { font-size: 15px; } .job-info { font-size: 12px; }
+  .jobs-progress { font-size: 15px; margin: 0 0 6px; }
+}
