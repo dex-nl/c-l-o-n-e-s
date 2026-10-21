@@ -5,7 +5,7 @@ import { collide } from './physics.js';
 import { makeCarModel, CARS, FLY_CEILING } from './autowinkel.js';
 
 const CAR_H = 1.25; // zo hoog is de auto (voor daken als je vliegt)
-const CAR_R = 1.05; // de auto is (voor botsen) een cirkel van deze grootte
+export const CAR_R = 1.05; // de auto is (voor botsen) een cirkel van deze grootte
 const angleDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
 export const KICKFLIP_MIN_ALT = 1.5; // zo hoog moet je minstens vliegen
