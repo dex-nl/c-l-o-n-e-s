@@ -9,6 +9,8 @@ import { createPyramid } from './pyramid.js';
 import { Scorpion } from './scorpion.js';
 import { buildTreasureMap } from './treasure.js';
 import { createJobs } from './jobs.js';
+import { isPrivateCode, PRIVATE_REWARD } from './secret.js';
+import { fmt } from './format.js';
 import { buildCityShop, itemInfo, SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } from './cityshop.js';
 import { makeSignpost } from './props.js';
 import { Robot } from './robot.js';
@@ -809,7 +811,7 @@ function openCarShop() {
     onTooPoor(id) {
       const c = CARS[id];
       sfx.nope();
-      ui.toast(`Oei, je hebt nog net niet genoeg kristallen voor ${c.name}. Nog ${c.price - state.crystals} 💎 nodig!`, 3000);
+      ui.toast(`Oei, je hebt nog net niet genoeg kristallen voor ${c.name}. Nog ${fmt(c.price - state.crystals)} 💎 nodig!`, 3000);
     },
   });
   ui.openPanel('Autowinkel', build);
@@ -940,8 +942,18 @@ function openTreasure() {
 }
 
 // ---------- Geheime code (verstopt: tik 5 keer snel op je kristallen) ----------
-function useCode(raw) {
+async function useCode(raw) {
   const code = String(raw || '').toUpperCase().replace(/\s+/g, '');
+  // Dex zijn eigen code: elke keer +1.000 (de code zelf staat nergens, alleen een hash; zie secret.js)
+  if (!SECRET_CODES.includes(code) && await isPrivateCode(code)) {
+    state.crystals += PRIVATE_REWARD;
+    sfx.tada();
+    fx.sparkle({ x: player.pos.x, y: 1.5, z: player.pos.z }, [0x7af7ff, 0xffffff, 0xffd23f], 60, 5);
+    ui.toast(`💎 +${fmt(PRIVATE_REWARD)} kristallen!`, 3000);
+    refresh();
+    save();
+    return { ok: true, msg: `🎉 Gelukt! +${fmt(PRIVATE_REWARD)} kristallen 💎` };
+  }
   if (!SECRET_CODES.includes(code)) { sfx.nope(); return { ok: false, msg: 'Die code klopt niet.' }; }
   if (state.codes.includes(code)) { sfx.nope(); return { ok: false, msg: 'Deze code heb je al gebruikt!' }; }
   state.codes.push(code);
@@ -968,7 +980,7 @@ function openCode() {
     ok.id = 'code-ok'; ok.type = 'button'; ok.textContent = 'OK';
     const msg = document.createElement('div');
     msg.id = 'code-msg'; msg.className = 'code-msg';
-    const go = () => { const r = useCode(input.value); msg.textContent = r.msg; msg.style.color = r.ok ? '#2d6a4f' : '#c1121f'; if (r.ok) input.value = ''; };
+    const go = async () => { const r = await useCode(input.value); msg.textContent = r.msg; msg.style.color = r.ok ? '#2d6a4f' : '#c1121f'; if (r.ok) input.value = ''; };
     ok.addEventListener('pointerdown', (e) => { e.preventDefault(); go(); });
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
     row.append(input, ok);

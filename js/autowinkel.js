@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { mat, box } from './characters.js';
 import { mesh } from './props.js';
 import { Npc } from './npc.js';
+import { fmt } from './format.js';
 
 // ---------- De auto's (prijzen in kristallen 💎) ----------
 // Een rondje Slijmbos levert ongeveer 8-16 kristallen op, de Slijmgrot ongeveer 8 (+12 van Koning Slijm).
@@ -245,7 +246,7 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
     spin.add(model.g);
     colliders.push({ x, z, r: 1.85 });
     // prijsbordje
-    const tex = priceTexture(CARS[id].name.toUpperCase(), `💎 ${CARS[id].price}`, gold ? '#e63946' : '#3a86ff');
+    const tex = priceTexture(CARS[id].name.toUpperCase(), `💎 ${fmt(CARS[id].price)}`, id === 'wolk' ? '#9b5de5' : gold ? '#e63946' : '#3a86ff');
     const st = new THREE.Group();
     st.add(mesh(new THREE.BoxGeometry(0.08, 0.9, 0.08), mat(0x2d3142), 0, 0.45, 0));
     const face = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 0.65), new THREE.MeshBasicMaterial({ map: tex }));
@@ -311,7 +312,7 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
 export function buildCarShop(body, state, { onBuy, onPick, onTooPoor }) {
   const top = document.createElement('p');
   top.className = 'panel-note';
-  top.innerHTML = `Je hebt <b>💎 ${state.crystals}</b> kristallen. Koop een auto en rij hem door de garagedeur naar buiten!`;
+  top.innerHTML = `Je hebt <b>💎 ${fmt(state.crystals)}</b> kristallen. Koop een auto en rij hem door de garagedeur naar buiten!`;
   body.appendChild(top);
   const grid = document.createElement('div');
   grid.className = 'cards';
@@ -330,7 +331,7 @@ export function buildCarShop(body, state, { onBuy, onPick, onTooPoor }) {
     if (owned) {
       btn.textContent = state.car === id ? '✓ Klaar om te rijden' : 'Kies deze auto';
       btn.disabled = state.car === id;
-    } else btn.textContent = `💎 ${c.price}  Koop`;
+    } else btn.textContent = `💎 ${fmt(c.price)}  Koop`;
     btn.addEventListener('pointerdown', (e) => {
       e.preventDefault();
       if (btn.disabled) return;

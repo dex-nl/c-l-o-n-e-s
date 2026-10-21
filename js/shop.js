@@ -1,5 +1,6 @@
 // De kraam van Koopman Kees: hoedjes en handige spullen, te koop voor kristallen.
 import { MAX_HEARTS } from './save.js';
+import { fmt } from './format.js';
 
 export const SHOP = [
   { id: 'feest', icon: '🎉', name: 'Feestmuts', price: 5, kind: 'hoed', info: 'Voor jou én al je clones!' },
@@ -24,7 +25,7 @@ export function whyNot(item, state) {
 export function buildShop(body, state, onBuy) {
   const top = document.createElement('p');
   top.className = 'panel-note';
-  top.innerHTML = `Je hebt <b>💎 ${state.crystals}</b> kristallen. Slijmpjes laten ze vallen!`;
+  top.innerHTML = `Je hebt <b>💎 ${fmt(state.crystals)}</b> kristallen. Slijmpjes laten ze vallen!`;
   body.appendChild(top);
   const grid = document.createElement('div');
   grid.className = 'cards';

@@ -2,6 +2,7 @@
 import { HAT_NAMES } from './characters.js';
 import { reached, maxClones, GEARS_NEEDED, MAP_PIECES_TOTAL, JOBS } from './quest.js';
 import { SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } from './cityshop.js';
+import { fmt } from './format.js';
 
 const HAT_ICONS = { feest: '🎉', piraat: '🏴‍☠️', cowboy: '🤠', tovenaar: '🧙', kroon: '👑' };
 
@@ -29,7 +30,7 @@ export function buildBackpack(body, state, hearts, onWear, city = null) {
   const stuff = section(body, 'Spullen');
   if (state.sword) item(stuff, '⚔️', state.sword > 1 ? 'Superzwaard' : 'Zwaard', state.sword > 1 ? 'Goud!' : 'Van Professor Bolt');
   item(stuff, '❤️', 'Hartjes', `${hearts} van ${state.maxHearts}`);
-  item(stuff, '💎', 'Kristallen', `${state.crystals}`);
+  item(stuff, '💎', 'Kristallen', fmt(state.crystals));
   if (reached(q, 'aan')) item(stuff, '🧬', 'Clones', `${state.clones} van ${maxClones(q)}`);
   if (q.state === 'bezig') item(stuff, '⚙️', 'Tandwielen', `${q.gears.length} van ${GEARS_NEEDED}`);
   if (q.state === 'batterij') item(stuff, '🔋', 'Superbatterij', 'Voor Professor Bolt');
