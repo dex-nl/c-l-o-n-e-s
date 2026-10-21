@@ -42,6 +42,16 @@ Het spel van Dex (11 jaar).
 - Je spullen zitten in je **rugzak**: tik op snoep om te eten, op speelgoed om te spelen en op een boek om te lezen.
 - Lotte en Opa Duif wandelen over het plein.
 
+### De Grote Stad (idee van Dex!)
+- De Stad is nu ongeveer **3 keer zo groot**, zodat je lekker kunt rijden. Het plein, de 4 winkels, de Autowinkel en de poort staan nog op dezelfde plek.
+- Een **grote ringweg** om de hele stad, met de **Lange weg** aan de noordkant (achter de winkels, daar kun je met de Rode Raket echt hard!).
+- Een **rotonde** met een reuzenkristal in het midden.
+- Meer straten met bochten en zebrapaden. De Autowinkel heeft nu ook een uitgang naar de oostweg.
+- **Flats** (hoge gebouwen met balkonnetjes), meer huizen, een **stadspark** met een vijver, eendjes en een glijbaan, en een **parkeerplaats**.
+- 3 extra autootjes rijden over de ringweg en over de rotonde. Ze stoppen nog steeds voor iedereen.
+- Huizen, flats en winkels worden doorzichtig als ze tussen jou en de camera staan, zodat je jezelf altijd ziet.
+- Overal zacht botsen, nooit schade. Op de kaart (🗺️) zie je alle wegen.
+
 ### De Autowinkel (idee van Dex!)
 - Rechts in De Stad staat de **Autowinkel**: een echte showroom met een glazen voorkant. Je loopt gewoon door de open deur naar binnen (geen laadscherm). Binnen is het dak weg, zodat je alles goed ziet.
 - Op draaiende plateaus staan de auto's, elk met een bordje met de prijs in **kristallen** 💎:
@@ -76,6 +86,7 @@ Het spel van Dex (11 jaar).
 - [x] Clonemachine: clones van jezelf maken
 - [x] Een stad met winkels (idee van Joshua)
 - [x] Een autowinkel en zelf autorijden (idee van Dex)
+- [x] Een grotere stad met een ringweg, een rotonde en een lange weg (idee van Dex)
 - [ ] Een vliegende auto 🛸 (idee van Dex, komt nog!)
 - [ ] Hoofdstuk 3: wat wordt het? (Dex bedenkt het!)
 

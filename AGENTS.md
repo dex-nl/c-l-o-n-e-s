@@ -33,6 +33,8 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/world.js` – het dorp, de vijver, de poorten (Slijmbos en De Stad), de kraam en de clonemachine
 - `js/forest.js` – het Slijmbos, de grotdeur en de 3 drukknoppen
 - `js/city.js` – De Stad: plein, fontein, 4 winkels, huizen, de mensen en de regenboogpoort terug
+- `js/citymore.js` – De Grote Stad: de ringweg, de Lange weg, de rotonde, flats, huizen, het stadspark, de parkeerplaats en de route van de autootjes op de ringweg
+- `js/optimize.js` – sneller tekenen: stilstaande dingen samenplakken (`mergeStatic`, `mergeLocal`, `mergeGroup`) en veel dezelfde dingen in één keer (`instanced`). Iets nieuws dat beweegt in De Stad? Dat wordt vanzelf herkend (via de `updaters`) en niet samengeplakt.
 - `js/cars.js` – de autootjes in De Stad (rijden rondjes en stoppen voor iedereen die ervoor staat)
 - `js/cityshop.js` – wat de winkels in De Stad verkopen (shirts, speelgoed, snoep, boeken)
 - `js/robot.js` – Robotje Bliep, die met je meezweeft

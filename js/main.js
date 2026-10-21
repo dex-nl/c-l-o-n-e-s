@@ -144,6 +144,7 @@ const pickups = new Pickups(scene);
 const robot = new Robot(scene);
 const myCar = new MyCar(city.group, city.colliders); // jouw eigen auto (alleen in De Stad)
 let driving = false;
+let driveToastCd = 0; // hoe lang tot we weer zeggen: met de auto kun je niet door de poort
 const state = loadSave();
 const hadSave = (() => { try { return !!localStorage.getItem(SAVE_KEY); } catch (e) { return false; } })();
 let hearts = state.maxHearts;
@@ -801,6 +802,15 @@ function frame() {
   if (driving && zone === city) {
     const people = zone.npcs.map((n) => n.pos);
     if (myCar.update(dt, move, zone, people)) { sfx.bump(); shake = Math.max(shake, 0.2); }
+    // De poort is een muurtje voor auto's: je stuitert zachtjes terug (en dan zegt het spel: stap eerst uit)
+    for (const ex of zone.exits) {
+      const dx = myCar.pos.x - ex.x, dz = myCar.pos.z - ex.z, d = Math.hypot(dx, dz) || 1e-3, min = ex.r + 1.3;
+      if (d < min) {
+        myCar.pos.x = ex.x + (dx / d) * min; myCar.pos.z = ex.z + (dz / d) * min;
+        if (Math.abs(myCar.speed) > 1) { myCar.speed *= -0.25; sfx.bump(); }
+        myCar.syncMesh();
+      }
+    }
     player.pos.set(myCar.pos.x - myCar.dir.x * 0.25, SEAT_Y[myCar.id] ?? 0.2, myCar.pos.z - myCar.dir.z * 0.25);
     player.rot = myCar.rot;
     player.mesh.rotation.y = myCar.rot;
@@ -867,10 +877,12 @@ function frame() {
 
   // Uitgangen naar andere zones
   exitCooldown -= realDt;
+  driveToastCd -= realDt;
   if (started && !transition && !fainting && exitCooldown <= 0) {
     for (const ex of zone.exits) {
-      if (Math.hypot(player.pos.x - ex.x, player.pos.z - ex.z) > ex.r + (driving ? 1 : 0)) continue;
-      if (driving) { ui.toast('🚗 Met de auto kun je niet door de poort. Stap eerst uit!', 2500); exitCooldown = 1.5; break; }
+      const who = driving ? myCar.pos : player.pos;
+      if (Math.hypot(who.x - ex.x, who.z - ex.z) > ex.r + (driving ? 1.5 : 0)) continue;
+      if (driving) { if (driveToastCd <= 0) { ui.toast('🚗 Met de auto kun je niet door de poort. Stap eerst uit!', 2500); driveToastCd = 3; } break; }
       if (ex.open()) goTo(ex.to, ex.spawn());
       else { ui.toast(ex.closedMsg, 2500); exitCooldown = 3; }
       break;

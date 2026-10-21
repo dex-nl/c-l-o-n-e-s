@@ -46,3 +46,12 @@
 - Op de wensenlijst: een vliegende auto (er staat al een plekje met BINNENKORT!).
 - Save naar versie 5. Oude saves blijven werken (getest met saves van versie 0 t/m 5).
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
+
+## 21 oktober 2026: stad groter gemaakt, wens van Dex
+- Gemaakt met een AI-helper op de tak `grote-stad` (bouwt verder op de tak `autowinkel`). **Dex of papa beslist of het erin komt.**
+- De Stad is ongeveer 3 keer zo groot: een grote ringweg, de Lange weg, een rotonde met een reuzenkristal, meer straten en zebrapaden.
+- Nieuw: flats, meer huizen, een stadspark met een vijver, eendjes en een glijbaan, en een parkeerplaats. 3 extra autootjes op de ringweg.
+- Het plein, de winkels, de Autowinkel en de poort staan nog op dezelfde plek. De save is niet veranderd (nog steeds versie 5).
+- Sneller gemaakt voor de iPhone: alles wat stilstaat is samengeplakt en bomen en lantaarns worden in één keer getekend. Bij de poort: eerst 564, nu ongeveer 205 tekenopdrachten per beeld.
+- Gebouwen worden doorzichtig als ze voor de camera staan.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), met een test die het hele wegennet rondrijdt. Nog niet getest op een echte iPad.

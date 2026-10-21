@@ -277,7 +277,6 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
   hedge(28.5, -4.5, 16.2, 5.6);
   hedge(28.2, 21.2, 16.6, 1.6, 0.6);
   for (let fx = 21; fx < 36; fx += 1.5) mesh(new THREE.OctahedronGeometry(0.16, 0), mat([0xff6b6b, 0xffd23f, 0xffffff, 0xc77dff][Math.round(fx * 2) % 4]), fx, 0.72, 21.2, group);
-  hedge(37.2, 15.5, 1.2, 9);
 
   // ---------- Waar komt jouw auto te staan? ----------
   const pickup = { x: 28.2, z: 10.2, rot: 0 }; // vlak voor de garagedeur, met de neus naar buiten
