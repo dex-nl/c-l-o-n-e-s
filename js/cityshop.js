@@ -1,5 +1,6 @@
 // De winkels in De Stad: speelgoed, snoep, kleding en boeken. Je betaalt met kristallen 💎 (nep-geld uit het spel).
 // Dit bestand gebruikt niks uit save.js, zodat save.js de lijstjes hieronder kan gebruiken om saves te controleren.
+import { fmt } from './format.js';
 
 export const SHIRTS = {
   rood: { icon: '🟥', name: 'Rood shirt', color: 0xe63946 },
@@ -128,7 +129,7 @@ export function buildCityShop(body, shopId, state, onBuy, onTooPoor) {
   const shop = CITY_SHOPS[shopId];
   const top = document.createElement('p');
   top.className = 'panel-note';
-  top.innerHTML = `Je hebt <b>💎 ${state.crystals}</b> kristallen. ${shop.note}`;
+  top.innerHTML = `Je hebt <b>💎 ${fmt(state.crystals)}</b> kristallen. ${shop.note}`;
   body.appendChild(top);
   const grid = document.createElement('div');
   grid.className = 'cards';

@@ -100,3 +100,14 @@
 - Save naar versie 7 (welke klusjes klaar zijn). Oude saves blijven werken. Had je de woestijnpoort al (auto gekocht of al in de woestijn), dan houd je hem, en de klusjes kun je dan nog steeds doen.
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt rondje rijden met de toetsen. Nog niet getest op een echte iPad.
 
+
+## 21 oktober 2026: De Wolkenflitser, de vliegende auto (wens van Dex)
+- Gemaakt met een AI-helper op de tak `vliegende-tesla`. **Dex of papa beslist of het erin komt.**
+- In de Autowinkel staat nu de **Wolkenflitser**: een witte, strakke elektrische auto (zonder merklogo) met een glazen koepel. Hij kost **10.000 kristallen**.
+- Hij rijdt zoals de andere auto's, maar kan ook vliegen: knoppen **⬆️ Omhoog** en **⬇️ Omlaag** op de iPad/iPhone, **spatie** en **Shift** op de MacBook. Uitstappen in de lucht = eerst zachtjes landen.
+- Je vliegt over huizen, winkels en bomen, maar niet door flats en niet hoger dan 8 meter. Door de poort mag ook vliegend niet: eerst uitstappen.
+- Blauwe straalmotoren onder de auto, uitklappende vleugeltjes en windwolkjes.
+- Grote getallen met een punt (10.000), overal waar kristallen staan.
+- Ook nieuw: **Dex zijn eigen code (geheim)**. Die geeft elke keer +1.000 kristallen. De code staat nergens opgeschreven, alleen een hash.
+- De save is niet veranderd (nog steeds versie 7).
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.

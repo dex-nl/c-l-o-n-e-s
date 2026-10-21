@@ -1,4 +1,5 @@
 // Alles wat over het 3D-beeld heen ligt: opdracht, hartjes, praatwolk, meldingen, panelen.
+import { fmt } from './format.js';
 const $ = (id) => document.getElementById(id);
 
 export const ui = {
@@ -35,7 +36,7 @@ export const ui = {
     $('stats').classList.toggle('hidden', !show);
     const h = '❤️'.repeat(Math.max(0, hearts)) + '🤍'.repeat(Math.max(0, max - hearts));
     if ($('hearts').textContent !== h) $('hearts').textContent = h;
-    const c = `💎 ${crystals}`;
+    const c = `💎 ${fmt(crystals)}`;
     if ($('crystals').textContent !== c) {
       $('crystals').textContent = c;
       $('crystals').classList.remove('bump');

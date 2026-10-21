@@ -182,6 +182,7 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 .panel-note { font-size: 17px; margin: 4px 0 12px; }
 .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
 .cards.small { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+.cards.cars { grid-template-columns: repeat(auto-fill, minmax(124px, 1fr)); }
 .card {
   background: #fff; border: 3px solid #e6dfcc; border-radius: 18px; padding: 10px 10px 12px;
   display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px;
@@ -240,6 +241,21 @@ body.title #hud, body.title #top-btns, body.title #joy-base, body.title #talk-bt
 }
 #error.hidden { display: none; }
 
+/* Vliegknoppen van de Wolkenflitser (ingedrukt houden) */
+#fly-btns {
+  position: fixed; right: calc(200px + env(safe-area-inset-right)); bottom: calc(50px + env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; gap: 12px; z-index: 5;
+}
+#fly-btns.hidden { display: none; }
+#fly-btns button {
+  width: 88px; height: 82px; border-radius: 22px; border: none; color: #fff; font-size: 30px; line-height: 1;
+  background: #9b5de5; box-shadow: 0 6px 0 #5a2a9c; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+#fly-btns button span { font-size: 15px; font-weight: 800; margin-top: 3px; }
+#fly-btns button.down { transform: translateY(4px); box-shadow: 0 2px 0 #5a2a9c; background: #b388f0; }
+body.title #fly-btns { visibility: hidden; }
+
 /* ---------- Kleine schermen (iPhone liggend) ---------- */
 @media (max-height: 500px) {
   #hud { max-width: 52vw; gap: 6px; }
@@ -263,6 +279,9 @@ body.title #hud, body.title #top-btns, body.title #joy-base, body.title #talk-bt
   #panel-title { font-size: 24px; }
   .card-icon { font-size: 30px; }
   #tagline { font-size: 20px; }
+  #fly-btns { right: calc(138px + env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); gap: 8px; }
+  #fly-btns button { width: 70px; height: 62px; font-size: 22px; border-radius: 18px; }
+  #fly-btns button span { font-size: 12px; }
   #start-btn { font-size: 26px; padding: 12px 34px; margin-top: 8px; }
 }
 

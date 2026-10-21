@@ -9,6 +9,8 @@ import { createPyramid } from './pyramid.js';
 import { Scorpion } from './scorpion.js';
 import { buildTreasureMap } from './treasure.js';
 import { createJobs } from './jobs.js';
+import { isPrivateCode, PRIVATE_REWARD } from './secret.js';
+import { fmt } from './format.js';
 import { buildCityShop, itemInfo, SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } from './cityshop.js';
 import { makeSignpost } from './props.js';
 import { Robot } from './robot.js';
@@ -173,7 +175,7 @@ let hearts = state.maxHearts;
 let boost = 0; // hoe lang het Raketsnoep nog werkt (seconden)
 
 // De autootjes in De Stad stoppen voor de speler, de clones en Robotje Bliep
-city.getPeople = () => [player.pos, ...squad.list.map((c) => c.pos), ...(robot.g.visible ? [robot.pos] : []), ...(myCar.model && !driving ? [myCar.parkedA, myCar.parkedB] : [])];
+city.getPeople = () => [...(driving && myCar.alt > 1.5 ? [] : [player.pos]), ...squad.list.map((c) => c.pos), ...(robot.g.visible ? [robot.pos] : []), ...(myCar.model && !driving ? [myCar.parkedA, myCar.parkedB] : [])];
 let lastHonk = 0;
 city.onHonk = () => {
   sfx.toet();
@@ -778,7 +780,7 @@ const CITY_TITLES = { speelgoed: 'Speelgoedwinkel', snoep: 'Snoepwinkel', kledin
 // ---------- De Autowinkel en zelf rijden ----------
 const CAR_ENTER_DISTANCE = 2.6;
 const nearMyCar = () => game.zone === city && !driving && myCar.distanceTo(player.pos) < CAR_ENTER_DISTANCE;
-const SEAT_Y = { mini: 0.22, jeep: 0.5, sport: 0.12, race: 0.08 };
+const SEAT_Y = { mini: 0.22, jeep: 0.5, sport: 0.12, race: 0.08, wolk: 0.18 };
 
 function openCarShop() {
   const build = (body) => buildCarShop(body, state, {
@@ -809,7 +811,7 @@ function openCarShop() {
     onTooPoor(id) {
       const c = CARS[id];
       sfx.nope();
-      ui.toast(`Oei, je hebt nog net niet genoeg kristallen voor ${c.name}. Nog ${c.price - state.crystals} 💎 nodig!`, 3000);
+      ui.toast(`Oei, je hebt nog net niet genoeg kristallen voor ${c.name}. Nog ${fmt(c.price - state.crystals)} 💎 nodig!`, 3000);
     },
   });
   ui.openPanel('Autowinkel', build);
@@ -820,10 +822,26 @@ function enterCar() {
   myCar.setDriving(true);
   player.legsSit = true;
   sfx.toet();
-  ui.toast('🚗 Rijden maar! Druk nog eens op de knop om uit te stappen.', 2500);
+  controls.flyMode = myCar.canFly;
+  document.getElementById('fly-btns').classList.toggle('hidden', !myCar.canFly);
+  if (myCar.canFly) ui.toast(matchMedia('(pointer: coarse)').matches ? '🛸 Wolkenflitser! Houd ⬆️ Omhoog ingedrukt om te vliegen, ⬇️ Omlaag om te zakken.' : '🛸 Wolkenflitser! Spatie = omhoog, Shift = omlaag. Uitstappen met E.', 3500);
+  else ui.toast('🚗 Rijden maar! Druk nog eens op de knop om uit te stappen.', 2500);
+}
+
+function stopFlying() {
+  controls.flyMode = false;
+  controls.flyBtn.up = controls.flyBtn.down = false;
+  document.getElementById('fly-btns').classList.add('hidden');
 }
 
 function exitCar() {
+  // Vlieg je nog? Dan eerst rustig landen; als je beneden bent stap je vanzelf uit.
+  if (myCar.flying) {
+    if (myCar.blockedBelow) { ui.toast('🚫 Hier kun je niet landen. Vlieg eerst naar een vrije plek!', 2600); sfx.nope(); return; }
+    if (!myCar.landing) { myCar.landing = true; ui.toast('🛬 Landen...', 1800); }
+    return;
+  }
+  stopFlying();
   // Stap uit aan de zijkant (links of rechts, of achter de auto als het daar niet past)
   const d = myCar.dir;
   const tries = [[-d.z, d.x, 1.6], [d.z, -d.x, 1.6], [-d.x, -d.z, 2.0], [d.x, d.z, 2.0]];
@@ -848,6 +866,30 @@ function exitCar() {
   }
   sfx.click();
   save();
+}
+
+// Effecten van de Wolkenflitser: windwolkjes als je vliegt, en vanzelf uitstappen als je geland bent
+let windCd = 0;
+function flyFx(dt, wasFlying) {
+  if (myCar.flying) {
+    windCd -= dt;
+    if (windCd <= 0) {
+      windCd = 0.09;
+      const d = myCar.dir, sp = Math.abs(myCar.speed);
+      const back = sp > 1 ? 1.8 : 0;
+      fx.sparkle({ x: myCar.pos.x - d.x * back + (Math.random() - 0.5) * 1.4, y: myCar.alt + 0.1, z: myCar.pos.z - d.z * back + (Math.random() - 0.5) * 1.4 }, [0xffffff, 0xd8f3ff, 0x7af7ff], 3, 1.2);
+    }
+  }
+  if (!wasFlying && myCar.flying) sfx.toet();
+  if (myCar.landing && !myCar.flying) {
+    myCar.landing = false;
+    fx.sparkle({ x: myCar.pos.x, y: 0.3, z: myCar.pos.z }, [0xffffff, 0x7af7ff], 18, 2.5);
+    return true;
+  } else if (myCar.landing && myCar.blockedBelow) {
+    myCar.landing = false;
+    ui.toast('🚫 Hier kun je niet landen. Vlieg eerst naar een vrije plek!', 2600);
+  }
+  return false;
 }
 
 // Snoep eten, met speelgoed spelen en boeken lezen (vanuit de rugzak)
@@ -940,8 +982,18 @@ function openTreasure() {
 }
 
 // ---------- Geheime code (verstopt: tik 5 keer snel op je kristallen) ----------
-function useCode(raw) {
+async function useCode(raw) {
   const code = String(raw || '').toUpperCase().replace(/\s+/g, '');
+  // Dex zijn eigen code: elke keer +1.000 (de code zelf staat nergens, alleen een hash; zie secret.js)
+  if (!SECRET_CODES.includes(code) && await isPrivateCode(code)) {
+    state.crystals += PRIVATE_REWARD;
+    sfx.tada();
+    fx.sparkle({ x: player.pos.x, y: 1.5, z: player.pos.z }, [0x7af7ff, 0xffffff, 0xffd23f], 60, 5);
+    ui.toast(`💎 +${fmt(PRIVATE_REWARD)} kristallen!`, 3000);
+    refresh();
+    save();
+    return { ok: true, msg: `🎉 Gelukt! +${fmt(PRIVATE_REWARD)} kristallen 💎` };
+  }
   if (!SECRET_CODES.includes(code)) { sfx.nope(); return { ok: false, msg: 'Die code klopt niet.' }; }
   if (state.codes.includes(code)) { sfx.nope(); return { ok: false, msg: 'Deze code heb je al gebruikt!' }; }
   state.codes.push(code);
@@ -968,7 +1020,7 @@ function openCode() {
     ok.id = 'code-ok'; ok.type = 'button'; ok.textContent = 'OK';
     const msg = document.createElement('div');
     msg.id = 'code-msg'; msg.className = 'code-msg';
-    const go = () => { const r = useCode(input.value); msg.textContent = r.msg; msg.style.color = r.ok ? '#2d6a4f' : '#c1121f'; if (r.ok) input.value = ''; };
+    const go = async () => { const r = await useCode(input.value); msg.textContent = r.msg; msg.style.color = r.ok ? '#2d6a4f' : '#c1121f'; if (r.ok) input.value = ''; };
     ok.addEventListener('pointerdown', (e) => { e.preventDefault(); go(); });
     input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
     row.append(input, ok);
@@ -1066,6 +1118,8 @@ const controls = new Controls({
 const tapBtn = (id, fn) => document.getElementById(id).addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); fn(); });
 tapBtn('sound-btn', toggleSound);
 tapBtn('music-btn', toggleMusic);
+controls.holdButton(document.getElementById('fly-up'), 'up');
+controls.holdButton(document.getElementById('fly-down'), 'down');
 tapBtn('bag-btn', openBackpack);
 tapBtn('map-btn', openMap);
 tapBtn('ghost-btn', toggleClones);
@@ -1133,7 +1187,10 @@ function frame() {
   const before = player.pos.clone();
   if (driving && zone === city) {
     const people = zone.npcs.map((n) => n.pos);
+    const wasFlying = myCar.flying;
+    myCar.fly(dt, paused || transition ? 0 : controls.lift, zone);
     if (myCar.update(dt, move, zone, people)) { sfx.bump(); shake = Math.max(shake, 0.2); }
+    const landed = myCar.canFly && flyFx(dt, wasFlying);
     // De poort is een muurtje voor auto's: je stuitert zachtjes terug (en dan zegt het spel: stap eerst uit)
     for (const ex of zone.exits) {
       const dx = myCar.pos.x - ex.x, dz = myCar.pos.z - ex.z, d = Math.hypot(dx, dz) || 1e-3, min = ex.r + 1.3;
@@ -1143,15 +1200,16 @@ function frame() {
         myCar.syncMesh();
       }
     }
-    player.pos.set(myCar.pos.x - myCar.dir.x * 0.25, SEAT_Y[myCar.id] ?? 0.2, myCar.pos.z - myCar.dir.z * 0.25);
+    player.pos.set(myCar.pos.x - myCar.dir.x * 0.25, (SEAT_Y[myCar.id] ?? 0.2) + myCar.model.g.position.y, myCar.pos.z - myCar.dir.z * 0.25);
     player.rot = myCar.rot;
     player.mesh.rotation.y = myCar.rot;
     player.walkAmount = Math.abs(myCar.speed) > 0.4 ? 1 : 0; // clones: niet dansen tijdens het rijden
     player.speed = Math.max(6, Math.abs(myCar.speed) + 1);   // clones rennen je achterna
     player.ch.legs.forEach((l) => { l.rotation.x = -1.45; }); // zitten
     player.ch.arms.forEach((a) => { a.rotation.x = -0.9; });  // handen aan het stuur
+    if (landed) exitCar(); // netjes geland: nu stap je uit
   } else {
-    if (driving) { driving = false; myCar.setDriving(false); player.pos.y = 0; }
+    if (driving) { driving = false; myCar.setDriving(false); stopFlying(); player.pos.y = 0; }
     player.update(dt, move, zone);
   }
   if (before.distanceToSquared(player.pos) > 1e-6) dirty = true;
@@ -1261,7 +1319,7 @@ function frame() {
   const near = !paused && !driving && !(state.sword && enemyNear()) && nearestTalkable();
   const carNear = !paused && nearMyCar() && (!near || myCar.distanceTo(player.pos) < near.distanceTo(player.pos));
   if (ui.dialogOpen) ui.setActionBtn('Verder', true, false);
-  else if (driving) ui.setActionBtn('Uitstappen', true, false);
+  else if (driving) ui.setActionBtn(myCar.flying ? 'Landen' : 'Uitstappen', true, false);
   else if (carNear) ui.setActionBtn('Instappen', true, true);
   else if (near) ui.setActionBtn(near.sign ? 'Lees' : 'Praat', true, true);
   else if (state.sword) ui.setActionBtn('⚔️', true, false);
@@ -1283,7 +1341,7 @@ function frame() {
   } else {
     lookGoal.copy(player.pos);
     camTarget.copy(player.pos).add(CAM_OFFSET);
-    if (driving) camTarget.addScaledVector(CAM_OFFSET, 0.2);
+    if (driving) camTarget.addScaledVector(CAM_OFFSET, 0.2 + myCar.alt * 0.035); // vliegen: iets verder weg, zodat je de stad ziet
   }
   camera.position.lerp(camTarget, Math.min(1, realDt * (started ? 4 : 1.5)));
   lookAt.lerp(lookGoal, Math.min(1, realDt * 6));
@@ -1342,7 +1400,7 @@ window.clones = {
   forest, cave, city, desert, pyramid, zones, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
-  get boost() { return boost; }, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop,
+  get boost() { return boost; }, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,
   get enemies() { return enemies; }, get hearts() { return hearts; }, set hearts(v) { hearts = v; },
   get started() { return started; }, start: () => { if (!started) document.getElementById('start').dispatchEvent(new PointerEvent('pointerup')); },
   setDebugCam: (pos, look) => { debugCam = pos ? { pos, look } : null; },
