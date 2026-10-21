@@ -522,9 +522,12 @@ function mazeAppear() {
 }
 
 let dirty = false;
+const num = (v, alt) => (Number.isFinite(v) ? +v.toFixed(2) : alt);
+
 function save() {
   if (game.zone === maze) state.maze.seen = maze.seenHex();
-  state.player = { x: +player.pos.x.toFixed(2), z: +player.pos.z.toFixed(2), rot: +player.rot.toFixed(2) };
+  const old = state.player || {};
+  state.player = { x: num(player.pos.x, num(old.x, 0)), z: num(player.pos.z, num(old.z, 5)), rot: num(player.rot, num(old.rot, 0)) };
   writeSave(state);
   dirty = false;
 }
@@ -1482,6 +1485,13 @@ function frame() {
     if (player.mesh.rotation.z) player.mesh.rotation.z = 0;
     player.update(dt, move, zone);
   }
+  // Veiligheid: raakt de speler ooit een kapotte plek kwijt (NaN), zet hem terug
+  if (!Number.isFinite(player.pos.x) || !Number.isFinite(player.pos.z)) {
+    if (!window.__nanSeen) { window.__nanSeen = true; console.warn('speler-plek was kapot, teruggezet'); }
+    player.pos.x = Number.isFinite(before.x) ? before.x : 0; player.pos.z = Number.isFinite(before.z) ? before.z : 0;
+    player.kx = player.kz = 0;
+  }
+  if (!Number.isFinite(player.rot)) player.rot = 0;
   if (before.distanceToSquared(player.pos) > 1e-6) dirty = true;
   if (player.swingHit) { swordHits(player.pos, player.rot, state.sword, false); hitStones(player.pos, player.rot); }
 
