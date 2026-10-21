@@ -1369,6 +1369,7 @@ function updateMaze(dt, paused) {
       shake = Math.max(shake, 0.8);
       fx.sparkle({ x: door.x, y: 2, z: door.z }, [door.color, 0xffffff], 30, 4);
       ui.toast(`🚪 De ${door.name} deur gaat open! (${m.doors.length}/3)`, 3000);
+      mazeHint = 0; // bij de volgende deur meteen weer een tip
       maze.hideTrail();
       refresh();
       save();
