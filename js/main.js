@@ -15,7 +15,7 @@ import { buildCityShop, itemInfo, SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } 
 import { makeSignpost } from './props.js';
 import { Robot } from './robot.js';
 import { buildCarShop, CARS } from './autowinkel.js';
-import { MyCar } from './drive.js';
+import { MyCar, KICKFLIP_MIN_ALT } from './drive.js';
 import { Player } from './player.js';
 import { makeBolt, makeKoopman, makeOma, Dog } from './npc.js';
 import { Controls } from './controls.js';
@@ -868,9 +868,29 @@ function exitCar() {
   save();
 }
 
+// Kickflip! (alleen hoog genoeg in de lucht, en niet te vaak)
+let flipToastCd = 0;
+function kickflip() {
+  if (!driving || !myCar.canFly || ui.panelOpen || ui.dialogOpen) return;
+  if (myCar.kickflip()) {
+    sfx.whoosh();
+    setTimeout(() => sfx.whoosh(), 350);
+    ui.toast('Kickflip! 😎', 1400);
+    return;
+  }
+  if (!myCar.flipT && myCar.alt < KICKFLIP_MIN_ALT && flipToastCd <= 0) { ui.toast('🔄 Vlieg eerst wat hoger voor een kickflip!', 2000); flipToastCd = 2.5; }
+}
+
 // Effecten van de Wolkenflitser: windwolkjes als je vliegt, en vanzelf uitstappen als je geland bent
 let windCd = 0;
 function flyFx(dt, wasFlying) {
+  flipToastCd -= dt;
+  document.getElementById('flip-btn').classList.toggle('off', !myCar.canKickflip);
+  if (myCar.flipT) {
+    // een glitterspoor tijdens de kickflip
+    const a = myCar.roll, d = myCar.dir;
+    fx.sparkle({ x: myCar.pos.x + Math.cos(a) * d.z * 1.1, y: myCar.alt + 0.6 + Math.sin(a) * 1.1, z: myCar.pos.z - Math.cos(a) * d.x * 1.1 }, [0xffd23f, 0xff8c42, 0x7af7ff, 0xffffff], 4, 1.5);
+  }
   if (myCar.flying) {
     windCd -= dt;
     if (windCd <= 0) {
@@ -1109,6 +1129,7 @@ const controls = new Controls({
   onKey: (k) => {
     if (k === 'escape') ui.closePanel();
     else if (ui.panelOpen) ui.closePanel();
+    else if (k === 'f') kickflip();
     else if (k === 'm') openMap();
     else if (k === 'h') toggleClones();
     else openBackpack();
@@ -1123,6 +1144,7 @@ controls.holdButton(document.getElementById('fly-down'), 'down');
 tapBtn('bag-btn', openBackpack);
 tapBtn('map-btn', openMap);
 tapBtn('ghost-btn', toggleClones);
+tapBtn('flip-btn', kickflip);
 ui.onVoice = (pitch) => sfx.voice(pitch);
 
 // ---------- De drukknoppen voor de grotdeur ----------
@@ -1203,6 +1225,7 @@ function frame() {
     player.pos.set(myCar.pos.x - myCar.dir.x * 0.25, (SEAT_Y[myCar.id] ?? 0.2) + myCar.model.g.position.y, myCar.pos.z - myCar.dir.z * 0.25);
     player.rot = myCar.rot;
     player.mesh.rotation.y = myCar.rot;
+    player.mesh.rotation.z = myCar.roll; // je draait mee met de kickflip (en blijft netjes zitten)
     player.walkAmount = Math.abs(myCar.speed) > 0.4 ? 1 : 0; // clones: niet dansen tijdens het rijden
     player.speed = Math.max(6, Math.abs(myCar.speed) + 1);   // clones rennen je achterna
     player.ch.legs.forEach((l) => { l.rotation.x = -1.45; }); // zitten
@@ -1210,6 +1233,7 @@ function frame() {
     if (landed) exitCar(); // netjes geland: nu stap je uit
   } else {
     if (driving) { driving = false; myCar.setDriving(false); stopFlying(); player.pos.y = 0; }
+    if (player.mesh.rotation.z) player.mesh.rotation.z = 0;
     player.update(dt, move, zone);
   }
   if (before.distanceToSquared(player.pos) > 1e-6) dirty = true;
@@ -1400,7 +1424,7 @@ window.clones = {
   forest, cave, city, desert, pyramid, zones, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
-  get boost() { return boost; }, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,
+  get boost() { return boost; }, kickflip, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,
   get enemies() { return enemies; }, get hearts() { return hearts; }, set hearts(v) { hearts = v; },
   get started() { return started; }, start: () => { if (!started) document.getElementById('start').dispatchEvent(new PointerEvent('pointerup')); },
   setDebugCam: (pos, look) => { debugCam = pos ? { pos, look } : null; },

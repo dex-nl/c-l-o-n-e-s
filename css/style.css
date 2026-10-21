@@ -253,6 +253,8 @@ body.title #hud, body.title #top-btns, body.title #joy-base, body.title #talk-bt
   touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
 }
 #fly-btns button span { font-size: 15px; font-weight: 800; margin-top: 3px; }
+#flip-btn { background: #ff8c42 !important; box-shadow: 0 6px 0 #b85a14 !important; }
+#flip-btn.off { opacity: 0.45; }
 #fly-btns button.down { transform: translateY(4px); box-shadow: 0 2px 0 #5a2a9c; background: #b388f0; }
 body.title #fly-btns { visibility: hidden; }
 
