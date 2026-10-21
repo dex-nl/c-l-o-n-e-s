@@ -7,6 +7,9 @@ import { makePortal } from './world.js';
 import { Npc } from './npc.js';
 import { makeHat } from './characters.js';
 import { createCars, roundedLoop } from './cars.js';
+import { createShowroom } from './autowinkel.js';
+import { createBigCity, treeBatch, makeHouse, BIG_BOUNDS } from './citymore.js';
+import { mergeStatic, mergeLocal, instanced } from './optimize.js';
 
 // Een bord met tekst dat zelf de letters kleiner maakt als de tekst lang is
 function wideSign(text, bg, w = 512, h = 112) {
@@ -67,23 +70,25 @@ export function createCity(group) {
   mesh(new THREE.CylinderGeometry(0.9, 0.6, 0.25, 10), mat(0xb8bec7), fx, 2.0, fz, group);
   const spout = mesh(new THREE.ConeGeometry(0.3, 1, 8), mat(0x9bdcff, { transparent: true, opacity: 0.7 }), fx, 2.6, fz, group);
   spout.castShadow = false;
-  const drops = [];
-  for (let i = 0; i < 16; i++) {
-    const d = new THREE.Mesh(new THREE.SphereGeometry(0.08, 5, 4), new THREE.MeshBasicMaterial({ color: 0xbfe9ff }));
-    group.add(d); drops.push({ d, a: (i / 16) * Math.PI * 2, ph: i / 16 });
-  }
+  // de druppels: 16 stuks, in één keer getekend
+  const drops = new THREE.InstancedMesh(new THREE.SphereGeometry(0.08, 5, 4), new THREE.MeshBasicMaterial({ color: 0xbfe9ff }), 16);
+  drops.frustumCulled = false;
+  group.add(drops);
+  const dropM = new THREE.Matrix4();
   updaters.push((t) => {
     spout.scale.y = 1 + Math.sin(t * 6) * 0.15;
-    for (const p of drops) {
-      const k = (t * 0.8 + p.ph) % 1;
-      p.d.position.set(fx + Math.cos(p.a) * k * 1.4, 3 + k * 1.2 - k * k * 3.6, fz + Math.sin(p.a) * k * 1.4);
+    for (let i = 0; i < 16; i++) {
+      const a = (i / 16) * Math.PI * 2, k = (t * 0.8 + i / 16) % 1;
+      dropM.makeTranslation(fx + Math.cos(a) * k * 1.4, 3 + k * 1.2 - k * k * 3.6, fz + Math.sin(a) * k * 1.4);
+      drops.setMatrixAt(i, dropM);
     }
+    drops.instanceMatrix.needsUpdate = true;
   });
   colliders.push({ x: fx, z: fz, r: 2.3 });
 
   // ---------- De 4 winkels (op een rij aan de achterkant van het plein) ----------
   const FRONT = -7; // hier is de voorkant van de winkels
-  const shopSpots = [];
+  const shopSpots = [], shopGroups = [];
   function shop(x, { name, wall, trim, awning, deco }) {
     const g = new THREE.Group();
     g.position.set(x, 0, 0);
@@ -111,6 +116,7 @@ export function createCity(group) {
     deco(g, updaters);
     boxes.push({ x, z: cz, hw: W / 2, hd: D / 2 });
     shopSpots.push({ x, z: FRONT + 1.9 });
+    shopGroups.push(g);
     return g;
   }
 
@@ -212,26 +218,8 @@ export function createCity(group) {
 
   // ---------- Huizen langs de hoofdstraat ----------
   const roofCols = [0xd1495b, 0x3a86ff, 0x9b5de5, 0x2a9d8f, 0xff8c42];
-  function house(x, z, rot, roof, tall = 1) {
-    const g = new THREE.Group();
-    const fade = z > 4; // huizen vooraan worden doorzichtig als je erachter loopt
-    const m = (c, extra = {}) => mat(c, fade ? { transparent: true, ...extra } : extra);
-    const mats = [];
-    const add = (geo, material, px, py, pz) => { mats.push(material); return mesh(geo, material, px, py, pz, g); };
-    const h = 3.4 * tall;
-    add(new THREE.BoxGeometry(4.4, h, 4.4), m(0xfff1d6), 0, h / 2, 0);
-    const r = add(new THREE.ConeGeometry(3.6, 2, 4), m(roof), 0, h + 1, 0);
-    r.rotation.y = Math.PI / 4;
-    add(new THREE.BoxGeometry(1, 1.7, 0.1), m(0x8b5a2b), 0, 0.85, 2.22);
-    const win = m(0x9ad7f5, { emissive: 0x335566 });
-    for (const wx of [-1.4, 1.4]) add(new THREE.BoxGeometry(0.8, 0.8, 0.1), win, wx, 1.6, 2.22);
-    if (tall > 1) for (const wx of [-1.4, 0, 1.4]) add(new THREE.BoxGeometry(0.8, 0.8, 0.1), win, wx, 3.8, 2.22);
-    g.position.set(x, 0, z);
-    g.rotation.y = rot;
-    group.add(g);
-    boxes.push({ x, z, hw: 2.3, hd: 2.3 });
-    if (fade) fadeables.push({ x, z, r: 2.4, mats, k: 1 });
-  }
+  // (alle huizen worden doorzichtig als ze tussen jou en de camera staan)
+  const house = (x, z, rot, roof, tall = 1) => makeHouse(group, { boxes, fadeables }, x, z, rot, roof, tall);
   house(-8.5, 11.8, Math.PI / 2, roofCols[0], 1.6);
   house(-13.6, 11.8, Math.PI / 2, roofCols[1]);
   house(-9, 23.2, Math.PI, roofCols[3], 1.6);
@@ -240,18 +228,10 @@ export function createCity(group) {
   house(18.5, -12, 0, roofCols[0], 1.6);
 
   // ---------- Een parkje met bomen en bankjes ----------
-  function tree(x, z, s = 1, collide = true) {
-    const g = new THREE.Group();
-    mesh(new THREE.CylinderGeometry(0.18 * s, 0.26 * s, 1.4 * s, 5), mat(0x8b5a2b), 0, 0.7 * s, 0, g);
-    const top = mesh(new THREE.IcosahedronGeometry(1.1 * s, 0), mat([0x52b788, 0x40916c, 0x74c69d][Math.floor(rand() * 3)]), 0, 2 * s, 0, g);
-    g.position.set(x, 0, z);
-    group.add(g);
-    const ph = rand() * 6;
-    updaters.push((t) => { top.rotation.z = Math.sin(t * 1.3 + ph) * 0.05; });
-    if (collide) colliders.push({ x, z, r: 0.55 * s });
-  }
+  const trees = treeBatch(rand, colliders); // alle bomen samen in één keer getekend
+  const tree = (x, z, s = 1, collide = true) => trees.add(x, z, s, collide);
   flat(10, 7, 0x74c69d, 10, 11.8, 0.025);
-  tree(7, 10.2, 1.1); tree(13.4, 13.6, 1.2); tree(13, 9.8, 1); tree(-17.5, 2.5, 1.1); tree(17.5, 2.5, 1.1); tree(-15, 21.5, 1); tree(15, 21.5, 1);
+  tree(7, 10.2, 1.1); tree(13.4, 13.6, 1.2); tree(13, 9.8, 1); tree(-17.5, 2.5, 1.1); tree(17.5, 2.5, 1.1);
   function bench(x, z, rot) {
     const g = new THREE.Group();
     mesh(new THREE.BoxGeometry(1.8, 0.12, 0.6), mat(0xc68b59), 0, 0.5, 0, g);
@@ -269,6 +249,7 @@ export function createCity(group) {
   }
 
   // ---------- Lantaarnpalen en vlaggetjes over de straat ----------
+  const flagGeo = new THREE.ConeGeometry(0.25, 0.5, 3), flagM = new THREE.MeshBasicMaterial({ color: 0xffffff });
   for (const z of [8, 14, 20]) {
     for (const sx of [-4.4, 4.4]) {
       mesh(new THREE.CylinderGeometry(0.08, 0.1, 3.6, 6), mat(0x2d3142), sx, 1.8, z, group);
@@ -278,28 +259,13 @@ export function createCity(group) {
     const flags = new THREE.Group();
     flags.position.set(0, 3.4, z);
     const cols = [0xe63946, 0xffd23f, 0x3a86ff, 0x52b788, 0xff8fab];
-    for (let i = 0; i < 11; i++) {
-      const f = new THREE.Mesh(new THREE.ConeGeometry(0.25, 0.5, 3), new THREE.MeshBasicMaterial({ color: cols[i % 5] }));
-      f.rotation.x = Math.PI;
-      f.position.set(-4 + i * 0.8, -0.35 - Math.sin((i / 10) * Math.PI) * 0.4, 0);
-      flags.add(f);
-    }
+    instanced(flags, flagGeo, flagM, Array.from({ length: 11 }, (_, i) => ({ x: -4 + i * 0.8, y: -0.35 - Math.sin((i / 10) * Math.PI) * 0.4, z: 0, rx: Math.PI, color: cols[i % 5] })), { cast: false, receive: false });
     group.add(flags);
     updaters.push((t) => { flags.rotation.x = Math.sin(t * 1.5 + z) * 0.12; });
   }
 
-  // ---------- Hoge gebouwen achter de winkels (de skyline) ----------
-  for (let i = 0; i < 12; i++) {
-    const x = -30 + i * 5.5 + (rand() - 0.5) * 2, h = 8 + rand() * 9;
-    const b = mesh(new THREE.BoxGeometry(4.6, h, 4.6), mat([0xcdb4db, 0xbde0fe, 0xffc8dd, 0xfde4cf, 0xd8e2dc][i % 5]), x, h / 2, -20 - rand() * 3, group);
-    for (let y = 2; y < h - 1; y += 2.2) mesh(new THREE.BoxGeometry(3.6, 0.7, 0.1), mat(0x9ad7f5, { emissive: 0x335566 }), x, y, b.position.z + 2.31, group);
-  }
-  for (let i = 0; i < 40; i++) {
-    const a = rand() * Math.PI * 2, r = 30 + rand() * 20;
-    const x = Math.cos(a) * r, z = Math.sin(a) * r;
-    if (z < -15) continue;
-    tree(x, z, 1.2 + rand() * 0.8, false);
-  }
+  // ---------- De Grote Stad: ringweg, rotonde, lange weg, flats, park, parkeerplaats, skyline ----------
+  const big = createBigCity(group, { colliders, boxes, fadeables, updaters, rand, flat, trees, bench });
 
   // ---------- Wolken ----------
   for (let i = 0; i < 6; i++) {
@@ -310,6 +276,7 @@ export function createCity(group) {
     }
     const sx = rand() * 120 - 60, sz = rand() * 60 - 50, sy = 18 + rand() * 6, sp = 0.5 + rand() * 0.6;
     group.add(c);
+    mergeLocal(c);
     updaters.push((t) => { c.position.set(((sx + t * sp + 60) % 120) - 60, sy, sz); });
   }
 
@@ -377,39 +344,69 @@ export function createCity(group) {
     look: { shirt: 0x6d597a, pants: 0x495057, skin: 0xf1c27d, hair: 0xe5e5e5, coat: 0x8d99ae },
   });
 
-  const npcs = [...keepers, mayor, lotte, opa];
+  // ---------- De Autowinkel (oostkant): een showroom waar je echt in kunt lopen ----------
+  const showroom = createShowroom(group, { colliders, boxes, updaters, wideSign });
+
+  const npcs = [...keepers, mayor, lotte, opa, showroom.dealer];
 
   // ---------- Autootjes (stoppen voor iedereen die voor ze staat) ----------
   const loop = roundedLoop(ROAD.minX, ROAD.maxX, ROAD.minZ, ROAD.maxZ, 2.5);
   const traffic = createCars(group, loop, [0xe63946, 0x3a86ff, 0xffd23f, 0x52b788], { colliders, onHonk: () => zone.onHonk?.() });
+  // en 3 autootjes op de grote ringweg (die rijden ook over de rotonde)
+  const traffic2 = createCars(group, big.route, [0xff8c42, 0x9b5de5, 0x2ec4b6], { colliders, onHonk: () => zone.onHonk?.() });
+  trees.build(group);
+
+  // ---------- De mensen: hoofd, armen en benen worden elk één vorm ----------
+  for (const n of npcs) for (const part of [n.ch.head, ...n.ch.arms, ...n.ch.legs]) mergeLocal(part);
+  for (const d of Object.values(showroom.displays)) mergeLocal(d.spin);
+
+  // ---------- Alles wat stilstaat samenplakken (veel sneller tekenen) ----------
+  const far = { x: -999, z: -999 };
+  const merged = mergeStatic(group, {
+    probe: (t) => { updaters.forEach((f) => f(t, 0.016)); showroom.update(t, 0.5, { x: 28.2, z: 6 }, true); },
+    reset: () => { for (let i = 0; i < 4; i++) showroom.update(0, 1, far, false); updaters.forEach((f) => f(0, 0)); },
+    skip: [...npcs.map((n) => n.mesh), ...traffic.cars.map((c) => c.g), ...traffic2.cars.map((c) => c.g)],
+    own: shopGroups,
+  });
+  // De winkels worden doorzichtig als je erachter rijdt (op de lange weg), zodat je jezelf blijft zien
+  for (const g of shopGroups) {
+    const mats = new Set();
+    g.traverse((o) => { if (o.material && !o.material.transparent) { o.material.transparent = true; mats.add(o.material); } });
+    fadeables.push({ x: g.position.x, z: FRONT - 2.5, r: 4.4, mats: [...mats], k: 1 });
+  }
 
   // ---------- Zone ----------
   const zone = {
     id: 'stad', name: 'De Stad', group, colliders, boxes, fadeables, npcs, talkables: [...npcs],
     keepers, mayor,
-    bounds: { minX: -20.5, maxX: 20.5, minZ: -6.1, maxZ: 22.6 },
+    bounds: BIG_BOUNDS,
+    merged,
+    showroom,
     music: 'stad',
-    env: { sky: [0x6ec3f4, 0xe3f4ff], fog: [0xe3f4ff, 40, 95], hemi: [0xf1f8ff, 0x9a8c74, 1.25], sun: [0xfff2d6, 2.2], cam: [0, 9, 11] },
+    env: { sky: [0x6ec3f4, 0xe3f4ff], fog: [0xe3f4ff, 45, 110], hemi: [0xf1f8ff, 0x9a8c74, 1.25], sun: [0xfff2d6, 2.2], cam: [0, 9, 11] },
     spawns: { fromDorp: { x: 0, z: 19.6, rot: Math.PI } },
     exit: { x: 0, z: 22.4 },
     mapItems: [
       { x: 0, z: -2.5, w: 46, d: 13, color: '#e8dcc4' }, { x: 0, z: 13, w: 7, d: 18, color: '#e8dcc4' },
       { x: 0, z: ROAD.minZ, w: 37.4, d: 3.4, color: '#6c727a' }, { x: 0, z: ROAD.maxZ, w: 37.4, d: 3.4, color: '#6c727a' },
       { x: ROAD.minX, z: 11.75, w: 3.4, d: 11.5, color: '#6c727a' }, { x: ROAD.maxX, z: 11.75, w: 3.4, d: 11.5, color: '#6c727a' },
-      { x: 10, z: 11.8, w: 10, d: 7, color: '#74c69d' }, { x: fx, z: fz, r: 1.8, color: '#4fb3e8' },
+      { x: 10, z: 11.8, w: 10, d: 7, color: '#74c69d' }, { x: 27.6, z: 15.65, w: 18.5, d: 7.3, color: '#8d939c' }, { x: fx, z: fz, r: 1.8, color: '#4fb3e8' },
+      ...big.mapItems,
     ],
     labels: [
       { x: -13.2, z: -9.5, text: 'Speelgoed' }, { x: -4.4, z: -9.5, text: 'Snoep' },
       { x: 4.4, z: -9.5, text: 'Kleding' }, { x: 13.2, z: -9.5, text: 'Boeken' },
-      { x: 0, z: 21, text: 'Naar het dorp' }, { x: fx, z: fz + 3, text: 'Fontein' },
+      { x: 0, z: 21, text: 'Naar het dorp' }, { x: 28.5, z: 5, text: 'Autowinkel' }, { x: fx, z: fz + 3, text: 'Fontein' },
+      ...big.labels,
     ],
-    cars: traffic.cars,
+    cars: [...traffic.cars, ...traffic2.cars],
     getPeople: null, // main.js zet hier een functie in: waar staan de speler, de clones en de mensen?
     onHonk: null,
     update: (t, dt) => {
       updaters.forEach((f) => f(t, dt));
       const people = [...(zone.getPeople ? zone.getPeople() : []), ...npcs.map((n) => n.pos)];
       traffic.update(t, dt, people);
+      traffic2.update(t, dt, people);
     },
   };
   return zone;

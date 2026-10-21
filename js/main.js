@@ -7,6 +7,8 @@ import { createCity } from './city.js';
 import { buildCityShop, itemInfo, SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } from './cityshop.js';
 import { makeSignpost } from './props.js';
 import { Robot } from './robot.js';
+import { buildCarShop, CARS } from './autowinkel.js';
+import { MyCar } from './drive.js';
 import { Player } from './player.js';
 import { makeBolt, makeKoopman, makeOma, Dog } from './npc.js';
 import { Controls } from './controls.js';
@@ -140,13 +142,16 @@ const squad = new CloneSquad(scene);
 const fx = new Effects(scene);
 const pickups = new Pickups(scene);
 const robot = new Robot(scene);
+const myCar = new MyCar(city.group, city.colliders); // jouw eigen auto (alleen in De Stad)
+let driving = false;
+let driveToastCd = 0; // hoe lang tot we weer zeggen: met de auto kun je niet door de poort
 const state = loadSave();
 const hadSave = (() => { try { return !!localStorage.getItem(SAVE_KEY); } catch (e) { return false; } })();
 let hearts = state.maxHearts;
 let boost = 0; // hoe lang het Raketsnoep nog werkt (seconden)
 
 // De autootjes in De Stad stoppen voor de speler, de clones en Robotje Bliep
-city.getPeople = () => [player.pos, ...squad.list.map((c) => c.pos), ...(robot.g.visible ? [robot.pos] : [])];
+city.getPeople = () => [player.pos, ...squad.list.map((c) => c.pos), ...(robot.g.visible ? [robot.pos] : []), ...(myCar.model && !driving ? [myCar.parkedA, myCar.parkedB] : [])];
 let lastHonk = 0;
 city.onHonk = () => {
   sfx.toet();
@@ -281,6 +286,7 @@ function setZone(id, spawn) {
   player.resolveCollisions(zone);
   squad.regroup(player);
   robot.snap(player);
+  if (id === 'stad' && state.car && myCar.id !== state.car) myCar.place(state.car, city.showroom.pickup);
   spawnEnemies(zone);
   if (id === 'dorp') hearts = state.maxHearts; // thuis word je weer helemaal beter
   playMusic(zone.music);
@@ -344,6 +350,7 @@ function refresh() {
   bolt.showMarker(boltHasNews(state));
   koopman.showMarker(reached(q, 'zwaard') && state.crystals >= 5 && state.hats.length === 0);
   city.mayor.showMarker(!state.cityGift);
+  city.showroom.setOwned(state.cars);
   applyGear();
   const batteryHere = pickups.list.some((p) => p.type === 'batterij');
   ui.setQuest(batteryHere ? '🔋 Pak de <b>Superbatterij</b>!' : questText(state, game.zone.id));
@@ -382,6 +389,7 @@ function talkTo(t) {
     if (t.id === 'bolt') afterBolt(before, wasAllFound);
     if (t.id === 'koopman') openShop();
     if (t.shop) openCityShop(t);
+    if (t.id === 'dealer') openCarShop();
     if (t.id === 'burgemeester' && !state.cityGift) {
       state.cityGift = true;
       state.crystals += 10;
@@ -429,7 +437,9 @@ function afterBolt(before, wasAllFound) {
 function action() {
   if (ui.panelOpen || transition || fainting || !started) return;
   if (ui.dialogOpen) { ui.nextLine(); return; }
+  if (driving) { exitCar(); return; }
   const t = state.sword && enemyNear() ? null : nearestTalkable();
+  if (nearMyCar() && (!t || myCar.distanceTo(player.pos) < t.distanceTo(player.pos))) { enterCar(); return; }
   if (t) { talkTo(t); return; }
   if (state.sword && player.swing()) {
     sfx.swing();
@@ -527,6 +537,81 @@ function openCityShop(keeper) {
 }
 const CITY_TITLES = { speelgoed: 'Speelgoedwinkel', snoep: 'Snoepwinkel', kleding: 'Kledingwinkel', boek: 'Boekwinkel' };
 
+// ---------- De Autowinkel en zelf rijden ----------
+const CAR_ENTER_DISTANCE = 2.6;
+const nearMyCar = () => game.zone === city && !driving && myCar.distanceTo(player.pos) < CAR_ENTER_DISTANCE;
+const SEAT_Y = { mini: 0.22, jeep: 0.5, sport: 0.12, race: 0.08 };
+
+function openCarShop() {
+  const build = (body) => buildCarShop(body, state, {
+    onBuy(id) {
+      const c = CARS[id];
+      if (state.crystals < c.price || state.cars.includes(id)) return;
+      state.crystals -= c.price;
+      state.cars.push(id);
+      state.car = id;
+      myCar.place(id, city.showroom.pickup);
+      city.showroom.setOwned(state.cars);
+      sfx.buy();
+      setTimeout(() => sfx.toet(), 300);
+      fx.confetti({ x: myCar.pos.x, y: 1, z: myCar.pos.z }, 60);
+      ui.toast(`${c.icon} De ${c.name} is van jou! Hij staat klaar bij de garagedeur.`, 3500);
+      refresh();
+      save();
+      ui.refreshPanel(build);
+    },
+    onPick(id) {
+      state.car = id;
+      myCar.place(id, city.showroom.pickup);
+      sfx.click();
+      ui.toast(`${CARS[id].icon} De ${CARS[id].name} staat klaar bij de garagedeur!`, 2500);
+      save();
+      ui.refreshPanel(build);
+    },
+    onTooPoor(id) {
+      const c = CARS[id];
+      sfx.nope();
+      ui.toast(`Oei, je hebt nog net niet genoeg kristallen voor ${c.name}. Nog ${c.price - state.crystals} 💎 nodig!`, 3000);
+    },
+  });
+  ui.openPanel('Autowinkel', build);
+}
+
+function enterCar() {
+  driving = true;
+  myCar.setDriving(true);
+  player.legsSit = true;
+  sfx.toet();
+  ui.toast('🚗 Rijden maar! Druk nog eens op de knop om uit te stappen.', 2500);
+}
+
+function exitCar() {
+  // Stap uit aan de zijkant (links of rechts, of achter de auto als het daar niet past)
+  const d = myCar.dir;
+  const tries = [[-d.z, d.x, 1.6], [d.z, -d.x, 1.6], [-d.x, -d.z, 2.0], [d.x, d.z, 2.0]];
+  let spot = null;
+  for (const [nx, nz, k] of tries) {
+    const p = { x: myCar.pos.x + nx * k, z: myCar.pos.z + nz * k };
+    const q = { ...p };
+    player.pos.set(q.x, 0, q.z);
+    player.resolveCollisions(game.zone);
+    if (Math.hypot(player.pos.x - p.x, player.pos.z - p.z) < 0.3) { spot = p; break; }
+  }
+  if (!spot) { player.pos.set(myCar.pos.x, 0, myCar.pos.z); player.resolveCollisions(game.zone); }
+  player.pos.y = 0;
+  driving = false;
+  myCar.setDriving(false);
+  player.resolveCollisions(game.zone);
+  player.ch.legs.forEach((l) => { l.rotation.x = 0; });
+  // Geparkeerd voor de poort? Dan zet Vera hem netjes terug, zodat je er lopend door kunt
+  if (game.zone.exits.some((ex) => Math.hypot(ex.x - myCar.pos.x, ex.z - myCar.pos.z) < 5)) {
+    myCar.place(myCar.id, city.showroom.pickup);
+    ui.toast('🚗 Vera Vroem zet je auto weer netjes bij de Autowinkel.', 2600);
+  }
+  sfx.click();
+  save();
+}
+
 // Snoep eten, met speelgoed spelen en boeken lezen (vanuit de rugzak)
 const cityActions = {
   onShirt(id) { state.shirt = id; sfx.click(); refresh(); save(); },
@@ -614,6 +699,7 @@ const raycaster = new THREE.Raycaster();
 function onTap(x, y) {
   if (!started || ui.panelOpen || transition || fainting) return;
   if (ui.dialogOpen) { ui.nextLine(); return; }
+  if (driving) return; // tijdens het rijden: handen aan het stuur!
   const p = new THREE.Vector2((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
   raycaster.setFromCamera(p, camera);
   for (const t of game.zone.talkables) {
@@ -624,6 +710,9 @@ function onTap(x, y) {
     }
   }
   if (game.zone === world && reached(state.quest, 'aan') && raycaster.intersectObject(world.machine.group, true).length) makeClone();
+  if (game.zone === city && myCar.model && !driving && raycaster.intersectObject(myCar.model.g, true).length) {
+    if (nearMyCar()) enterCar(); else ui.toast('Loop eerst wat dichterbij!');
+  }
 }
 
 const controls = new Controls({
@@ -710,7 +799,29 @@ function frame() {
   }
   player.speed = boost > 0 ? 9.5 : 6;
   const before = player.pos.clone();
-  player.update(dt, move, zone);
+  if (driving && zone === city) {
+    const people = zone.npcs.map((n) => n.pos);
+    if (myCar.update(dt, move, zone, people)) { sfx.bump(); shake = Math.max(shake, 0.2); }
+    // De poort is een muurtje voor auto's: je stuitert zachtjes terug (en dan zegt het spel: stap eerst uit)
+    for (const ex of zone.exits) {
+      const dx = myCar.pos.x - ex.x, dz = myCar.pos.z - ex.z, d = Math.hypot(dx, dz) || 1e-3, min = ex.r + 1.3;
+      if (d < min) {
+        myCar.pos.x = ex.x + (dx / d) * min; myCar.pos.z = ex.z + (dz / d) * min;
+        if (Math.abs(myCar.speed) > 1) { myCar.speed *= -0.25; sfx.bump(); }
+        myCar.syncMesh();
+      }
+    }
+    player.pos.set(myCar.pos.x - myCar.dir.x * 0.25, SEAT_Y[myCar.id] ?? 0.2, myCar.pos.z - myCar.dir.z * 0.25);
+    player.rot = myCar.rot;
+    player.mesh.rotation.y = myCar.rot;
+    player.walkAmount = Math.abs(myCar.speed) > 0.4 ? 1 : 0; // clones: niet dansen tijdens het rijden
+    player.speed = Math.max(6, Math.abs(myCar.speed) + 1);   // clones rennen je achterna
+    player.ch.legs.forEach((l) => { l.rotation.x = -1.45; }); // zitten
+    player.ch.arms.forEach((a) => { a.rotation.x = -0.9; });  // handen aan het stuur
+  } else {
+    if (driving) { driving = false; myCar.setDriving(false); player.pos.y = 0; }
+    player.update(dt, move, zone);
+  }
   if (before.distanceToSquared(player.pos) > 1e-6) dirty = true;
   if (player.swingHit) swordHits(player.pos, player.rot, state.sword, false);
 
@@ -741,7 +852,7 @@ function frame() {
 
   // Stofwolkje bij elke voetstap
   const step = Math.floor(player.phase / Math.PI);
-  if (step !== lastStep && player.walkAmount > 0.6 && zone !== cave) fx.dust(player.pos);
+  if (step !== lastStep && player.walkAmount > 0.6 && zone !== cave && !driving) fx.dust(player.pos);
   lastStep = step;
 
   // Tandwielen draaien en oppakken
@@ -766,9 +877,12 @@ function frame() {
 
   // Uitgangen naar andere zones
   exitCooldown -= realDt;
+  driveToastCd -= realDt;
   if (started && !transition && !fainting && exitCooldown <= 0) {
     for (const ex of zone.exits) {
-      if (Math.hypot(player.pos.x - ex.x, player.pos.z - ex.z) > ex.r) continue;
+      const who = driving ? myCar.pos : player.pos;
+      if (Math.hypot(who.x - ex.x, who.z - ex.z) > ex.r + (driving ? 1.5 : 0)) continue;
+      if (driving) { if (driveToastCd <= 0) { ui.toast('🚗 Met de auto kun je niet door de poort. Stap eerst uit!', 2500); driveToastCd = 3; } break; }
       if (ex.open()) goTo(ex.to, ex.spawn());
       else { ui.toast(ex.closedMsg, 2500); exitCooldown = 3; }
       break;
@@ -776,6 +890,7 @@ function frame() {
   }
 
   fx.update(realDt);
+  if (zone === city) city.showroom.update(t, realDt, player.pos, driving);
   robot.update(t, realDt, player);
   if (boost > 0 && player.walkAmount > 0.5 && Math.random() < 0.3) fx.sparkle({ x: player.pos.x, y: 0.5, z: player.pos.z }, [0xff8c42, 0xffd23f], 2, 1.5);
 
@@ -787,8 +902,11 @@ function frame() {
   } else ui.setBoss('', null);
 
   // Knoppen en hartjes
-  const near = !paused && !(state.sword && enemyNear()) && nearestTalkable();
+  const near = !paused && !driving && !(state.sword && enemyNear()) && nearestTalkable();
+  const carNear = !paused && nearMyCar() && (!near || myCar.distanceTo(player.pos) < near.distanceTo(player.pos));
   if (ui.dialogOpen) ui.setActionBtn('Verder', true, false);
+  else if (driving) ui.setActionBtn('Uitstappen', true, false);
+  else if (carNear) ui.setActionBtn('Instappen', true, true);
   else if (near) ui.setActionBtn(near.sign ? 'Lees' : 'Praat', true, true);
   else if (state.sword) ui.setActionBtn('⚔️', true, false);
   else ui.setActionBtn('Praat', false, false);
@@ -809,6 +927,7 @@ function frame() {
   } else {
     lookGoal.copy(player.pos);
     camTarget.copy(player.pos).add(CAM_OFFSET);
+    if (driving) camTarget.addScaledVector(CAM_OFFSET, 0.2);
   }
   camera.position.lerp(camTarget, Math.min(1, realDt * (started ? 4 : 1.5)));
   lookAt.lerp(lookGoal, Math.min(1, realDt * 6));
@@ -864,7 +983,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.clones = {
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
   forest, cave, city, zones, game, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
-  get boost() { return boost; },
+  get boost() { return boost; }, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop,
   get enemies() { return enemies; }, get hearts() { return hearts; }, set hearts(v) { hearts = v; },
   get started() { return started; }, start: () => { if (!started) document.getElementById('start').dispatchEvent(new PointerEvent('pointerup')); },
   setDebugCam: (pos, look) => { debugCam = pos ? { pos, look } : null; },

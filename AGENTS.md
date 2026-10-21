@@ -33,9 +33,13 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/world.js` – het dorp, de vijver, de poorten (Slijmbos en De Stad), de kraam en de clonemachine
 - `js/forest.js` – het Slijmbos, de grotdeur en de 3 drukknoppen
 - `js/city.js` – De Stad: plein, fontein, 4 winkels, huizen, de mensen en de regenboogpoort terug
+- `js/citymore.js` – De Grote Stad: de ringweg, de Lange weg, de rotonde, flats, huizen, het stadspark, de parkeerplaats en de route van de autootjes op de ringweg
+- `js/optimize.js` – sneller tekenen: stilstaande dingen samenplakken (`mergeStatic`, `mergeLocal`, `mergeGroup`) en veel dezelfde dingen in één keer (`instanced`). Iets nieuws dat beweegt in De Stad? Dat wordt vanzelf herkend (via de `updaters`) en niet samengeplakt.
 - `js/cars.js` – de autootjes in De Stad (rijden rondjes en stoppen voor iedereen die ervoor staat)
 - `js/cityshop.js` – wat de winkels in De Stad verkopen (shirts, speelgoed, snoep, boeken)
 - `js/robot.js` – Robotje Bliep, die met je meezweeft
+- `js/autowinkel.js` – de Autowinkel: de showroom (dak gaat weg als je binnen bent), de garagedeur, de auto's (`CARS`, prijzen in kristallen) en het winkelpaneel
+- `js/drive.js` – je eigen auto: instappen, sturen, zacht botsen
 - `js/cave.js` – de Slijmgrot. **De kerker is getekend met letters** (`MAP`): `#` muur, `.` vloer, `K` Koning Slijm, `s`/`b` slijmpjes, `v` vuurschaal, `E` ingang
 - `js/props.js` – borden, paddenstoelen, vuurvliegjes
 - `js/physics.js` – botsen tegen bomen, huizen en muren
@@ -50,7 +54,7 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/shop.js`, `js/backpack.js`, `js/map.js` – de winkel, de rugzak en de kaart
 - `js/controls.js` – joystick, knoppen en toetsenbord
 - `js/ui.js` – praatwolk (letter voor letter), hartjes, meldingen, panelen, startscherm
-- `js/save.js` – opslaan en oude saves omzetten (nu versie 4)
+- `js/save.js` – opslaan en oude saves omzetten (nu versie 5)
 - `.github/workflows/pages.yml` – zet het spel op GitHub Pages
 
 ## Testen

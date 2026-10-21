@@ -37,3 +37,21 @@
 - Robotje Bliep, Raketsnoep, nieuwe shirts (ook voor je clones) en boeken met tips.
 - Save naar versie 4. Oude saves blijven werken (getest met saves van versie 0, 1, 2, 3 en 4).
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
+
+## 20 oktober 2026: autowinkel en zelf rijden, idee van Dex
+- Gemaakt met een AI-helper op de tak `autowinkel` (bouwt verder op de tak `stad`). **Dex of papa beslist of het erin komt.**
+- Nieuw: de Autowinkel in De Stad, een showroom waar je echt in kunt lopen. Binnen gaat het dak weg, zodat je alles goed ziet.
+- Verkoopster Vera Vroem verkoopt 4 auto's voor kristallen: Mini Muis (12), Jungle Jeep (25), Bliksem Sport (40) en Rode Raket (60).
+- Instappen, zelf rijden met de joystick of de toetsen, en door de garagedeur naar buiten. Zachtjes botsen, geen schade.
+- Op de wensenlijst: een vliegende auto (er staat al een plekje met BINNENKORT!).
+- Save naar versie 5. Oude saves blijven werken (getest met saves van versie 0 t/m 5).
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
+
+## 21 oktober 2026: stad groter gemaakt, wens van Dex
+- Gemaakt met een AI-helper op de tak `grote-stad` (bouwt verder op de tak `autowinkel`). **Dex of papa beslist of het erin komt.**
+- De Stad is ongeveer 3 keer zo groot: een grote ringweg, de Lange weg, een rotonde met een reuzenkristal, meer straten en zebrapaden.
+- Nieuw: flats, meer huizen, een stadspark met een vijver, eendjes en een glijbaan, en een parkeerplaats. 3 extra autootjes op de ringweg.
+- Het plein, de winkels, de Autowinkel en de poort staan nog op dezelfde plek. De save is niet veranderd (nog steeds versie 5).
+- Sneller gemaakt voor de iPhone: alles wat stilstaat is samengeplakt en bomen en lantaarns worden in één keer getekend. Bij de poort: eerst 564, nu ongeveer 205 tekenopdrachten per beeld.
+- Gebouwen worden doorzichtig als ze voor de camera staan.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), met een test die het hele wegennet rondrijdt. Nog niet getest op een echte iPad.

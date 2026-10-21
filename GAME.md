@@ -42,6 +42,29 @@ Het spel van Dex (11 jaar).
 - Je spullen zitten in je **rugzak**: tik op snoep om te eten, op speelgoed om te spelen en op een boek om te lezen.
 - Lotte en Opa Duif wandelen over het plein.
 
+### De Grote Stad (idee van Dex!)
+- De Stad is nu ongeveer **3 keer zo groot**, zodat je lekker kunt rijden. Het plein, de 4 winkels, de Autowinkel en de poort staan nog op dezelfde plek.
+- Een **grote ringweg** om de hele stad, met de **Lange weg** aan de noordkant (achter de winkels, daar kun je met de Rode Raket echt hard!).
+- Een **rotonde** met een reuzenkristal in het midden.
+- Meer straten met bochten en zebrapaden. De Autowinkel heeft nu ook een uitgang naar de oostweg.
+- **Flats** (hoge gebouwen met balkonnetjes), meer huizen, een **stadspark** met een vijver, eendjes en een glijbaan, en een **parkeerplaats**.
+- 3 extra autootjes rijden over de ringweg en over de rotonde. Ze stoppen nog steeds voor iedereen.
+- Huizen, flats en winkels worden doorzichtig als ze tussen jou en de camera staan, zodat je jezelf altijd ziet.
+- Overal zacht botsen, nooit schade. Op de kaart (🗺️) zie je alle wegen.
+
+### De Autowinkel (idee van Dex!)
+- Rechts in De Stad staat de **Autowinkel**: een echte showroom met een glazen voorkant. Je loopt gewoon door de open deur naar binnen (geen laadscherm). Binnen is het dak weg, zodat je alles goed ziet.
+- Op draaiende plateaus staan de auto's, elk met een bordje met de prijs in **kristallen** 💎:
+  - 🚗 **Mini Muis** – 12 💎 (geel met stippen en oogjes als lampen, piep piep!)
+  - 🚙 **Jungle Jeep** – 25 💎 (grote wielen, rolbeugel en reservewiel)
+  - 🏎️ **Bliksem Sport** – 40 💎 (glimmend blauw met strepen en een spoiler)
+  - 🏁 **Rode Raket** – 60 💎 (de snelste: glimmend rood, grote spoiler, nummer 1)
+- Achter de toonbank staat verkoopster **Vera Vroem**. Praat met haar om een auto te kopen. Te weinig kristallen? Dan zegt ze lief hoeveel je nog nodig hebt.
+- Je nieuwe auto staat binnen klaar. Stap in en rij door de **grote garagedeur** (die gaat vanzelf open) naar de straat.
+- Rijden: snellere auto's gaan harder. Bots je tegen een muur of heg, dan stuiter je zachtjes terug. Geen schade! Je rijdt niet door mensen of andere autootjes heen.
+- Met de auto kun je niet door de poort: stap eerst uit. Je clones rennen achter je auto aan.
+- Een plekje met **BINNENKORT!** wacht op de vliegende auto...
+
 ### Overal
 - **Hartjes** ❤️: raakt een slijmpje je, dan ben je er een kwijt. Alle hartjes op? Dan word je wakker in het dorp (je verliest niks).
 - **Rugzak** 🎒: zie je spullen en kies welk hoedje je draagt.
@@ -53,6 +76,7 @@ Het spel van Dex (11 jaar).
 ## Besturing
 - **iPad:** sleep met je vinger op de linkerkant van het scherm om te lopen. De grote knop rechts is **Praat** (bij iemand), **Lees** (bij een bord) of **⚔️** (zwaard). Bij de machine: druk op **Clone!**
 - **Laptop:** lopen met **W A S D** of de **pijltjes**. **E** of **spatie** = praten of zwaaien. **C** = clonen. **M** = kaart. **B** = rugzak.
+- **Autorijden:** sta bij je auto en druk op **Instappen** (of **E**, of tik op de auto). Stuur met de joystick of **W A S D**/pijltjes: de auto rijdt de kant op waar je naartoe duwt. **Uitstappen** (of **E**) om uit te stappen.
 
 ## Wensenlijst
 - [x] Zwaard en gevechten
@@ -61,6 +85,9 @@ Het spel van Dex (11 jaar).
 - [x] Kerkers (de Slijmgrot)
 - [x] Clonemachine: clones van jezelf maken
 - [x] Een stad met winkels (idee van Joshua)
+- [x] Een autowinkel en zelf autorijden (idee van Dex)
+- [x] Een grotere stad met een ringweg, een rotonde en een lange weg (idee van Dex)
+- [ ] Een vliegende auto 🛸 (idee van Dex, komt nog!)
 - [ ] Hoofdstuk 3: wat wordt het? (Dex bedenkt het!)
 
 ## Ideeën voor later (Dex kiest!)
@@ -71,5 +98,5 @@ Het spel van Dex (11 jaar).
 - Een huisdier dat je kunt kopen bij Koopman Kees.
 - Dag en nacht, met lantaarns in het dorp.
 - Een boot op de vijver, of een eiland.
-- Zelf autorijden in De Stad.
+- Een racebaan of een garage om je auto te verven.
 - De verborgen schat zoeken met een kaart in stukjes (het boek in de Boekwinkel verklapt al iets...).
