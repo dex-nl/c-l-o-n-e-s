@@ -21,7 +21,7 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 
 ## Het spel
 - Spelen op de **iPad, liggend**: aanraakbediening (joystick links, grote Praat-knop rechts, tikken op personages), een hint als het scherm rechtop staat, en een **manifest + icoon** zodat "Zet op beginscherm" het spel beeldvullend opent.
-- Ook te spelen met het toetsenbord (WASD/pijltjes, E/spatie, C, M, B).
+- Ook te spelen met het toetsenbord (WASD/pijltjes, E/spatie, C, M, B, H).
 - Soort spel: avontuur in een wereld (zoals Zelda of Pokémon).
 - Stijl: **low-poly 3D** met echte schaduwen, golvend water en dingen die bewegen.
 - Moet erin: een **clonemachine** waarmee je clones van jezelf maakt.
@@ -30,7 +30,7 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `index.html` – de pagina, laadt Three.js via de CDN (en twee lettertypes van Google Fonts)
 - `css/style.css` – knoppen, praatwolk, opdracht, panelen, startscherm
 - `js/main.js` – start het spel, de zones, de spel-lus, praten, vechten, clonen
-- `js/world.js` – het dorp, de vijver, de poorten (Slijmbos en De Stad), de kraam en de clonemachine
+- `js/world.js` – het dorp, de vijver, de poorten (Slijmbos, De Stad en De Grote Woestijn), de kraam en de clonemachine
 - `js/forest.js` – het Slijmbos, de grotdeur en de 3 drukknoppen
 - `js/city.js` – De Stad: plein, fontein, 4 winkels, huizen, de mensen en de regenboogpoort terug
 - `js/citymore.js` – De Grote Stad: de ringweg, de Lange weg, de rotonde, flats, huizen, het stadspark, de parkeerplaats en de route van de autootjes op de ringweg
@@ -40,22 +40,29 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/robot.js` – Robotje Bliep, die met je meezweeft
 - `js/autowinkel.js` – de Autowinkel: de showroom (dak gaat weg als je binnen bent), de garagedeur, de auto's (`CARS`, prijzen in kristallen) en het winkelpaneel
 - `js/drive.js` – je eigen auto: instappen, sturen, zacht botsen
+- `js/desert.js` – De Grote Woestijn (hoofdstuk 3): duinen, cactussen, paden (`PATHS`), oase met Kameel Karel, Sfinx Sam, ruïnes, piramides, de 3 zonnestenen (`SUN_STONES`), de piramidedeur en de zandstorm (`startStorm`/`stopStorm`)
+- `js/pyramid.js` – binnen in de Grote Piramide, ook **getekend met letters** (`MAP`): `#` muur, `.` vloer, `S` Schorpioen Sjors, `m` mummieslijmpje, `t` fakkel, `p` vaas, `c` sarcofaag, `H` oude muur met tekens, `E` ingang
+- `js/scorpion.js` – Schorpioen Sjors, de baas van de piramide (knijpen, staartstamp, ingraven)
+- `js/treasure.js` – de schatkaart in 4 stukjes (getekend op een canvas)
 - `js/cave.js` – de Slijmgrot. **De kerker is getekend met letters** (`MAP`): `#` muur, `.` vloer, `K` Koning Slijm, `s`/`b` slijmpjes, `v` vuurschaal, `E` ingang
 - `js/props.js` – borden, paddenstoelen, vuurvliegjes
 - `js/physics.js` – botsen tegen bomen, huizen en muren
 - `js/player.js`, `js/characters.js` – de speler, de poppetjes, het zwaard en de hoedjes
 - `js/npc.js` – Professor Bolt, Koopman Kees, Oma Pien en Knoeper de hond
 - `js/clones.js` – de clones: volgen, dansen, meevechten, op knoppen staan
-- `js/enemies.js` – de slijmpjes en Koning Slijm
-- `js/pickups.js` – kristallen, hartjes en de Superbatterij
+- `js/enemies.js` – de slijmpjes (groen, blauw, mummie) en Koning Slijm
+- `js/pickups.js` – kristallen, hartjes, de Superbatterij en het stukje schatkaart
 - `js/effects.js` – confetti, glinsters, stofwolkjes, zwaardboog, schokgolf
 - `js/sound.js` – geluidjes én muziek, gemaakt met de Web Audio API (geen geluidsbestanden). Liedjes staan als noten in `SONGS`
-- `js/quest.js` – het verhaal: alle stappen (`QUEST_ORDER`) en wat iedereen zegt
+- `js/quest.js` – het verhaal: alle stappen (`QUEST_ORDER`) en wat iedereen zegt. **`isCityDone(state)`** bepaalt wanneer de woestijnpoort verschijnt (= alle `JOBS`, de klusjes van Burgemeester Bert, gedaan; of `desertEarly` van een oude save); pas dat alleen daar aan. Ook de klusjes zelf (`JOBS`, `LAP_TIME`) en wat Bert zegt
 - `js/shop.js`, `js/backpack.js`, `js/map.js` – de winkel, de rugzak en de kaart
 - `js/controls.js` – joystick, knoppen en toetsenbord
 - `js/ui.js` – praatwolk (letter voor letter), hartjes, meldingen, panelen, startscherm
-- `js/save.js` – opslaan en oude saves omzetten (nu versie 5)
+- `js/jobs.js` – de klusjes in De Stad die je ziet: Eendje Ed, het pakje, de bril van Opa Duif en de poortjes voor het rondje (`JOB_SPOTS`)
+- `js/save.js` – opslaan en oude saves omzetten (nu versie 7: `jobs` = `{ done, active, step }`, `desertEarly`; versie 6: `mapPieces`, `codes`, `clonesHidden`; `quest.stones` en `quest.bossBeaten` tijdens hoofdstuk 3)
 - `.github/workflows/pages.yml` – zet het spel op GitHub Pages
 
 ## Testen
+- Testen van de klusjes: `clones.state.jobs`, `clones.cityJobs` (bijvoorbeeld `clones.cityJobs.lap`), `clones.openJobs()`, `clones.finishJob(id)` (alleen voor het klusje dat bezig is).
+- Testen van hoofdstuk 3: `clones.unlockDesert()` laat de woestijnpoort meteen verschijnen alsof alle klusjes klaar zijn (wordt niet opgeslagen), `clones.goTo('woestijn', clones.desert.spawns.fromDorp)`, `clones.desert.startStorm()`, `clones.toggleClones()`. De geheime code staat in GAME.md: **verklap hem niet in het spel** (geen hints, geen knop).
 - In de browser-console staat `window.clones` met handige dingen, bijvoorbeeld `clones.goTo('bos', clones.forest.spawns.fromDorp)`, `clones.goTo('stad', clones.city.spawns.fromDorp)` of `clones.state.crystals = 50`.

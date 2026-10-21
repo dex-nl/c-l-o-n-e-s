@@ -38,6 +38,16 @@
 - Save naar versie 4. Oude saves blijven werken (getest met saves van versie 0, 1, 2, 3 en 4).
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
 
+## 21 oktober 2026: De klusjes van Burgemeester Bert, wens van Dex
+- Ook op de tak `woestijn` (PR #6). **Dex of papa beslist of het erin komt.**
+- Dex koos wanneer De Stad "uitgespeeld" is: als je een paar **klusjes voor Burgemeester Bert** hebt gedaan. Er zijn er 4, een voor een:
+  Eendje Ed terugbrengen naar de vijver, een pakje bezorgen bij Toby Tol, de bril van Opa Duif zoeken en een rondje Grote Stad rijden binnen 90 seconden.
+- Elk klusje geeft een paar kristallen (3, 3, 4 en 5). Bert laat zien hoe ver je bent (*"Klusje 2 van 4"*) en er is een lijstje met alle klusjes.
+- Na het laatste klusje verschijnt de woestijnpoort met glitters en *"Er is een nieuwe poort verschenen!"*. "Een auto gekocht" telt niet meer.
+- Het welkomstcadeautje van 10 kristallen van Bert is gebleven.
+- Save naar versie 7 (welke klusjes klaar zijn). Oude saves blijven werken. Had je de woestijnpoort al (auto gekocht of al in de woestijn), dan houd je hem, en de klusjes kun je dan nog steeds doen.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt rondje rijden met de toetsen. Nog niet getest op een echte iPad.
+
 ## 20 oktober 2026: autowinkel en zelf rijden, idee van Dex
 - Gemaakt met een AI-helper op de tak `autowinkel` (bouwt verder op de tak `stad`). **Dex of papa beslist of het erin komt.**
 - Nieuw: de Autowinkel in De Stad, een showroom waar je echt in kunt lopen. Binnen gaat het dak weg, zodat je alles goed ziet.
@@ -47,6 +57,16 @@
 - Save naar versie 5. Oude saves blijven werken (getest met saves van versie 0 t/m 5).
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
 
+## 21 oktober 2026: De klusjes van Burgemeester Bert, wens van Dex
+- Ook op de tak `woestijn` (PR #6). **Dex of papa beslist of het erin komt.**
+- Dex koos wanneer De Stad "uitgespeeld" is: als je een paar **klusjes voor Burgemeester Bert** hebt gedaan. Er zijn er 4, een voor een:
+  Eendje Ed terugbrengen naar de vijver, een pakje bezorgen bij Toby Tol, de bril van Opa Duif zoeken en een rondje Grote Stad rijden binnen 90 seconden.
+- Elk klusje geeft een paar kristallen (3, 3, 4 en 5). Bert laat zien hoe ver je bent (*"Klusje 2 van 4"*) en er is een lijstje met alle klusjes.
+- Na het laatste klusje verschijnt de woestijnpoort met glitters en *"Er is een nieuwe poort verschenen!"*. "Een auto gekocht" telt niet meer.
+- Het welkomstcadeautje van 10 kristallen van Bert is gebleven.
+- Save naar versie 7 (welke klusjes klaar zijn). Oude saves blijven werken. Had je de woestijnpoort al (auto gekocht of al in de woestijn), dan houd je hem, en de klusjes kun je dan nog steeds doen.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt rondje rijden met de toetsen. Nog niet getest op een echte iPad.
+
 ## 21 oktober 2026: stad groter gemaakt, wens van Dex
 - Gemaakt met een AI-helper op de tak `grote-stad` (bouwt verder op de tak `autowinkel`). **Dex of papa beslist of het erin komt.**
 - De Stad is ongeveer 3 keer zo groot: een grote ringweg, de Lange weg, een rotonde met een reuzenkristal, meer straten en zebrapaden.
@@ -55,3 +75,28 @@
 - Sneller gemaakt voor de iPhone: alles wat stilstaat is samengeplakt en bomen en lantaarns worden in één keer getekend. Bij de poort: eerst 564, nu ongeveer 205 tekenopdrachten per beeld.
 - Gebouwen worden doorzichtig als ze voor de camera staan.
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), met een test die het hele wegennet rondrijdt. Nog niet getest op een echte iPad.
+
+## 21 oktober 2026: De Grote Woestijn (hoofdstuk 3), wens van Dex
+- Gemaakt met een AI-helper op de tak `woestijn` (De Stad, de Autowinkel en de Grote Stad zitten al in `main`). **Dex of papa beslist of het erin komt.**
+- Dex wilde: piramides, cactussen, een zandstorm, een speciaal monster en het volgende stukje van de schatkaart. Alles zit erin!
+- Een nieuwe zandkleurige poort aan de westkant van het dorp. Hij verschijnt met glitters als De Stad uitgespeeld is (voorlopig: als je een auto hebt gekocht).
+- De Grote Woestijn is heel groot (ruim 3 keer De Grote Stad): duinen, cactussen, paden met wegwijzers, een oase met Kameel Karel, Sfinx Sam, ruïnes, piramides en overal mummieslijmpjes.
+- Zandstorm: gele mist, vliegend zand en wind die je opzij duwt (geen pijn).
+- Puzzel met 3 zonnestenen. Daarna kun je de Grote Piramide in, met gangen, fakkels en hiërogliefen.
+- Het monster: Schorpioen Sjors, groot maar lief (grote ogen, roze wangetjes, rood hoedje). Hij knijpt, stampt en graaft zich in. Je clones vechten mee.
+- De beloning: stukje 1 van 4 van de schatkaart van de piraat. Je kunt hem bekijken in je rugzak.
+- Ook nieuw (wensen van Dex): een geheime code voor 100 kristallen (waar hij staat en hoe je hem intypt staat alleen in GAME.md, onder "Geheim!") en de 👻-knop (of H) om je clones even weg te sturen.
+- Save naar versie 6 (stukjes schatkaart, gebruikte codes, clones weg of niet). Oude saves blijven werken (getest met saves van versie 0 t/m 6).
+- Snel genoeg gehouden: cactussen, duinen, stenen en paden worden in één keer getekend en alles wat stilstaat is samengeplakt. In de woestijn ongeveer 130 tot 160 tekenopdrachten per beeld.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
+
+## 21 oktober 2026: De klusjes van Burgemeester Bert, wens van Dex
+- Ook op de tak `woestijn` (PR #6). **Dex of papa beslist of het erin komt.**
+- Dex koos wanneer De Stad "uitgespeeld" is: als je een paar **klusjes voor Burgemeester Bert** hebt gedaan. Er zijn er 4, een voor een:
+  Eendje Ed terugbrengen naar de vijver, een pakje bezorgen bij Toby Tol, de bril van Opa Duif zoeken en een rondje Grote Stad rijden binnen 90 seconden.
+- Elk klusje geeft een paar kristallen (3, 3, 4 en 5). Bert laat zien hoe ver je bent (*"Klusje 2 van 4"*) en er is een lijstje met alle klusjes.
+- Na het laatste klusje verschijnt de woestijnpoort met glitters en *"Er is een nieuwe poort verschenen!"*. "Een auto gekocht" telt niet meer.
+- Het welkomstcadeautje van 10 kristallen van Bert is gebleven.
+- Save naar versie 7 (welke klusjes klaar zijn). Oude saves blijven werken. Had je de woestijnpoort al (auto gekocht of al in de woestijn), dan houd je hem, en de klusjes kun je dan nog steeds doen.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt rondje rijden met de toetsen. Nog niet getest op een echte iPad.
+
