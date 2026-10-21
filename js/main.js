@@ -9,13 +9,14 @@ import { createPyramid } from './pyramid.js';
 import { Scorpion } from './scorpion.js';
 import { buildTreasureMap } from './treasure.js';
 import { createJobs } from './jobs.js';
-import { isPrivateCode, PRIVATE_REWARD } from './secret.js';
+import { secretCode, PRIVATE_REWARD } from './secret.js';
+import { collide } from './physics.js';
 import { fmt } from './format.js';
 import { buildCityShop, itemInfo, SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } from './cityshop.js';
 import { makeSignpost } from './props.js';
 import { Robot } from './robot.js';
 import { buildCarShop, CARS } from './autowinkel.js';
-import { MyCar, KICKFLIP_MIN_ALT } from './drive.js';
+import { MyCar, KICKFLIP_MIN_ALT, CAR_R } from './drive.js';
 import { Player } from './player.js';
 import { makeBolt, makeKoopman, makeOma, Dog } from './npc.js';
 import { Controls } from './controls.js';
@@ -1028,7 +1029,9 @@ function openTreasure() {
 async function useCode(raw) {
   const code = String(raw || '').toUpperCase().replace(/\s+/g, '');
   // Dex zijn eigen code: elke keer +1.000 (de code zelf staat nergens, alleen een hash; zie secret.js)
-  if (!SECRET_CODES.includes(code) && await isPrivateCode(code)) {
+  const secret = SECRET_CODES.includes(code) ? null : await secretCode(code);
+  if (secret === 'auto') return giveSecretCar();
+  if (secret === 'dex') {
     state.crystals += PRIVATE_REWARD;
     sfx.tada();
     fx.sparkle({ x: player.pos.x, y: 1.5, z: player.pos.z }, [0x7af7ff, 0xffffff, 0xffd23f], 60, 5);
@@ -1047,6 +1050,48 @@ async function useCode(raw) {
   refresh();
   save();
   return { ok: true, msg: '🎉 Gelukt! +100 kristallen 💎' };
+}
+// De geheime auto-code: de Wolkenflitser, gratis (zo vaak je wilt)
+// In De Stad: hij staat meteen naast je. Ergens anders (daar kun je niet rijden): hij wacht bij de ingang van De Stad.
+function carSpotOk(p) {
+  const q = { x: p.x, z: p.z };
+  collide(q, CAR_R, city);
+  if (Math.hypot(q.x - p.x, q.z - p.z) > 0.05) return false;
+  if (city.exits.some((ex) => Math.hypot(ex.x - p.x, ex.z - p.z) < 6)) return false;
+  return !city.npcs.some((n) => Math.hypot(n.pos.x - p.x, n.pos.z - p.z) < CAR_R + 0.8);
+}
+function giveSecretCar() {
+  if (driving) { sfx.nope(); return { ok: false, msg: 'Stap eerst uit je auto!' }; }
+  if (!state.cars.includes('wolk')) state.cars.push('wolk');
+  state.car = 'wolk';
+  myCar.place(null); // de oude auto even weg (anders botst de nieuwe ertegen)
+  let spot = null;
+  const here = game.zone === city;
+  if (here) {
+    const d = { x: Math.sin(player.rot), z: Math.cos(player.rot) };
+    for (const [nx, nz, k] of [[d.z, -d.x, 2.8], [-d.z, d.x, 2.8], [d.x, d.z, 3.2], [-d.x, -d.z, 3.2], [d.z, -d.x, 4.2], [-d.z, d.x, 4.2]]) {
+      const p = { x: player.pos.x + nx * k, z: player.pos.z + nz * k, rot: player.rot };
+      if (carSpotOk(p)) { spot = p; break; }
+    }
+  } else {
+    const a = city.spawns.fromDorp;
+    for (const [dx, dz] of [[3.6, -5], [-3.6, -5], [0, -7.5]]) { const p = { x: a.x + dx, z: a.z + dz, rot: Math.PI }; if (carSpotOk(p)) { spot = p; break; } }
+  }
+  if (!spot) spot = city.showroom.pickup; // geen plekje? dan bij de Autowinkel
+  myCar.place('wolk', spot);
+  city.showroom.setOwned(state.cars);
+  sfx.tada();
+  if (here) {
+    fx.sparkle({ x: spot.x, y: 1, z: spot.z }, [0x7af7ff, 0xffffff, 0x9b5de5], 50, 4);
+    fx.confetti({ x: spot.x, z: spot.z }, 40);
+    ui.toast('🛸 Daar is de Wolkenflitser! Stap maar in! 🚗✨', 3500);
+  } else {
+    fx.sparkle({ x: player.pos.x, y: 1.5, z: player.pos.z }, [0x7af7ff, 0xffffff, 0x9b5de5], 40, 4);
+    ui.toast('De Wolkenflitser staat voor je klaar in De Stad! 🚗✨', 3800);
+  }
+  refresh();
+  save();
+  return { ok: true, msg: '🎉 Gelukt! 🛸 De Wolkenflitser is van jou!' };
 }
 function openCode() {
   if (ui.dialogOpen || ui.panelOpen || !started) return;
@@ -1452,7 +1497,7 @@ window.clones = {
   forest, cave, city, desert, pyramid, zones, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
-  get boost() { return boost; }, kickflip, boostCar, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,
+  get boost() { return boost; }, collideTest: collide, kickflip, boostCar, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,
   get enemies() { return enemies; }, get hearts() { return hearts; }, set hearts(v) { hearts = v; },
   get started() { return started; }, start: () => { if (!started) document.getElementById('start').dispatchEvent(new PointerEvent('pointerup')); },
   setDebugCam: (pos, look) => { debugCam = pos ? { pos, look } : null; },

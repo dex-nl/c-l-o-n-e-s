@@ -110,4 +110,8 @@
 - Grote getallen met een punt (10.000), overal waar kristallen staan.
 - Ook nieuw: **Dex zijn eigen code (geheim)**. Die geeft elke keer +1.000 kristallen. De code staat nergens opgeschreven, alleen een hash.
 - De save is niet veranderd (nog steeds versie 7).
+- Daarna nog 3 wensen van Dex:
+  - **🔄 Kickflip** in de lucht (knop of **F**): een snelle rol van 360°, met glitters en *"Kickflip! 😎"*. Niet te vaak achter elkaar.
+  - **🚀 Boost** (knop of **R**): 2 seconden dubbel zo snel, blauwe vlammen, en dan 4 seconden opladen (ringetje om de knop). Je botst nog gewoon (de auto beweegt nu in kleine stapjes, zodat hij nooit door een muur schiet).
+  - Een **geheime auto-code**: de Wolkenflitser gratis (in De Stad naast je, ergens anders bij de ingang van De Stad). Net als Dex zijn code: alleen een hash, nergens opgeschreven.
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
