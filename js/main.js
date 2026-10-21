@@ -4,6 +4,10 @@ import { createWorld, makeGear } from './world.js';
 import { createForest } from './forest.js';
 import { createCave } from './cave.js';
 import { createCity } from './city.js';
+import { createDesert } from './desert.js';
+import { createPyramid } from './pyramid.js';
+import { Scorpion } from './scorpion.js';
+import { buildTreasureMap } from './treasure.js';
 import { buildCityShop, itemInfo, SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } from './cityshop.js';
 import { makeSignpost } from './props.js';
 import { Robot } from './robot.js';
@@ -12,12 +16,12 @@ import { MyCar } from './drive.js';
 import { Player } from './player.js';
 import { makeBolt, makeKoopman, makeOma, Dog } from './npc.js';
 import { Controls } from './controls.js';
-import { loadSave, writeSave, SAVE_KEY } from './save.js';
+import { loadSave, writeSave, SAVE_KEY, SECRET_CODES } from './save.js';
 import { ui } from './ui.js';
-import { GEARS_NEEDED, TEAM_SIZE, reached, maxClones, questText, boltHasNews, linesFor } from './quest.js';
+import { GEARS_NEEDED, TEAM_SIZE, reached, maxClones, questText, boltHasNews, linesFor, isCityDone, SUN_STONE_IDS, MAP_PIECES_TOTAL } from './quest.js';
 import { CloneSquad } from './clones.js';
 import { Effects } from './effects.js';
-import { Slime } from './enemies.js';
+import { Slime, SLIME_COLORS } from './enemies.js';
 import { Pickups } from './pickups.js';
 import { buildShop } from './shop.js';
 import { buildBackpack } from './backpack.js';
@@ -100,6 +104,8 @@ const world = addZone((g) => Object.assign(createWorld(g), {
 const forest = addZone(createForest);
 const cave = addZone(createCave);
 const city = addZone(createCity); // De Stad (idee van Joshua)
+const desert = addZone(createDesert); // De Grote Woestijn (hoofdstuk 3, idee van Dex)
+const pyramid = addZone(createPyramid); // binnen in de Grote Piramide
 
 // Dorpelingen
 const bolt = makeBolt(world.group, world.npcSpot);
@@ -118,6 +124,7 @@ world.mapItems = [{ x: 5, z: 10, r: 4.2, color: '#4fb3e8' }, { x: 0, z: 0, r: 1.
 world.labels = [
   { x: -4.6, z: -14.5, text: 'Clonemachine' }, { x: 0, z: -21, text: 'Poort' },
   { x: 7, z: 0.2, text: 'Kraam' }, { x: 5, z: 10, text: 'Vijver' }, { x: 20.5, z: 0, text: 'De Stad' },
+  { x: -20, z: 0, text: 'Woestijn', show: () => world.desertVisible() },
 ];
 forest.labels = [{ x: 0, z: -20, text: 'Grotdeur' }, { x: 0, z: 21, text: 'Naar het dorp' }];
 cave.labels = [{ x: 0, z: 15, text: 'Ingang' }, { x: 0, z: -15, text: 'Koningszaal' }];
@@ -129,6 +136,18 @@ world.exits = [{
 }, {
   x: 22.4, z: 0, r: 1.6, to: 'stad', spawn: () => city.spawns.fromDorp, open: () => true, // De Stad is altijd open
 }];
+// De woestijnpoort (westkant): eerst moet hij verschijnen (De Stad uitgespeeld), dan moet hoofdstuk 2 klaar zijn
+const desertVisible = () => isCityDone(state) || reached(state.quest, 'woestijn');
+world.exits.push({
+  x: -22.4, z: 0, r: 1.6, to: 'woestijn', spawn: () => desert.spawns.fromDorp, active: desertVisible,
+  open: () => reached(state.quest, 'woestijn'),
+  get closedMsg() { return reached(state.quest, 'held') ? 'De poort is op slot. Praat eerst met Professor Bolt!' : 'De woestijnpoort is op slot. Versla eerst Koning Slijm in het Slijmbos!'; },
+});
+desert.exits = [
+  { x: desert.exit.x, z: desert.exit.z, r: 1.4, to: 'dorp', spawn: () => world.spots.uitWoestijn, open: () => true },
+  { x: desert.door.x, z: desert.door.z, r: 1.0, to: 'piramide', spawn: () => pyramid.spawns.fromWoestijn, open: () => desert.doorOpen, closedMsg: 'De deur zit dicht. Laat eerst de 3 zonnestenen schijnen!' },
+];
+pyramid.exits = [{ x: pyramid.exit.x, z: pyramid.exit.z, r: 1.0, to: 'woestijn', spawn: () => desert.spawns.fromPiramide, open: () => true }];
 city.exits = [{ x: city.exit.x, z: city.exit.z, r: 1.4, to: 'dorp', spawn: () => world.spots.uitStad, open: () => true }];
 forest.exits = [
   { x: 0, z: 22.6, r: 1.4, to: 'dorp', spawn: () => world.spots.uitBos, open: () => true },
@@ -182,6 +201,7 @@ scene.add(landing);
 // ---------- Het "spel" dat slijmpjes en zones kunnen gebruiken ----------
 let enemies = [];
 let king = null;
+let sjors = null; // Schorpioen Sjors, de baas van de piramide
 let shake = 0, hitStop = 0, fainting = false, transition = false;
 let lastHitSound = 0;
 
@@ -201,10 +221,10 @@ const game = {
     const s = new Slime(game.zone.group, x, z, kind);
     s.chasing = true;
     enemies.push(s);
-    fx.poof({ x, z }, 0x5aa9e6);
+    fx.poof({ x, z }, SLIME_COLORS[kind] || 0x5aa9e6);
   },
   onSlimeDefeated(s) {
-    fx.poof(s.pos, s.king ? 0x4cc96f : s.kind === 'blauw' ? 0x5aa9e6 : 0x7bd389, s.king ? 3 : 1);
+    fx.poof(s.pos, s.color || SLIME_COLORS[s.kind] || 0x7bd389, s.king || s.boss ? 3 : 1);
     sfx.poof();
     pickups.spawn('kristal', s.pos.x, s.pos.z, s.loot + Math.floor(Math.random() * 2));
     if (hearts < state.maxHearts && Math.random() < 0.3) pickups.spawn('hart', s.pos.x, s.pos.z);
@@ -220,11 +240,23 @@ const game = {
       for (const e of enemies) if (!e.dead) e.hurt(99, s.pos.x, s.pos.z, game);
       save();
     }
+    if (s.boss) {
+      state.quest.bossBeaten = true; // onthouden tot je het kaartstuk hebt gepakt
+      game.showLanding(0, 0, 0);
+      hitStop = 0.35;
+      shake = 1;
+      fx.confetti(s.pos, 90);
+      sfx.fanfare();
+      ui.toast('🦂 Schorpioen Sjors is verslagen! Hij liet iets vallen...', 3500);
+      pickups.spawn('kaartstuk', s.pos.x, s.pos.z);
+      for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
+      save();
+    }
   },
-  slam(x, z, r) {
-    fx.ring({ x, z }, r, 0x9bf6ff, 0.55);
+  slam(x, z, r, color = 0x4cc96f) {
+    fx.ring({ x, z }, r, color === 0x4cc96f ? 0x9bf6ff : 0xffe8a3, 0.55);
     fx.ring({ x, z }, r * 0.6, 0xffffff, 0.4);
-    fx.poof({ x, z }, 0x4cc96f, 1.5);
+    fx.poof({ x, z }, color, 1.5);
     sfx.slam();
     shake = Math.max(shake, 0.8);
     if (Math.hypot(player.pos.x - x, player.pos.z - z) < r) game.hurtPlayer(1, x, z, 16);
@@ -243,6 +275,11 @@ function spawnEnemies(zone) {
   if (zone.id === 'grot' && state.quest.state === 'grot') {
     if (state.quest.kingBeaten) pickups.spawn('batterij', zone.king.x, zone.king.z);
     else { king = new Slime(zone.group, zone.king.x, zone.king.z, 'koning'); enemies.push(king); }
+  }
+  sjors = null;
+  if (zone.id === 'piramide' && state.quest.state === 'piramide') {
+    if (state.quest.bossBeaten) pickups.spawn('kaartstuk', zone.boss.x, zone.boss.z);
+    else { sjors = new Scorpion(zone.group, zone.boss.x, zone.boss.z); enemies.push(sjors); }
   }
 }
 
@@ -267,6 +304,31 @@ function applyEnv(env) {
   CAM_OFFSET.set(...env.cam);
 }
 
+// ---------- Zandstorm in de woestijn: mist, zandkorrels en wind ----------
+const stormColor = new THREE.Color();
+let stormWas = false;
+desert.focus = player.pos; // de zandkorrels waaien rond de speler
+function updateStorm(dt, paused) {
+  const st = desert.storm, k = st.k, env = desert.env, sf = desert.stormFog;
+  stormColor.set(sf[0]);
+  scene.fog.color.set(env.fog[0]).lerp(stormColor, k);
+  scene.fog.near = env.fog[1] + (sf[1] - env.fog[1]) * k;
+  scene.fog.far = env.fog[2] + (sf[2] - env.fog[2]) * k;
+  sky.material.uniforms.top.value.set(env.sky[0]).lerp(stormColor, k * 0.95);
+  sky.material.uniforms.bottom.value.set(env.sky[1]).lerp(stormColor, k);
+  sun.intensity = env.sun[1] * (1 - 0.45 * k);
+  // de wind duwt je een beetje opzij (geen pijn!)
+  if (!paused && !transition && !fainting && started && k > 0.3) {
+    player.pos.x += st.wind.x * 2.2 * k * dt;
+    player.pos.z += st.wind.z * 2.2 * k * dt;
+    player.resolveCollisions(desert);
+  }
+  if (st.active !== stormWas) {
+    stormWas = st.active;
+    if (started) ui.toast(st.active ? '🌪️ ZANDSTORM! Hou je vast, de wind duwt je opzij!' : '☀️ De zandstorm is voorbij.', 3000);
+  }
+}
+
 let exitCooldown = 0;
 function setZone(id, spawn) {
   const old = game.zone;
@@ -278,10 +340,11 @@ function setZone(id, spawn) {
   landing.visible = false;
   const zone = zones[id];
   game.zone = zone;
+  if (id === 'woestijn') { desert.storm.k = 0; desert.stopStorm(20 + Math.random() * 10); stormWas = false; } // eerst even rustig
   state.zone = id;
   zone.group.visible = true;
   applyEnv(zone.env);
-  lantern.visible = id === 'grot';
+  lantern.visible = id === 'grot' || id === 'piramide';
   player.setPosition(spawn.x, spawn.z, spawn.rot ?? player.rot);
   player.resolveCollisions(zone);
   squad.regroup(player);
@@ -346,6 +409,19 @@ function refresh() {
   world.machine.setSuper(reached(q, 'held'));
   if (!repaired) world.machine.setGearsInside(0);
   world.gate.setOpen(reached(q, 'zwaard'));
+  updateDesertGate();
+  world.desertGate.setOpen(reached(q, 'woestijn'));
+  desert.setDoorOpen(reached(q, 'piramide'));
+  for (const st of desert.stones) {
+    const lit = reached(q, 'piramide') || (q.stones || []).includes(st.id);
+    if (st.lit !== lit) desert.setStoneLit(st, lit);
+  }
+  const ghost = document.getElementById('ghost-btn');
+  ghost.classList.toggle('hidden', !(reached(q, 'aan') && state.clones > 0));
+  ghost.textContent = state.clonesHidden ? '🧬' : '👻';
+  ghost.setAttribute('aria-label', state.clonesHidden ? 'Clones terug' : 'Clones weg');
+  ghost.title = state.clonesHidden ? 'Clones terug (H)' : 'Clones weg (H)';
+  ghost.classList.toggle('off', !!state.clonesHidden);
   forest.setDoorOpen(reached(q, 'grot'));
   bolt.showMarker(boltHasNews(state));
   koopman.showMarker(reached(q, 'zwaard') && state.crystals >= 5 && state.hats.length === 0);
@@ -353,7 +429,32 @@ function refresh() {
   city.showroom.setOwned(state.cars);
   applyGear();
   const batteryHere = pickups.list.some((p) => p.type === 'batterij');
-  ui.setQuest(batteryHere ? '🔋 Pak de <b>Superbatterij</b>!' : questText(state, game.zone.id));
+  const pieceHere = pickups.list.some((p) => p.type === 'kaartstuk');
+  ui.setQuest(batteryHere ? '🔋 Pak de <b>Superbatterij</b>!' : pieceHere ? '📜 Pak het stukje <b>schatkaart</b>!' : questText(state, game.zone.id));
+}
+
+// ---------- De woestijnpoort verschijnt (als De Stad uitgespeeld is) ----------
+let desertGateShown = false, desertAppearPending = false;
+function updateDesertGate() {
+  const vis = desertVisible();
+  if (vis === desertGateShown) return;
+  desertGateShown = vis;
+  world.setDesertVisible(vis, false);
+  if (vis && started) {
+    desertAppearPending = true; // de glitters zie je als je in het dorp bent
+    ui.toast('✨ Er is een nieuwe poort verschenen! Kijk aan de westkant van het dorp.', 4500);
+    sfx.tada();
+  }
+}
+function desertAppear() {
+  desertAppearPending = false;
+  world.setDesertVisible(true, true);
+  const at = { x: -22, y: 2, z: 0 };
+  fx.sparkle(at, [0xffd23f, 0xffffff, 0xff8c42], 50, 6);
+  setTimeout(() => fx.sparkle(at, [0xffd23f, 0x7af7ff, 0xffffff], 40, 5), 500);
+  fx.confetti({ x: -21, z: 0 }, 50);
+  sfx.powerUp();
+  ui.toast('✨ Er is een nieuwe poort verschenen: naar DE GROTE WOESTIJN!', 4000);
 }
 
 let dirty = false;
@@ -430,6 +531,16 @@ function afterBolt(before, wasAllFound) {
     fx.confetti(bolt.pos, 120);
     sfx.fanfare();
     ui.toast('🏆 Hoofdstuk 2 uitgespeeld! Nu kun je 10 clones maken!', 4500);
+  } else if (before === 'held' && isCityDone(state)) {
+    q.state = 'woestijn';
+    q.stones = [];
+    sfx.powerUp();
+    ui.toast('🏜️ De woestijnpoort is open! (westkant van het dorp)', 4000);
+  } else if (before === 'kaart') {
+    q.state = 'schat';
+    fx.confetti(bolt.pos, 120);
+    sfx.fanfare();
+    ui.toast('🏆 Hoofdstuk 3 uitgespeeld! Schatkaart: 1 van 4. Wordt vervolgd!', 4500);
   }
 }
 
@@ -444,6 +555,38 @@ function action() {
   if (state.sword && player.swing()) {
     sfx.swing();
     fx.swoosh(player.pos, player.rot, state.sword > 1);
+  }
+}
+
+// Raakt het zwaard een zonnesteen? (in de woestijn)
+function hitStones(pos, rot) {
+  const q = state.quest;
+  if (game.zone !== desert || q.state !== 'woestijn') return;
+  for (const st of desert.stones) {
+    if (st.lit) continue;
+    const dx = st.x - pos.x, dz = st.z - pos.z, d = Math.hypot(dx, dz);
+    if (d > SWORD_REACH + 1.0) continue;
+    let diff = Math.atan2(dx, dz) - rot;
+    while (diff > Math.PI) diff -= Math.PI * 2;
+    while (diff < -Math.PI) diff += Math.PI * 2;
+    if (Math.abs(diff) > 1.3 && d > 1.8) continue;
+    q.stones = [...new Set([...(q.stones || []), st.id])];
+    desert.setStoneLit(st, true);
+    fx.sparkle({ x: st.x, y: 5, z: st.z }, [0xffd23f, 0xffffff, 0xff8c42], 40, 6);
+    sfx.ding();
+    const n = q.stones.length;
+    if (n >= SUN_STONE_IDS.length) {
+      q.state = 'piramide';
+      desert.setDoorOpen(true);
+      sfx.rumble();
+      shake = 1;
+      fx.confetti({ x: st.x, z: st.z }, 60);
+      ui.toast('☀️ Alle 3 de zonnestenen schijnen! De deur van de Grote Piramide gaat open!', 4500);
+    } else {
+      ui.toast(`☀️ Zonnesteen ${n} van 3 schijnt! Zie je de gouden lichtstraal?`, 3500);
+    }
+    refresh();
+    save();
   }
 }
 
@@ -475,6 +618,7 @@ const nearMachine = () => game.zone === world
 function makeClone() {
   if (ui.dialogOpen || ui.panelOpen || !reached(state.quest, 'aan') || squad.busy) return;
   if (!nearMachine()) { if (game.zone === world) ui.toast('Ga eerst voor de clonemachine staan!'); return; }
+  if (state.clonesHidden) { state.clonesHidden = false; squad.setHidden(false, player); } // nieuwe clone? dan komen de anderen ook terug
   const max = maxClones(state.quest);
   if (state.clones >= max) { ui.toast(`Je hebt al ${max} clones. Meer passen er niet!`); sfx.nope(); return; }
   state.clones++;
@@ -651,6 +795,7 @@ function openBackpack() {
     ...cityActions,
     onShirt(id) { cityActions.onShirt(id); ui.refreshPanel(build); },
     onCandy(id) { cityActions.onCandy(id); ui.refreshPanel(build); },
+    onMap() { ui.closePanel(); openTreasure(); },
   });
   ui.openPanel('Rugzak', build);
 }
@@ -659,6 +804,23 @@ function openBackpack() {
 function questTarget() {
   const q = state.quest, z = game.zone.id;
   if (z === 'stad') return state.cityGift ? null : city.mayor.pos;
+  const toDesertGate = { x: -22, z: 0 };
+  if (q.state === 'woestijn') {
+    if (z === 'dorp') return toDesertGate;
+    if (z === 'woestijn') {
+      let best = null, bd = Infinity;
+      for (const st of desert.stones) {
+        const d = Math.hypot(st.x - player.pos.x, st.z - player.pos.z);
+        if (!st.lit && d < bd) { bd = d; best = st; }
+      }
+      return best;
+    }
+    return null;
+  }
+  if (q.state === 'piramide') return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.door : z === 'piramide' ? pyramid.boss : null;
+  if (q.state === 'kaart' || (q.state === 'held' && isCityDone(state))) {
+    return z === 'dorp' ? bolt.pos : z === 'woestijn' ? desert.exit : z === 'piramide' ? pyramid.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
+  }
   const toVillageExit = { x: 0, z: 22 }, toForestFromCave = cave.exit;
   if (q.state === 'bezig') {
     if (q.gears.length >= GEARS_NEEDED) return bolt.pos;
@@ -671,6 +833,76 @@ function questTarget() {
   if (q.state === 'zwaard') return z === 'dorp' ? { x: 0, z: -22 } : z === 'bos' ? { x: 0, z: -19 } : null;
   if (q.state === 'grot') return z === 'dorp' ? { x: 0, z: -22 } : z === 'bos' ? { x: 0, z: -21 } : cave.king;
   return null;
+}
+
+// De schatkaart bekijken (uit de rugzak, of meteen als je een stukje vindt)
+function openTreasure() {
+  if (ui.dialogOpen || ui.panelOpen || !started) return;
+  ui.openPanel('📜 De schatkaart', (body) => buildTreasureMap(body, state));
+}
+
+// ---------- Geheime code (verstopt: tik 5 keer snel op je kristallen) ----------
+function useCode(raw) {
+  const code = String(raw || '').toUpperCase().replace(/\s+/g, '');
+  if (!SECRET_CODES.includes(code)) { sfx.nope(); return { ok: false, msg: 'Die code klopt niet.' }; }
+  if (state.codes.includes(code)) { sfx.nope(); return { ok: false, msg: 'Deze code heb je al gebruikt!' }; }
+  state.codes.push(code);
+  if (code === 'KRISTAL100') state.crystals += 100;
+  sfx.tada();
+  fx.sparkle({ x: player.pos.x, y: 1.5, z: player.pos.z }, [0x7af7ff, 0xffffff, 0xffd23f], 50, 5);
+  ui.toast('💎 Geheime code! Je krijgt 100 kristallen!', 3500);
+  refresh();
+  save();
+  return { ok: true, msg: '🎉 Gelukt! +100 kristallen 💎' };
+}
+function openCode() {
+  if (ui.dialogOpen || ui.panelOpen || !started) return;
+  ui.openPanel('🤫 Geheime code', (body) => {
+    const p = document.createElement('p');
+    p.className = 'panel-note';
+    p.textContent = 'Weet jij een geheime code? Typ hem hier:';
+    const row = document.createElement('div');
+    row.className = 'code-row';
+    const input = document.createElement('input');
+    Object.assign(input, { id: 'code-input', type: 'text', maxLength: 20, autocomplete: 'off', spellcheck: false, placeholder: 'CODE' });
+    input.setAttribute('autocapitalize', 'characters');
+    const ok = document.createElement('button');
+    ok.id = 'code-ok'; ok.type = 'button'; ok.textContent = 'OK';
+    const msg = document.createElement('div');
+    msg.id = 'code-msg'; msg.className = 'code-msg';
+    const go = () => { const r = useCode(input.value); msg.textContent = r.msg; msg.style.color = r.ok ? '#2d6a4f' : '#c1121f'; if (r.ok) input.value = ''; };
+    ok.addEventListener('pointerdown', (e) => { e.preventDefault(); go(); });
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); go(); } });
+    row.append(input, ok);
+    body.append(p, row, msg);
+    setTimeout(() => input.focus(), 50);
+  });
+}
+let crystalTaps = [];
+document.getElementById('crystals').addEventListener('pointerdown', (e) => {
+  e.preventDefault(); e.stopPropagation();
+  const now = performance.now();
+  crystalTaps = crystalTaps.filter((t0) => now - t0 < 2500);
+  crystalTaps.push(now);
+  if (crystalTaps.length >= 5) { crystalTaps = []; openCode(); }
+});
+
+// ---------- Clones even weg (👻) en weer terug ----------
+function toggleClones() {
+  if (!started || ui.dialogOpen || ui.panelOpen || transition) return;
+  if (!state.clones) return;
+  state.clonesHidden = !state.clonesHidden;
+  squad.setHidden(state.clonesHidden, player);
+  if (state.clonesHidden) {
+    fx.poof(player.pos, 0x7af7ff, 1.5);
+    ui.toast('👻 Je clones zijn even weg. Druk nog eens om ze terug te halen!', 3000);
+  } else {
+    fx.sparkle({ x: player.pos.x, y: 1, z: player.pos.z }, [0x7af7ff, 0xffffff], 30, 4);
+    ui.toast('🧬 Je clones zijn terug!', 2000);
+  }
+  sfx.click();
+  refresh();
+  save();
 }
 
 function openMap() {
@@ -728,6 +960,7 @@ const controls = new Controls({
     if (k === 'escape') ui.closePanel();
     else if (ui.panelOpen) ui.closePanel();
     else if (k === 'm') openMap();
+    else if (k === 'h') toggleClones();
     else openBackpack();
   },
 });
@@ -737,6 +970,7 @@ tapBtn('sound-btn', toggleSound);
 tapBtn('music-btn', toggleMusic);
 tapBtn('bag-btn', openBackpack);
 tapBtn('map-btn', openMap);
+tapBtn('ghost-btn', toggleClones);
 ui.onVoice = (pitch) => sfx.voice(pitch);
 
 // ---------- De drukknoppen voor de grotdeur ----------
@@ -823,7 +1057,7 @@ function frame() {
     player.update(dt, move, zone);
   }
   if (before.distanceToSquared(player.pos) > 1e-6) dirty = true;
-  if (player.swingHit) swordHits(player.pos, player.rot, state.sword, false);
+  if (player.swingHit) { swordHits(player.pos, player.rot, state.sword, false); hitStones(player.pos, player.rot); }
 
   zone.update(t, realDt);
   for (const n of zone.npcs) n.update(t, realDt, player.pos, zone);
@@ -845,6 +1079,16 @@ function frame() {
       fx.confetti(player.pos);
       ui.toast('🔋 Je hebt de Superbatterij! Breng hem naar Professor Bolt!', 4000);
       save();
+    }
+    if (type === 'kaartstuk') {
+      if (!state.mapPieces.includes('woestijn')) state.mapPieces.push('woestijn');
+      state.quest.state = 'kaart';
+      delete state.quest.bossBeaten;
+      sfx.fanfare();
+      fx.confetti(player.pos, 100);
+      ui.toast(`📜 Een stukje van de schatkaart! (${state.mapPieces.length} van ${MAP_PIECES_TOTAL})`, 4000);
+      save();
+      setTimeout(() => { if (!ui.panelOpen && !ui.dialogOpen) openTreasure(); }, 1400);
     }
     refresh();
     dirty = true;
@@ -880,6 +1124,7 @@ function frame() {
   driveToastCd -= realDt;
   if (started && !transition && !fainting && exitCooldown <= 0) {
     for (const ex of zone.exits) {
+      if (ex.active && !ex.active()) continue; // deze poort is er (nog) niet
       const who = driving ? myCar.pos : player.pos;
       if (Math.hypot(who.x - ex.x, who.z - ex.z) > ex.r + (driving ? 1.5 : 0)) continue;
       if (driving) { if (driveToastCd <= 0) { ui.toast('🚗 Met de auto kun je niet door de poort. Stap eerst uit!', 2500); driveToastCd = 3; } break; }
@@ -899,7 +1144,13 @@ function frame() {
     const fight = king && !king.dead && cave.inThroneRoom(player.pos);
     ui.setBoss('👑 Koning Slijm', fight ? king.hp / king.maxHp : null);
     playMusic(fight ? 'baas' : 'grot');
+  } else if (zone === pyramid) {
+    const fight = sjors && !sjors.dead && pyramid.inThroneRoom(player.pos);
+    ui.setBoss('🦂 Schorpioen Sjors', fight ? sjors.hp / sjors.maxHp : null);
+    playMusic(fight ? 'baas' : 'piramide');
   } else ui.setBoss('', null);
+  if (zone === world && desertAppearPending && !transition) desertAppear();
+  if (zone === desert) updateStorm(realDt, paused);
 
   // Knoppen en hartjes
   const near = !paused && !driving && !(state.sword && enemyNear()) && nearestTalkable();
@@ -967,6 +1218,7 @@ ui.setToggles(state.sound, state.music);
 world.gate.setOpen(reached(state.quest, 'zwaard'), true);
 forest.setDoorOpen(reached(state.quest, 'grot'), true);
 squad.restore(state.clones, player);
+squad.setHidden(state.clonesHidden, player);
 setZone(state.zone, state.player);
 camera.position.set(player.pos.x + 16, 8, player.pos.z);
 requestAnimationFrame(frame);
@@ -982,7 +1234,9 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 // Handig om te testen (in de console): window.clones
 window.clones = {
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
-  forest, cave, city, zones, game, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
+  forest, cave, city, desert, pyramid, zones, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
+  // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
+  unlockDesert: () => { state._desertForced = true; refresh(); }, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
   get boost() { return boost; }, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop,
   get enemies() { return enemies; }, get hearts() { return hearts; }, set hearts(v) { hearts = v; },
   get started() { return started; }, start: () => { if (!started) document.getElementById('start').dispatchEvent(new PointerEvent('pointerup')); },

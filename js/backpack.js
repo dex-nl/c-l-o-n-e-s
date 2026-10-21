@@ -1,6 +1,6 @@
 // De rugzak: wat heb je allemaal? En welk hoedje draag je?
 import { HAT_NAMES } from './characters.js';
-import { reached, maxClones, GEARS_NEEDED } from './quest.js';
+import { reached, maxClones, GEARS_NEEDED, MAP_PIECES_TOTAL } from './quest.js';
 import { SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } from './cityshop.js';
 
 const HAT_ICONS = { feest: '🎉', piraat: '🏴‍☠️', cowboy: '🤠', tovenaar: '🧙', kroon: '👑' };
@@ -33,6 +33,12 @@ export function buildBackpack(body, state, hearts, onWear, city = null) {
   if (reached(q, 'aan')) item(stuff, '🧬', 'Clones', `${state.clones} van ${maxClones(q)}`);
   if (q.state === 'bezig') item(stuff, '⚙️', 'Tandwielen', `${q.gears.length} van ${GEARS_NEEDED}`);
   if (q.state === 'batterij') item(stuff, '🔋', 'Superbatterij', 'Voor Professor Bolt');
+  if (state.mapPieces && state.mapPieces.length && city && city.onMap) {
+    const c = item(stuff, '📜', 'Schatkaart', `${state.mapPieces.length} van ${MAP_PIECES_TOTAL} stukjes. Tik om te bekijken`);
+    c.classList.add('pick');
+    c.id = 'bag-schatkaart';
+    c.addEventListener('pointerdown', (e) => { e.preventDefault(); city.onMap(); });
+  }
 
   const hats = section(body, 'Hoedjes');
   const options = [[null, '🧢', 'Rood petje'], ...state.hats.map((id) => [id, HAT_ICONS[id], HAT_NAMES[id]])];

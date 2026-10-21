@@ -55,3 +55,18 @@
 - Sneller gemaakt voor de iPhone: alles wat stilstaat is samengeplakt en bomen en lantaarns worden in één keer getekend. Bij de poort: eerst 564, nu ongeveer 205 tekenopdrachten per beeld.
 - Gebouwen worden doorzichtig als ze voor de camera staan.
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), met een test die het hele wegennet rondrijdt. Nog niet getest op een echte iPad.
+
+## 21 oktober 2026: De Grote Woestijn (hoofdstuk 3), wens van Dex
+- Gemaakt met een AI-helper op de tak `woestijn` (De Stad, de Autowinkel en de Grote Stad zitten al in `main`). **Dex of papa beslist of het erin komt.**
+- Dex wilde: piramides, cactussen, een zandstorm, een speciaal monster en het volgende stukje van de schatkaart. Alles zit erin!
+- Een nieuwe zandkleurige poort aan de westkant van het dorp. Hij verschijnt met glitters als De Stad uitgespeeld is (voorlopig: als je een auto hebt gekocht).
+- De Grote Woestijn is heel groot (ruim 3 keer De Grote Stad): duinen, cactussen, paden met wegwijzers, een oase met Kameel Karel, Sfinx Sam, ruïnes, piramides en overal mummieslijmpjes.
+- Zandstorm: gele mist, vliegend zand en wind die je opzij duwt (geen pijn).
+- Puzzel met 3 zonnestenen. Daarna kun je de Grote Piramide in, met gangen, fakkels en hiërogliefen.
+- Het monster: Schorpioen Sjors, groot maar lief (grote ogen, roze wangetjes, rood hoedje). Hij knijpt, stampt en graaft zich in. Je clones vechten mee.
+- De beloning: stukje 1 van 4 van de schatkaart van de piraat. Je kunt hem bekijken in je rugzak.
+- Ook nieuw (wensen van Dex): een geheime code voor 100 kristallen (waar hij staat en hoe je hem intypt staat alleen in GAME.md, onder "Geheim!") en de 👻-knop (of H) om je clones even weg te sturen.
+- Save naar versie 6 (stukjes schatkaart, gebruikte codes, clones weg of niet). Oude saves blijven werken (getest met saves van versie 0 t/m 6).
+- Snel genoeg gehouden: cactussen, duinen, stenen en paden worden in één keer getekend en alles wat stilstaat is samengeplakt. In de woestijn ongeveer 130 tot 160 tekenopdrachten per beeld.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
+

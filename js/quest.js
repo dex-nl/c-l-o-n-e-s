@@ -3,10 +3,23 @@
 //   Hoofdstuk 1: 'nieuw' -> 'bezig' (tandwielen zoeken) -> 'klaar' (gerepareerd) -> 'aan' (clonen maar!)
 //   Hoofdstuk 2: 'zwaard' (naar het Slijmbos) -> 'grot' (deur open: versla Koning Slijm)
 //                -> 'batterij' (breng hem naar Bolt) -> 'held' (klaar! nu 10 clones)
+//   Hoofdstuk 3: 'woestijn' (laat de 3 zonnestenen schijnen) -> 'piramide' (versla Schorpioen Sjors)
+//                -> 'kaart' (breng het stukje schatkaart naar Bolt) -> 'schat' (wordt vervolgd!)
 export const NPC_NAME = 'Professor Bolt';
 export const GEARS_NEEDED = 3;
 export const TEAM_SIZE = 3; // zoveel clones heb je nodig voordat Bolt over het Slijmbos vertelt
-export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held'];
+export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat'];
+export const MAP_PIECES = ['woestijn']; // de stukjes van de schatkaart die er al zijn (er komen er 4)
+export const MAP_PIECES_TOTAL = 4;
+export const SUN_STONE_IDS = ['west', 'oost', 'tempel']; // de zonnestenen in de woestijn (zie desert.js)
+
+// Is De Stad "uitgespeeld"? Dan verschijnt de poort naar De Grote Woestijn in het dorp.
+// VOORLOPIG: je hebt een auto gekocht. (Dex kiest nog wat het precies wordt: pas het alleen HIER aan.)
+// state._desertForced is alleen voor het testen (window.clones.unlockDesert()).
+export function isCityDone(state) {
+  return state._desertForced === true || (Array.isArray(state.cars) && state.cars.length > 0);
+}
+export const CITY_DONE_HINT = 'koop een auto in de <b>Autowinkel</b> in De Stad';
 
 // Ben je al bij deze stap (of verder)?
 export const reached = (quest, step) => QUEST_ORDER.indexOf(quest.state) >= QUEST_ORDER.indexOf(step);
@@ -37,6 +50,21 @@ export function questText(state, zoneId) {
       if (zoneId === 'grot') return '👑 Versla <b>Koning Slijm</b>!';
       return '👑 Ga de grot in en versla <b>Koning Slijm</b>';
     case 'batterij': return '🔋 Breng de Superbatterij naar <b>Professor Bolt</b>';
+    case 'held':
+      if (isCityDone(state)) return '❗ <b>Professor Bolt</b> heeft nieuws voor je!';
+      return `⭐ Held van het dorp! Volgende avontuur? Tip: ${CITY_DONE_HINT}`;
+    case 'woestijn': {
+      const lit = (q.stones || []).length;
+      if (zoneId === 'woestijn') return `☀️ Sla de 3 <b>zonnestenen</b> met je zwaard <b>(${lit}/3)</b>`;
+      if (zoneId === 'dorp') return '🏜️ Ga door de <b>woestijnpoort</b> (westkant van het dorp)';
+      return '🏜️ Ga naar <b>De Grote Woestijn</b> (westkant van het dorp)';
+    }
+    case 'piramide':
+      if (zoneId === 'piramide') return '🦂 Versla <b>Schorpioen Sjors</b> in de troonzaal!';
+      if (zoneId === 'woestijn') return '🚪 De piramide is open! Ga naar binnen (helemaal achterin)';
+      return '🏜️ Ga naar de <b>Grote Piramide</b> in de woestijn';
+    case 'kaart': return '📜 Breng het stukje <b>schatkaart</b> naar <b>Professor Bolt</b>';
+    case 'schat': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
     default: return `⭐ Held van het dorp! Clones: <b>${n}/${max}</b>. Wat wordt je volgende avontuur?`;
   }
 }
@@ -44,7 +72,7 @@ export function questText(state, zoneId) {
 // Heeft Professor Bolt iets nieuws te vertellen? (dan staat er een ! boven zijn hoofd)
 export function boltHasNews(state) {
   const q = state.quest;
-  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij'
+  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart'
     || (q.state === 'bezig' && q.gears.length >= GEARS_NEEDED)
     || (q.state === 'aan' && state.clones >= TEAM_SIZE);
 }
@@ -54,7 +82,15 @@ const pick = (list) => list[Math.floor(Math.random() * list.length)];
 // Wat zegt iemand? Hangt af van hoe ver je bent.
 export function linesFor(id, state) {
   const q = state.quest, clones = state.clones;
-  if (id === 'bolt') return boltLines(q, clones);
+  if (id === 'bolt') {
+    if (q.state === 'held' && !isCityDone(state)) {
+      return [
+        'De machine kan nu 10 clones maken. Probeer maar!',
+        'Ben je al in De Stad geweest? Ik hoor dat je daar een eigen auto kunt kopen... Vroem!',
+      ];
+    }
+    return boltLines(q, clones);
+  }
   if (id === 'koopman') {
     if (!reached(q, 'zwaard')) {
       return [
@@ -71,11 +107,31 @@ export function linesFor(id, state) {
     if (reached(q, 'aan') && clones > 0) return ['Wat zie ik nou? Er lopen allemaal kleine jij\'tjes achter je aan!', 'Vroeger hadden we geen clones. Toen moesten we zelf de afwas doen!'];
     return ['Hallo lieverd! Ik ben Oma Pien.', 'Die Professor Bolt is altijd aan het knutselen. Laatst ontplofte zijn broodrooster!'];
   }
+  if (id === 'kameel') return camelLines(state);
   const city = cityLines(id, state);
   if (city) return city;
   if (id === 'hond' && state.toys && state.toys.includes('bal')) return [pick(['Woef! Woef! Gooi de bal!', '*kwispel kwispel* Is dat MIJN bal?!', 'Knoeper rent de bal achterna. Woef!'])];
   if (id === 'hond') return [pick(['Woef! Woef!', '*kwispel kwispel*', 'Knoeper wil spelen! Woef!', '*snuffel snuffel* ...Woef?'])];
   return ['...'];
+}
+
+// Kameel Karel bij de oase weet alles van de woestijn
+function camelLines(state) {
+  const q = state.quest, lit = (q.stones || []).length;
+  if (q.state === 'woestijn') {
+    return [
+      'Mmmh... *kauw kauw* Hallo, ik ben Kameel Karel.',
+      lit === 0 ? 'Zoek je de zonnestenen? Er staat er een bij de Oude Ruïne, een bij de Kleine Piramide en een bij de Vergeten Tempel.'
+        : `Je hebt er al ${lit} van de 3 laten schijnen. Zie je de gouden lichtstraal in de lucht? Zo zie je welke al klaar zijn!`,
+      'Volg de stenen paden. Op de kaart (M) zie je waar je bent.',
+    ];
+  }
+  if (q.state === 'piramide') return ['De piramide is open! *kauw* Schorpioen Sjors is mijn buurman. Hij knijpt een beetje, maar hij is niet gemeen.', 'Pas op als hij zijn staart optilt: dan stampt hij!'];
+  return [pick([
+    'Mmmh... *kauw kauw* Zand is lekker. Nou ja, een beetje.',
+    'Wist je dat ik een hele week geen water hoef te drinken? Maar ik vind de oase toch fijn.',
+    'Zandstorm? Ach, dan doe ik gewoon even mijn ogen dicht.',
+  ])];
 }
 
 // Wat zeggen de mensen in De Stad?
@@ -190,6 +246,38 @@ function boltLines(q, clones) {
         'Even inbouwen... KLONK! ZOEM! ZZZZING!',
         'De clonemachine is nu SUPER. Hij kan wel 10 clones maken!',
         'Jij bent de held van het dorp. Dankjewel!',
+      ];
+    case 'held':
+      return [
+        'Held! Ik heb iets geks gevonden in mijn werkplaats...',
+        'Een oud briefje met een tekening van een piramide. Er staat: "Het eerste stukje van de schatkaart ligt in de piramide."',
+        'Het is de schatkaart van de piraat uit het boek De verborgen schat! En die piramide staat in DE GROTE WOESTIJN.',
+        'Ik heb een nieuwe poort gebouwd aan de westkant van het dorp. Hij is nu open!',
+        'Maar pas op: de woestijn is heel groot, en er wonen mummieslijmpjes. Neem je clones mee!',
+      ];
+    case 'woestijn':
+      return [
+        'In de woestijn staat een Grote Piramide. De deur gaat open met 3 zonnestenen.',
+        'Sla elke zonnesteen met je zwaard. Dan schijnt hij! Ze staan bij de ruïnes.',
+        'Verdwaal je? Kijk op de kaart, of vraag het aan Kameel Karel bij de oase.',
+      ];
+    case 'piramide':
+      return [
+        'De piramide is open? Fantastisch!',
+        'Ik heb gehoord dat er een schorpioen woont. Hij heet Sjors. Hij is groot, maar eigenlijk best lief...',
+        'Zakt hij in het zand? Kijk naar de schaduw: daar komt hij omhoog!',
+      ];
+    case 'kaart':
+      return [
+        'Is dat... het stukje van de schatkaart?! Laat eens zien!',
+        'Kijk: een piramide, een palmboom... en een stippellijn die verder loopt!',
+        'Dit is stukje 1 van 4. De andere stukjes liggen nog ergens verstopt in de wereld.',
+        'Ik bewaar alles in je rugzak. Wordt vervolgd... Jij bent een echte schattenjager!',
+      ];
+    case 'schat':
+      return [
+        'Hoe gaat het met de schatkaart? Nog 3 stukjes te gaan!',
+        'Ik ben benieuwd waar het volgende stukje ligt... Misschien heeft Dex een idee?',
       ];
     default:
       return [

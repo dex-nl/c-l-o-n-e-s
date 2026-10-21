@@ -8,7 +8,10 @@ const KINDS = {
   groen: { color: 0x7bd389, size: 0.55, hp: 2, speed: 2.6, aggro: 7, loot: 1 },
   blauw: { color: 0x5aa9e6, size: 0.6, hp: 3, speed: 3.3, aggro: 8, loot: 2 },
   koning: { color: 0x4cc96f, size: 1.7, hp: 24, speed: 2.2, aggro: 16, loot: 12 },
+  // Mummieslijm (woestijn en piramide): een slijmpje dat in wc-papier is gerold. Sterker dan een blauw slijmpje!
+  mummie: { color: 0xf1e3c2, size: 0.62, hp: 4, speed: 3.4, aggro: 9, loot: 2 },
 };
+export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6 };
 const REST = 0.45, HOP = 0.5; // even stilzitten, dan een sprongetje
 
 // Vormen en kleuren die alle slijmpjes delen (scheelt geheugen)
@@ -18,6 +21,8 @@ const pupilGeo = new THREE.BoxGeometry(0.13, 0.17, 0.06);
 const browGeo = new THREE.BoxGeometry(0.32, 0.07, 0.06);
 const shineGeo = new THREE.BoxGeometry(0.2, 0.12, 0.05);
 const white = mat(0xffffff), black = mat(0x1d1d1d), shineM = mat(0xffffff, { emissive: 0x888888 });
+const bandGeo = new THREE.TorusGeometry(0.93, 0.07, 3, 14);
+const bandM = mat(0xfffaf0), sleepyGeo = new THREE.BoxGeometry(0.3, 0.06, 0.08);
 
 export class Slime {
   constructor(group, x, z, kind = 'groen') {
@@ -50,6 +55,21 @@ export class Slime {
         brow.position.set(sx, 0.38, 0.93);
         brow.rotation.z = sx > 0 ? 0.4 : -0.4;
         face.add(brow);
+      }
+    }
+    if (kind === 'mummie') {
+      // verbandjes rondom, en slaperige oogleden
+      [[-0.35, 0.25], [0.05, -0.2], [0.45, 0.15]].forEach(([y, tilt]) => {
+        const b = new THREE.Mesh(bandGeo, bandM);
+        b.rotation.set(Math.PI / 2 + tilt, 0, tilt * 0.5);
+        b.position.y = y;
+        b.scale.setScalar(Math.cos(Math.asin(Math.min(0.9, Math.abs(y)))));
+        face.add(b);
+      });
+      for (const sx of [-0.32, 0.32]) {
+        const lid = new THREE.Mesh(sleepyGeo, bandM);
+        lid.position.set(sx, 0.3, 0.97);
+        face.add(lid);
       }
     }
     const shine = new THREE.Mesh(shineGeo, shineM);

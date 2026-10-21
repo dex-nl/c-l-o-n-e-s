@@ -62,6 +62,7 @@ export function createWorld(scene) {
     m.rotation.y = Math.atan2(x2 - x1, z2 - z1);
     m.receiveShadow = true;
     scene.add(m);
+    return m;
   }
   const plaza = new THREE.Mesh(new THREE.CircleGeometry(4, 10).rotateX(-Math.PI / 2), pathM);
   plaza.position.y = 0.02; plaza.receiveShadow = true;
@@ -240,18 +241,21 @@ export function createWorld(scene) {
   // ---------- Hek rond het dorp ----------
   const woodM = mat(0xc68b59);
   const posts = 48;
+  const westFence = new THREE.Group(); // dit stukje hek gaat weg als de woestijnpoort verschijnt
+  scene.add(westFence);
   for (let i = 0; i < posts; i++) {
     if (i === 35 || i === 36) continue; // hier zit de poort naar het Slijmbos
     if (i === 47 || i === 0) continue;  // hier zit de poort naar De Stad (oostkant)
+    const fence = i === 23 || i === 24 ? westFence : scene; // hier komt de poort naar De Grote Woestijn (westkant)
     const a1 = (i / posts) * Math.PI * 2, a2 = ((i + 1) / posts) * Math.PI * 2;
     const x1 = Math.cos(a1) * VILLAGE_RADIUS, z1 = Math.sin(a1) * VILLAGE_RADIUS;
     const x2 = Math.cos(a2) * VILLAGE_RADIUS, z2 = Math.sin(a2) * VILLAGE_RADIUS;
-    scene.add(mesh(new THREE.BoxGeometry(0.25, 1.2, 0.25), woodM, x1, 0.6, z1));
+    fence.add(mesh(new THREE.BoxGeometry(0.25, 1.2, 0.25), woodM, x1, 0.6, z1));
     const len = Math.hypot(x2 - x1, z2 - z1);
     for (const h of [0.45, 0.9]) {
       const rail = mesh(new THREE.BoxGeometry(0.1, 0.14, len), woodM, (x1 + x2) / 2, h, (z1 + z2) / 2);
       rail.rotation.y = Math.atan2(x2 - x1, z2 - z1);
-      scene.add(rail);
+      fence.add(rail);
     }
   }
 
@@ -266,6 +270,31 @@ export function createWorld(scene) {
   cityPortal.group.scale.setScalar(0.6); // past precies onder de balk van de poort
   updaters.push(cityPortal.update);
   path(3.8, 0.5, 27, 0, 1.8);
+
+  // ---------- Zandkleurige poort naar De Grote Woestijn (westkant) ----------
+  // Hij is er pas als De Stad uitgespeeld is (zie isCityDone in quest.js). Dan verschijnt hij met glitters.
+  const desertGroup = new THREE.Group();
+  desertGroup.visible = false;
+  scene.add(desertGroup);
+  world.desertGate = createGate(desertGroup, updaters, { angle: Math.PI / 2, label: 'WOESTIJN', color: '#d4a017' });
+  const desertPortal = makePortal(desertGroup, -23.79, 0, Math.PI / 2, null);
+  desertPortal.group.scale.setScalar(0.6);
+  updaters.push(desertPortal.update);
+  desertGroup.add(path(-4, -0.6, -27, 0, 1.8));
+  let grow = 1;
+  world.setDesertVisible = (yes, animate = false) => {
+    desertGroup.visible = yes;
+    westFence.visible = !yes;
+    if (yes && animate) grow = 0;
+  };
+  world.desertVisible = () => desertGroup.visible;
+  updaters.push((t, dt) => {
+    if (grow >= 1) return;
+    grow = Math.min(1, grow + dt * 0.8);
+    const k = 1 - (1 - grow) ** 3;
+    desertGroup.position.set(-24 * (1 - k), 0, 0);
+    desertGroup.scale.set(k, k, k);
+  });
 
   // ---------- Kraam van Koopman Kees ----------
   createStall(scene, 6.6, -2.2);
@@ -339,6 +368,7 @@ export function createWorld(scene) {
     flauw: { x: 0, z: 4.2, rot: 0 },          // hier word je wakker als je flauwvalt
     uitBos: { x: 0, z: -20.3, rot: 0 },       // hier kom je terug uit het Slijmbos
     uitStad: { x: 20.2, z: 0, rot: -Math.PI / 2 }, // hier kom je terug uit De Stad
+    uitWoestijn: { x: -20.2, z: 0, rot: Math.PI / 2 }, // hier kom je terug uit De Grote Woestijn
   };
   world.gearSpots = [
     { id: 'tandwiel-1', x: 16.5, z: 6.5 },   // achter het blauwe huis

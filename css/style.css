@@ -276,3 +276,11 @@ body.title #hud, body.title #top-btns, body.title #joy-base, body.title #talk-bt
 /* Lange woorden op de grote knop (Instappen / Uitstappen) */
 #talk-btn.long { font-size: 21px; }
 @media (max-height: 500px) { #talk-btn.long { font-size: 16px; } }
+
+/* ---------- De schatkaart en de geheime code ---------- */
+.treasure-map { display: block; width: min(100%, 480px); height: auto; margin: 6px auto 10px; background: #e9dcc0; border-radius: 12px; box-shadow: inset 0 0 0 4px #b08d57; }
+#crystals { pointer-events: auto; cursor: default; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+.code-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 8px 0; }
+.code-row input { font-size: 22px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; padding: 10px 14px; border-radius: 12px; border: 3px solid #b08d57; width: min(280px, 60vw); }
+.code-row button { font-size: 22px; padding: 10px 20px; border-radius: 14px; border: 0; background: var(--gold, #ffd23f); color: #2d3142; box-shadow: 0 4px 0 rgba(0,0,0,0.18); }
+.code-msg { font-size: 19px; font-weight: 800; min-height: 26px; }

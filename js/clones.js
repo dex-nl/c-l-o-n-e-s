@@ -42,8 +42,26 @@ export class CloneSquad {
     this.swordLevel = swordLevel;
     this.hat = hat;
     this.shirt = shirt;
-    for (const c of this.list) { giveSword(c.ch, swordLevel); setHat(c.ch, hat); if (shirt != null) setShirt(c.ch, shirt); }
+    for (const c of [...this.list, ...(this.stash || [])]) { giveSword(c.ch, swordLevel); setHat(c.ch, hat); if (shirt != null) setShirt(c.ch, shirt); }
   }
+
+  // Clones even weg (👻): onzichtbaar, ze volgen niet, botsen niet en vechten niet.
+  // Ze wachten in this.stash. Terug? Dan staan ze meteen weer in een rij achter je.
+  setHidden(yes, player) {
+    if (!!this.hidden === yes) return;
+    this.hidden = yes;
+    if (yes) {
+      this.stash = this.list;
+      this.list = [];
+      for (const c of this.stash) c.mesh.visible = false;
+    } else {
+      this.list = [...(this.stash || []), ...this.list];
+      this.stash = null;
+      for (const c of this.list) c.mesh.visible = true;
+      this.regroup(player);
+    }
+  }
+  get total() { return this.list.length + (this.stash ? this.stash.length : 0); }
 
   makeOne() {
     const ch = makeHero();

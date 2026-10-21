@@ -25,6 +25,26 @@ Het spel van Dex (11 jaar).
 - **De Slijmgrot**: een kerker met vuurschalen en kristallen. Achterin wacht **Koning Slijm**. Pas op voor zijn grote sprong!
 - Breng de Superbatterij terug naar Professor Bolt: dan kan de machine **10 clones** maken.
 
+### Hoofdstuk 3: De Grote Woestijn (idee van Dex!)
+- De zandkleurige **woestijnpoort** aan de **westkant van het dorp** verschijnt pas (met glitters en de melding *"Er is een nieuwe poort verschenen!"*) als **De Stad uitgespeeld** is. Voorlopig betekent dat: **je hebt een auto gekocht**. (Dex kiest nog wat het precies wordt; dat staat op één plek: `isCityDone` in `js/quest.js`.)
+- De poort gaat open als je hoofdstuk 2 hebt uitgespeeld én Professor Bolt je over het eerste stukje van de **schatkaart** heeft verteld (de schat van de piraat uit het boek *De verborgen schat*).
+- **De Grote Woestijn** is **heel groot** (ruim 3 keer zo groot als De Grote Stad): duinen waar je omheen moet, **cactussen**, stenen paden met wegwijzers, een **oase** met palmbomen en **Kameel Karel** (hij geeft tips), **Sfinx Sam** (een reuzenkat van steen), ruïnes en **piramides**.
+- Overal **mummieslijmpjes**: slijmpjes in wc-papier, sterker en sneller dan de slijmpjes in het bos. Je clones vechten mee.
+- Af en toe een **zandstorm** 🌪️: de lucht wordt geel, zand vliegt voorbij en de wind duwt je een beetje opzij. Geen pijn, hij waait vanzelf weer over.
+- Puzzel: sla de 3 **zonnestenen** met je zwaard (bij de Oude Ruïne, de Kleine Piramide en de Vergeten Tempel). Een gouden lichtstraal laat zien welke al schijnen. Schijnen ze alle 3? Dan gaat de deur van de **Grote Piramide** open (helemaal achterin, ver van de poort).
+- **In de Grote Piramide**: gangen met fakkels, vazen, een sarcofaag, hiërogliefen op de muren en meer mummieslijmpjes.
+- In de troonzaal woont de baas: **Schorpioen Sjors** 🦂 (grote ogen, roze wangetjes, een rood hoedje). Hij knijpt met zijn scharen, stampt met zijn staart (kijk naar de ring op de grond) en als hij boos wordt graaft hij zich in en springt hij onder je vandaan omhoog (kijk naar de schaduw!).
+- Versla hem en je krijgt het **1e stukje van de schatkaart** (1 van 4). Breng het naar Professor Bolt. Je kunt de schatkaart altijd bekijken in je **rugzak**. Wordt vervolgd...
+
+### Clones even weg 👻
+- Vind je je clones soms in de weg lopen? Tik op **👻** rechtsboven (of druk op **H**): je clones zijn even weg (onzichtbaar, ze volgen en vechten niet). Nog een keer (**🧬**) en ze staan meteen weer achter je. Het spel onthoudt het. Werkt overal, ook in je auto.
+
+### Geheim! 🤫 (niet verklappen in het spel)
+- Er is een **geheime code** die je **100 kristallen** geeft, maar één keer per save.
+- **Waar staat de code?** Diep in de **Grote Piramide**: in de grote hal ga je links (west) een smal doodlopend gangetje in, langs een vaas, helemaal naar het eind. Daar hangt een **oude muur met tekens**. Lees hem (sta er vlak voor) en je ziet: `KRISTAL100`.
+- **Waar typ je de code?** Tik (of klik) **5 keer snel** (binnen 2,5 seconde) op je **kristallen** 💎 linksboven. Dan komt er een vakje.
+- Foute code: *"Die code klopt niet."* Al gebruikt: *"Deze code heb je al gebruikt!"*
+
 ### In het dorp
 - **Koopman Kees** heeft een kraam: koop hoedjes (voor jou én al je clones), extra hartjes en het gouden **Superzwaard**.
 - **Oma Pien** wandelt rond en vertelt grappige dingen. **Knoeper** de hond rent over het plein.
@@ -75,7 +95,7 @@ Het spel van Dex (11 jaar).
 
 ## Besturing
 - **iPad:** sleep met je vinger op de linkerkant van het scherm om te lopen. De grote knop rechts is **Praat** (bij iemand), **Lees** (bij een bord) of **⚔️** (zwaard). Bij de machine: druk op **Clone!**
-- **Laptop:** lopen met **W A S D** of de **pijltjes**. **E** of **spatie** = praten of zwaaien. **C** = clonen. **M** = kaart. **B** = rugzak.
+- **Laptop:** lopen met **W A S D** of de **pijltjes**. **E** of **spatie** = praten of zwaaien. **C** = clonen. **M** = kaart. **B** = rugzak. **H** = clones weg/terug.
 - **Autorijden:** sta bij je auto en druk op **Instappen** (of **E**, of tik op de auto). Stuur met de joystick of **W A S D**/pijltjes: de auto rijdt de kant op waar je naartoe duwt. **Uitstappen** (of **E**) om uit te stappen.
 
 ## Wensenlijst
@@ -88,7 +108,10 @@ Het spel van Dex (11 jaar).
 - [x] Een autowinkel en zelf autorijden (idee van Dex)
 - [x] Een grotere stad met een ringweg, een rotonde en een lange weg (idee van Dex)
 - [ ] Een vliegende auto 🛸 (idee van Dex, komt nog!)
-- [ ] Hoofdstuk 3: wat wordt het? (Dex bedenkt het!)
+- [x] Hoofdstuk 3: De Grote Woestijn met piramides, cactussen, een zandstorm, Schorpioen Sjors en het 1e stukje van de schatkaart (idee van Dex)
+- [x] Een geheime code voor 100 kristallen (idee van Dex)
+- [x] Clones even wegsturen met de 👻-knop (idee van Dex)
+- [ ] De andere 3 stukjes van de schatkaart (waar liggen ze? Dex bedenkt het!)
 
 ## Ideeën voor later (Dex kiest!)
 - Clones commando's geven: "wacht hier", "volg mij", "val aan".
@@ -99,4 +122,4 @@ Het spel van Dex (11 jaar).
 - Dag en nacht, met lantaarns in het dorp.
 - Een boot op de vijver, of een eiland.
 - Een racebaan of een garage om je auto te verven.
-- De verborgen schat zoeken met een kaart in stukjes (het boek in de Boekwinkel verklapt al iets...).
+- De verborgen schat zoeken met een kaart in stukjes: stukje 1 ligt in de woestijn, waar liggen de andere 3?

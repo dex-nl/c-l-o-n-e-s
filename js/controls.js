@@ -11,10 +11,12 @@ export class Controls {
 
     // Toetsenbord
     window.addEventListener('keydown', (e) => {
+      // Typ je in een tekstvakje (de geheime code)? Dan doen de toetsen niks in het spel.
+      if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) { if (e.key === 'Escape') onKey('escape'); return; }
       const k = e.key.toLowerCase();
       if (['e', ' ', 'enter'].includes(k)) { if (!e.repeat) this.onAction(); e.preventDefault(); return; }
       if (k === 'c') { if (!e.repeat) this.onClone(); return; }
-      if (['m', 'b', 'i', 'escape'].includes(k)) { if (!e.repeat) onKey(k); return; }
+      if (['m', 'b', 'i', 'h', 'escape'].includes(k)) { if (!e.repeat) onKey(k); return; }
       this.keys.add(k);
       if (k.startsWith('arrow')) e.preventDefault();
     });

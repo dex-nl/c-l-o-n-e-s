@@ -153,6 +153,23 @@ const SONGS = {
       'A5 - C6 - F6 ~ E6 D6', 'C6 ~ G5 ~ E5 ~ G5 ~', 'D6 ~ C6 ~ Bb5 ~ D5 ~', 'C5 ~ E5 ~ G5 ~ - -',
     ],
   },
+  // De Grote Woestijn: een spannend woestijnliedje (met G# erin klinkt het "woestijnerig")
+  woestijn: {
+    bpm: 108, lead: 'square', drums: true,
+    chords: ['Em', 'F', 'Em', 'Dm', 'E', 'F', 'G', 'E'],
+    melody: [
+      'E5 F5 G#5 ~ A5 G#5 F5 E5', 'F5 ~ A5 ~ C6 ~ A5 ~', 'E5 F5 G#5 ~ B5 A5 G#5 F5', 'D5 ~ F5 ~ A5 ~ - -',
+      'B5 ~ C6 B5 A5 ~ G#5 ~', 'A5 G#5 F5 ~ E5 ~ F5 ~', 'G5 ~ F5 E5 D5 ~ F5 ~', 'E5 ~ G#5 ~ B5 ~ - -',
+    ],
+  },
+  piramide: {
+    bpm: 80, lead: 'triangle', drums: false,
+    chords: ['Em', 'F', 'Em', 'B', 'Em', 'F', 'Am', 'E'],
+    melody: [
+      'E5 ~ ~ ~ F5 ~ E5 ~', 'F5 ~ ~ ~ - - A4 ~', 'G5 ~ F5 ~ E5 ~ D5 ~', 'D#5 ~ ~ ~ - - - -',
+      'B5 ~ ~ A5 G5 ~ F5 ~', 'F5 ~ ~ ~ E5 ~ ~ ~', 'C5 ~ E5 ~ A5 ~ G#5 ~', 'E5 ~ ~ ~ - - - -',
+    ],
+  },
   baas: {
     bpm: 150, lead: 'square', drums: true, busyBass: true,
     chords: ['Em', 'C', 'D', 'B', 'Em', 'C', 'D', 'B'],
