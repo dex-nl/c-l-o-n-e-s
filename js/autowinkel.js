@@ -81,7 +81,7 @@ export function makeCarModel(id) {
     for (const [x, z] of [[-0.72, 0.85], [0.72, 0.85], [-0.72, -0.85], [0.72, -0.85]]) wheel(x, z, 0.3, 0.26);
   } else if (id === 'wolk') {
     // De Wolkenflitser: strak, wit en glad, met een glazen koepel en blauw gloeiende straalmotoren eronder
-    const white = mat(0xf8f9fa, { metalness: 0.35, roughness: 0.18 });
+    const white = mat(0xffffff, { metalness: 0.1, roughness: 0.3, emissive: 0x3a3f47, emissiveIntensity: 0.35 });
     const black = mat(0x1d1d1d, { metalness: 0.3, roughness: 0.3 });
     mesh(new THREE.BoxGeometry(1.6, 0.42, 3.1), white, 0, 0.5, 0, g);
     const nose = mesh(new THREE.BoxGeometry(1.56, 0.26, 0.9), white, 0, 0.6, 1.5, g); nose.rotation.x = 0.22;
@@ -89,8 +89,10 @@ export function makeCarModel(id) {
     mesh(new THREE.BoxGeometry(1.62, 0.1, 3.12), black, 0, 0.28, 0, g); // zwarte onderkant
     // glazen koepel (doorzichtig, zodat je jezelf ziet zitten)
     const dome = new THREE.Mesh(new THREE.SphereGeometry(0.8, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2),
-      mat(0x7fb7ff, { transparent: true, opacity: 0.32, roughness: 0.05, metalness: 0.2, emissive: 0x1b3a66, emissiveIntensity: 0.4, depthWrite: false }));
-    dome.scale.set(0.95, 0.7, 1.45); dome.position.set(0, 0.7, -0.05); g.add(dome);
+      mat(0x1d3557, { transparent: true, opacity: 0.5, roughness: 0.05, metalness: 0.4, emissive: 0x16325c, emissiveIntensity: 0.5, depthWrite: false }));
+    dome.scale.set(0.92, 0.95, 1.5); dome.position.set(0, 0.68, -0.1); g.add(dome);
+    // dunne blauwe streep langs de zijkant
+    for (const s of [-1, 1]) mesh(new THREE.BoxGeometry(0.03, 0.06, 2.9), mat(0x7af7ff, { emissive: 0x1b8fd8, emissiveIntensity: 0.8 }), s * 0.81, 0.52, 0, g);
     // lichtbalk voor en achter
     mesh(new THREE.BoxGeometry(1.3, 0.06, 0.05), mat(0xffffff, { emissive: 0xbfe9ff, emissiveIntensity: 1 }), 0, 0.62, 1.93, g);
     mesh(new THREE.BoxGeometry(1.4, 0.07, 0.05), mat(0xff4d6d, { emissive: 0xaa0022, emissiveIntensity: 1 }), 0, 0.8, -1.66, g);
@@ -114,7 +116,7 @@ export function makeCarModel(id) {
       cone.position.set(x, -0.15, z); g.add(cone);
       thrusters.push(cone);
     }
-    for (const [x, z] of [[-0.75, 1.0], [0.75, 1.0], [-0.75, -1.0], [0.75, -1.0]]) wheel(x, z, 0.28, 0.22);
+    for (const [x, z] of [[-0.86, 1.0], [0.86, 1.0], [-0.86, -1.0], [0.86, -1.0]]) wheel(x, z, 0.3, 0.2);
     return { g, wheels, wings, thrusters, glowM };
   } else {
     // De Rode Raket: een raceauto met een nummer, een grote spoiler en uitlaten
