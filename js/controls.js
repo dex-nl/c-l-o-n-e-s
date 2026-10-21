@@ -20,6 +20,7 @@ export class Controls {
       if (this.flyMode && (k === ' ' || k === 'shift')) { this.keys.add(k); e.preventDefault(); return; }
       if (['e', ' ', 'enter'].includes(k)) { if (!e.repeat) this.onAction(); e.preventDefault(); return; }
       if (k === 'c') { if (!e.repeat) this.onClone(); return; }
+      if (k === 'r' && this.flyMode) { if (!e.repeat) onKey('r'); e.preventDefault(); return; } // boost
       if (k === 'f' && this.flyMode) { if (!e.repeat) onKey('f'); e.preventDefault(); return; } // kickflip
       if (['m', 'b', 'i', 'h', 'escape'].includes(k)) { if (!e.repeat) onKey(k); return; }
       this.keys.add(k);

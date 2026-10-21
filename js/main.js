@@ -881,11 +881,34 @@ function kickflip() {
   if (!myCar.flipT && myCar.alt < KICKFLIP_MIN_ALT && flipToastCd <= 0) { ui.toast('🔄 Vlieg eerst wat hoger voor een kickflip!', 2000); flipToastCd = 2.5; }
 }
 
+// Boost! (even dubbel zo snel; daarna laadt hij een paar seconden op)
+function boostCar() {
+  if (!driving || !myCar.canFly || ui.panelOpen || ui.dialogOpen) return;
+  if (myCar.boost()) {
+    sfx.whoosh();
+    setTimeout(() => sfx.whoosh(), 200);
+    shake = Math.max(shake, 0.25);
+    ui.toast('🚀 BOOST!', 1200);
+  } else if (flipToastCd <= 0 && myCar.boostT <= 0) { ui.toast('🚀 De boost laadt nog op...', 1500); flipToastCd = 2; }
+}
+const BASE_FOV = 50;
+
 // Effecten van de Wolkenflitser: windwolkjes als je vliegt, en vanzelf uitstappen als je geland bent
 let windCd = 0;
 function flyFx(dt, wasFlying) {
   flipToastCd -= dt;
   document.getElementById('flip-btn').classList.toggle('off', !myCar.canKickflip);
+  const bb = document.getElementById('boost-btn');
+  bb.style.setProperty('--p', myCar.boostReady.toFixed(2));
+  bb.classList.toggle('off', !myCar.canBoost && myCar.boostT <= 0);
+  bb.classList.toggle('on', myCar.boostT > 0);
+  if (myCar.boostT > 0) {
+    // blauwe vlammen uit de achterkant
+    const d = myCar.dir;
+    for (const s of [-0.45, 0.45]) {
+      fx.sparkle({ x: myCar.pos.x - d.x * 2.0 + d.z * s, y: myCar.alt + 0.45, z: myCar.pos.z - d.z * 2.0 - d.x * s }, [0x3a86ff, 0x7af7ff, 0xffffff, 0xff8c42], 3, 1.4);
+    }
+  }
   if (myCar.flipT) {
     // een glitterspoor tijdens de kickflip
     const a = myCar.roll, d = myCar.dir;
@@ -1130,6 +1153,7 @@ const controls = new Controls({
     if (k === 'escape') ui.closePanel();
     else if (ui.panelOpen) ui.closePanel();
     else if (k === 'f') kickflip();
+    else if (k === 'r') boostCar();
     else if (k === 'm') openMap();
     else if (k === 'h') toggleClones();
     else openBackpack();
@@ -1145,6 +1169,7 @@ tapBtn('bag-btn', openBackpack);
 tapBtn('map-btn', openMap);
 tapBtn('ghost-btn', toggleClones);
 tapBtn('flip-btn', kickflip);
+tapBtn('boost-btn', boostCar);
 ui.onVoice = (pitch) => sfx.voice(pitch);
 
 // ---------- De drukknoppen voor de grotdeur ----------
@@ -1367,6 +1392,9 @@ function frame() {
     camTarget.copy(player.pos).add(CAM_OFFSET);
     if (driving) camTarget.addScaledVector(CAM_OFFSET, 0.2 + myCar.alt * 0.035); // vliegen: iets verder weg, zodat je de stad ziet
   }
+  // Boost: de camera "zoomt" heel even uit (snelheidsgevoel)
+  const fov = BASE_FOV + (driving && myCar.boostT > 0 ? 9 : 0);
+  if (Math.abs(camera.fov - fov) > 0.05) { camera.fov += (fov - camera.fov) * Math.min(1, realDt * 6); camera.updateProjectionMatrix(); }
   camera.position.lerp(camTarget, Math.min(1, realDt * (started ? 4 : 1.5)));
   lookAt.lerp(lookGoal, Math.min(1, realDt * 6));
   camera.lookAt(lookAt.x, lookAt.y + 1, lookAt.z);
@@ -1424,7 +1452,7 @@ window.clones = {
   forest, cave, city, desert, pyramid, zones, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
-  get boost() { return boost; }, kickflip, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,
+  get boost() { return boost; }, kickflip, boostCar, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,
   get enemies() { return enemies; }, get hearts() { return hearts; }, set hearts(v) { hearts = v; },
   get started() { return started; }, start: () => { if (!started) document.getElementById('start').dispatchEvent(new PointerEvent('pointerup')); },
   setDebugCam: (pos, look) => { debugCam = pos ? { pos, look } : null; },
