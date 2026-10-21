@@ -357,7 +357,7 @@ export function buildCarShop(body, state, { onBuy, onPick, onTooPoor }) {
   top.innerHTML = `Je hebt <b>💎 ${fmt(state.crystals)}</b> kristallen. Koop een auto en rij hem door de garagedeur naar buiten!`;
   body.appendChild(top);
   const grid = document.createElement('div');
-  grid.className = 'cards';
+  grid.className = 'cards cars'; // 5 auto's naast elkaar (past ook op de iPhone)
   for (const id of CAR_ORDER) {
     const c = CARS[id];
     const owned = state.cars.includes(id);
