@@ -44,6 +44,7 @@ Het spel van Dex (11 jaar).
 - **Waar staat de code?** Diep in de **Grote Piramide**: in de grote hal ga je links (west) een smal doodlopend gangetje in, langs een vaas, helemaal naar het eind. Daar hangt een **oude muur met tekens**. Lees hem (sta er vlak voor) en je ziet: `KRISTAL100`.
 - **Waar typ je de code?** Tik (of klik) **5 keer snel** (binnen 2,5 seconde) op je **kristallen** 💎 linksboven. Dan komt er een vakje.
 - Foute code: *"Die code klopt niet."* Al gebruikt: *"Deze code heb je al gebruikt!"*
+- Er is ook **Dex zijn eigen code (geheim)**: die geeft **elke keer +1.000 kristallen** (hoofdletters maken niet uit). Hij staat nergens: niet in het spel, niet in deze tekst en niet in de code (alleen een geheime vingerafdruk, een *hash*). Alleen Dex weet hem. Je typt hem in hetzelfde vakje.
 
 ### In het dorp
 - **Koopman Kees** heeft een kraam: koop hoedjes (voor jou én al je clones), extra hartjes en het gouden **Superzwaard**.
@@ -85,11 +86,23 @@ Het spel van Dex (11 jaar).
   - 🚙 **Jungle Jeep** – 25 💎 (grote wielen, rolbeugel en reservewiel)
   - 🏎️ **Bliksem Sport** – 40 💎 (glimmend blauw met strepen en een spoiler)
   - 🏁 **Rode Raket** – 60 💎 (de snelste: glimmend rood, grote spoiler, nummer 1)
+  - 🛸 **Wolkenflitser** – 10.000 💎 (wit, strak en elektrisch, met een glazen koepel... en hij kan **VLIEGEN**!)
 - Achter de toonbank staat verkoopster **Vera Vroem**. Praat met haar om een auto te kopen. Te weinig kristallen? Dan zegt ze lief hoeveel je nog nodig hebt.
 - Je nieuwe auto staat binnen klaar. Stap in en rij door de **grote garagedeur** (die gaat vanzelf open) naar de straat.
 - Rijden: snellere auto's gaan harder. Bots je tegen een muur of heg, dan stuiter je zachtjes terug. Geen schade! Je rijdt niet door mensen of andere autootjes heen.
 - Met de auto kun je niet door de poort: stap eerst uit. Je clones rennen achter je auto aan.
-- Een plekje met **BINNENKORT!** wacht op de vliegende auto...
+
+### De Wolkenflitser: de vliegende auto (idee van Dex!)
+- Staat in de Autowinkel op het paarse plateau (waar eerst BINNENKORT stond). Hij zweeft een beetje.
+- Hij rijdt gewoon zoals de andere auto's, maar hij kan ook **vliegen**:
+  - **iPad/iPhone:** houd de paarse knop **⬆️ Omhoog** ingedrukt om op te stijgen, **⬇️ Omlaag** om te zakken. Laat je los, dan blijf je zweven.
+  - **MacBook:** **spatie** = omhoog, **Shift** = omlaag. (In de Wolkenflitser is spatie dus niet uitstappen; uitstappen doe je met **E** of **Enter**.)
+- In de lucht vlieg je over wegen, heggen, bomen, lantaarns, huizen en winkels heen. De hoge **flats** zijn te hoog: daar bots je tegenaan. Hoger dan **8 meter** kun je niet (onder de skyline blijven).
+- Je zakt niet door een dak heen. Boven een dak kun je niet landen.
+- Stap je uit in de lucht (of druk je op **Landen**)? Dan land je eerst zachtjes en stap je daarna vanzelf uit. Met Omlaag land je ook zachtjes (en blijf je zitten).
+- Ook vliegend mag je niet door de poort: *"Stap eerst uit!"*. De andere autootjes rijden gewoon door.
+- Onder de auto gloeien blauwe straalmotoren, de vleugeltjes klappen uit en er waaien windwolkjes.
+- 10.000 kristallen is heel veel! Grote getallen staan overal met een punt: 💎 10.000.
 
 ### Overal
 - **Hartjes** ❤️: raakt een slijmpje je, dan ben je er een kwijt. Alle hartjes op? Dan word je wakker in het dorp (je verliest niks).
@@ -103,6 +116,7 @@ Het spel van Dex (11 jaar).
 - **iPad:** sleep met je vinger op de linkerkant van het scherm om te lopen. De grote knop rechts is **Praat** (bij iemand), **Lees** (bij een bord) of **⚔️** (zwaard). Bij de machine: druk op **Clone!**
 - **Laptop:** lopen met **W A S D** of de **pijltjes**. **E** of **spatie** = praten of zwaaien. **C** = clonen. **M** = kaart. **B** = rugzak. **H** = clones weg/terug.
 - **Autorijden:** sta bij je auto en druk op **Instappen** (of **E**, of tik op de auto). Stuur met de joystick of **W A S D**/pijltjes: de auto rijdt de kant op waar je naartoe duwt. **Uitstappen** (of **E**) om uit te stappen.
+- **Vliegen (Wolkenflitser):** **⬆️ Omhoog** / **⬇️ Omlaag** ingedrukt houden, of **spatie** / **Shift** op de laptop. **E** of **Enter** = landen en uitstappen.
 
 ## Wensenlijst
 - [x] Zwaard en gevechten
@@ -113,7 +127,7 @@ Het spel van Dex (11 jaar).
 - [x] Een stad met winkels (idee van Joshua)
 - [x] Een autowinkel en zelf autorijden (idee van Dex)
 - [x] Een grotere stad met een ringweg, een rotonde en een lange weg (idee van Dex)
-- [ ] Een vliegende auto 🛸 (idee van Dex, komt nog!)
+- [x] Een vliegende auto 🛸: de Wolkenflitser (idee van Dex)
 - [x] Hoofdstuk 3: De Grote Woestijn met piramides, cactussen, een zandstorm, Schorpioen Sjors en het 1e stukje van de schatkaart (idee van Dex)
 - [x] Een geheime code voor 100 kristallen (idee van Dex)
 - [x] Clones even wegsturen met de 👻-knop (idee van Dex)

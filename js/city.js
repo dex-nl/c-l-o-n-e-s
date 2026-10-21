@@ -382,6 +382,7 @@ export function createCity(group) {
     bounds: BIG_BOUNDS,
     merged,
     showroom,
+    airBoxes: showroom.airBoxes, // dak en gevel van de Autowinkel (voor de vliegende auto)
     music: 'stad',
     env: { sky: [0x6ec3f4, 0xe3f4ff], fog: [0xe3f4ff, 45, 110], hemi: [0xf1f8ff, 0x9a8c74, 1.25], sun: [0xfff2d6, 2.2], cam: [0, 9, 11] },
     spawns: { fromDorp: { x: 0, z: 19.6, rot: Math.PI } },

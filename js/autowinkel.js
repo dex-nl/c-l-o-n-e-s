@@ -174,6 +174,7 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
   const T = 0.3; // dikte van de muren
   const hideInside = []; // dingen die we verstoppen als je binnen bent (dak, bovenkant van de voorgevel)
   const fadeInside = []; // materialen die doorzichtig worden als je binnen bent
+  const airBoxes = [];   // dingen die in de lucht hangen (dak, bovenkant gevel): alleen voor de vliegende auto
 
   // vloer met glimmende tegels
   const tiles = new THREE.Group();
@@ -209,11 +210,11 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
   const glassM = mat(0xbfe9ff, { transparent: true, opacity: 0.25, roughness: 0.1, emissive: 0x335566, emissiveIntensity: 0.3, depthWrite: false });
   const frameM = mat(0x2d3142, { transparent: true });
   fadeInside.push(frameM);
-  const post = (x) => { const m = mesh(new THREE.BoxGeometry(0.25, 3.2, 0.3), frameM, x, 1.6, Z, group); boxes.push({ x, z: Z, hw: 0.13, hd: 0.15 }); };
+  const post = (x) => { const m = mesh(new THREE.BoxGeometry(0.25, 3.2, 0.3), frameM, x, 1.6, Z, group); boxes.push({ x, z: Z, hw: 0.13, hd: 0.15, h: 3.3 }); };
   const pane = (x1, x2) => {
     const m = mesh(new THREE.BoxGeometry(x2 - x1, 3.2, 0.08), glassM, (x1 + x2) / 2, 1.6, Z, group);
     m.castShadow = false;
-    boxes.push({ x: (x1 + x2) / 2, z: Z, hw: (x2 - x1) / 2, hd: 0.15 });
+    boxes.push({ x: (x1 + x2) / 2, z: Z, hw: (x2 - x1) / 2, hd: 0.15, h: 3.3 });
   };
   // deuropening: x 21.6 .. 24.2 (open, geen deur: zo loop je zo naar binnen)
   post(S.minX + 0.6); pane(S.minX + 0.15, S.minX + 0.6);
@@ -223,6 +224,8 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
   // bovenkant van de gevel (boven de deuren) + het grote bord
   const header = mesh(new THREE.BoxGeometry(W, S.h - 3.2, T), wallM, cx, 3.2 + (S.h - 3.2) / 2, Z, group);
   hideInside.push(header);
+  // de bovenkant van de gevel hangt in de lucht: alleen de vliegende auto kan ertegen botsen
+  airBoxes.push({ x: cx, z: Z, hw: W / 2, hd: 0.15, low: 3.2, h: S.h + 0.4 });
   const sign = new THREE.Mesh(new THREE.PlaneGeometry(9, 1.6), new THREE.MeshBasicMaterial({ map: wideSign('AUTOWINKEL', '#e63946') }));
   sign.position.set(cx, 4.1, Z + 0.17);
   group.add(sign);
@@ -232,7 +235,7 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
   hideInside.push(awning);
 
   // de garagedeur: rolt omhoog als je in de buurt komt
-  const garageBox = { x: 29.7, z: Z, hw: 2.7, hd: 0.2 };
+  const garageBox = { x: 29.7, z: Z, hw: 2.7, hd: 0.2, h: 3.3 };
   boxes.push(garageBox);
   const door = new THREE.Group();
   for (let i = 0; i < 6; i++) door.add(mesh(new THREE.BoxGeometry(5.3, 0.5, 0.1), mat(i % 2 ? 0xadb5bd : 0xced4da, { metalness: 0.3 }), 0, 0.27 + i * 0.53, 0));
@@ -247,6 +250,7 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
   const roof = mesh(new THREE.BoxGeometry(W + 0.4, 0.3, D + 0.4), mat(0x495057), cx, S.h + 0.15, (S.minZ + S.maxZ) / 2, group);
   roof.castShadow = false; // anders wordt het binnen te donker
   hideInside.push(roof);
+  airBoxes.push({ x: cx, z: (S.minZ + S.maxZ) / 2, hw: W / 2 + 0.2, hd: D / 2 + 0.2, low: S.h, h: S.h + 0.4 });
   // lampen aan het plafond (alleen zichtbaar als het dak weg is: lampjes zweven dan gezellig)
   for (const lx of [24, 28.5, 33]) {
     const lamp = mesh(new THREE.CylinderGeometry(0.5, 0.6, 0.2, 10), mat(0xfff3b0, { emissive: 0xffd23f, emissiveIntensity: 0.8 }), lx, S.h - 0.2, 5, group);
@@ -259,7 +263,7 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
   mesh(new THREE.BoxGeometry(4.0, 0.1, 1.1), mat(0xffffff), 23.2, 1.15, 1.1, group);
   mesh(new THREE.BoxGeometry(0.5, 0.35, 0.05), mat(0x2d3142), 22.3, 1.4, 1.0, group); // kassa
   mesh(new THREE.BoxGeometry(0.4, 0.06, 0.25), mat(0xffd23f, { emissive: 0x664400 }), 24.1, 1.24, 1.1, group); // sleutels
-  boxes.push({ x: 23.2, z: 1.1, hw: 1.9, hd: 0.45 });
+  boxes.push({ x: 23.2, z: 1.1, hw: 1.9, hd: 0.45, h: 1.3 });
   const dealer = new Npc(group, {
     id: 'dealer', name: 'Vera Vroem', x: 23.2, z: 0.05, rot: 0, voice: 1.2,
     look: { shirt: 0xffffff, pants: 0x2d3142, skin: 0xe0ac69, hair: 0xd62828, coat: 0xe63946 },
@@ -312,7 +316,7 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
   for (const lx of [21, 33.5, 35.5]) mesh(new THREE.PlaneGeometry(0.12, 3).rotateX(-Math.PI / 2), mat(0xffffff, { polygonOffset: true, polygonOffsetFactor: -5, polygonOffsetUnits: -5 }), lx, 0.04, 17.4, group).castShadow = false;
   // heggen achter en voor, zodat je niet achter de showroom kunt verdwalen
   const hedgeM = mat(0x40916c);
-  const hedge = (x, z, w, d, h = 1.2) => { mesh(new THREE.BoxGeometry(w, h, d), hedgeM, x, h / 2, z, group); boxes.push({ x, z, hw: w / 2, hd: d / 2 }); };
+  const hedge = (x, z, w, d, h = 1.2) => { mesh(new THREE.BoxGeometry(w, h, d), hedgeM, x, h / 2, z, group); boxes.push({ x, z, hw: w / 2, hd: d / 2, h: h + 0.1 }); };
   hedge(28.5, -4.5, 16.2, 5.6);
   hedge(28.2, 21.2, 16.6, 1.6, 0.6);
   for (let fx = 21; fx < 36; fx += 1.5) mesh(new THREE.OctahedronGeometry(0.16, 0), mat([0xff6b6b, 0xffd23f, 0xffffff, 0xc77dff][Math.round(fx * 2) % 4]), fx, 0.72, 21.2, group);
@@ -322,7 +326,7 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
 
   let doorK = 0;
   const showroom = {
-    dealer, displays, pickup, signs, garageBox,
+    dealer, displays, pickup, signs, garageBox, airBoxes,
     inside: false,
     isInside: (p) => p.x > S.minX && p.x < S.maxX && p.z > S.minZ && p.z < S.maxZ,
     setOwned(cars) { for (const id of CAR_ORDER) displays[id].sold.visible = cars.includes(id); },

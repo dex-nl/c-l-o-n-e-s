@@ -4,6 +4,7 @@
 import { collide } from './physics.js';
 import { makeCarModel, CARS, FLY_CEILING } from './autowinkel.js';
 
+const CAR_H = 1.25; // zo hoog is de auto (voor daken als je vliegt)
 const CAR_R = 1.05; // de auto is (voor botsen) een cirkel van deze grootte
 const angleDiff = (a, b) => { let d = a - b; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return d; };
 
@@ -74,9 +75,10 @@ export class MyCar {
     if (want < 0 && this.alt < 1.6) want *= Math.max(0.3, this.alt / 1.6); // vlak boven de grond: zachtjes landen
     this.vy += (want - this.vy) * Math.min(1, dt * 4);
     const floor = zone ? this.floorAt(zone) : 0;
+    const top = zone ? this.roofAt(zone) : FLY_CEILING;
     const old = this.alt;
     this.alt += this.vy * dt;
-    if (this.alt >= FLY_CEILING) { this.alt = FLY_CEILING; this.vy = Math.min(0, this.vy); }
+    if (this.alt >= top) { this.alt = Math.max(Math.min(old, top), Math.min(this.alt, top)); this.vy = Math.min(0, this.vy); }
     // niet door een dak of boom heen zakken: daar blijf je boven zweven
     if (floor > 0 && old >= floor - 0.01 && this.alt < floor) { this.alt = floor; this.vy = Math.max(0, this.vy); }
     if (this.alt <= 0) { this.alt = 0; this.vy = Math.max(0, this.vy); }
@@ -84,10 +86,22 @@ export class MyCar {
     return this.alt;
   }
 
+  // Hangt er iets boven je (een dak)? Dan kun je niet hoger dan daaronder.
+  roofAt(zone) {
+    let top = FLY_CEILING;
+    for (const b of zone.airBoxes || []) {
+      if (b.low >= this.alt + CAR_H - 0.05 && this.over(b)) top = Math.min(top, b.low - CAR_H);
+    }
+    return Math.max(0, top);
+  }
+
+  over(b) { return Math.abs(this.pos.x - b.x) < b.hw + CAR_R && Math.abs(this.pos.z - b.z) < b.hd + CAR_R; }
+
   // Hoe hoog is het hoogste ding vlak onder de auto?
   floorAt(zone) {
     let f = 0;
     const R = CAR_R;
+    for (const b of zone.airBoxes || []) if (b.h <= this.alt + 0.06 && this.over(b)) f = Math.max(f, b.h + 0.05);
     for (const c of zone.colliders) if (Math.hypot(this.pos.x - c.x, this.pos.z - c.z) < c.r + R) f = Math.max(f, (c.h ?? 1.5) + 0.05);
     for (const b of zone.boxes) if (!b.off && Math.abs(this.pos.x - b.x) < b.hw + R && Math.abs(this.pos.z - b.z) < b.hd + R) f = Math.max(f, (b.h ?? 1.5) + 0.05);
     return f;
@@ -96,7 +110,8 @@ export class MyCar {
   // Waar bots je tegenaan als je vliegt? Alleen tegen dingen die hoger zijn dan jij (flats, bomen als je laag vliegt).
   airZone(zone) {
     const tall = (o) => (o.h ?? 1.5) > this.alt;
-    return { colliders: zone.colliders.filter(tall), boxes: zone.boxes.filter(tall), bounds: zone.bounds };
+    const air = (zone.airBoxes || []).filter((b) => this.alt + CAR_H > b.low && this.alt < b.h);
+    return { colliders: zone.colliders.filter(tall), boxes: [...zone.boxes.filter(tall), ...air], bounds: zone.bounds };
   }
 
   // move = { x, y } van de joystick. people = posities van mensen waar je niet doorheen mag.
