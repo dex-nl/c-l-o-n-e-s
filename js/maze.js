@@ -165,7 +165,7 @@ function tryLayout(seed) {
   runs.sort((a, b) => b.cells.length - a.cells.length);
   const boulders = runs.slice(0, 5);
   // doornen: in gangen op de weg (gebied 1 en hoger)
-  const thorns = outside.filter((c, n) => n % 5 === 3 && region.get(key(c.i, c.j)) >= 1 && !doors.some((d) => (d.a.i === c.i && d.a.j === c.j) || (d.b.i === c.i && d.b.j === c.j)));
+  const thorns = outside.filter((c, n) => n % 9 === 4 && region.get(key(c.i, c.j)) >= 1 && !doors.some((d) => (d.a.i === c.i && d.a.j === c.j) || (d.b.i === c.i && d.b.j === c.j)));
   // heggenslijmpjes: meer naarmate je dieper komt
   const slimes = [];
   const perRegion = [4, 6, 7, 8];
@@ -653,6 +653,8 @@ export function createMaze(group) {
       if (L.isOpen(i, j, i + 1, j)) g.fillRect(px(x + h - 0.1), pz(z - h), (BL + 0.2) * scale, 2 * h * scale);
       if (L.isOpen(i, j, i, j + 1)) g.fillRect(px(x - h), pz(z + h - 0.1), 2 * h * scale, (BL + 0.2) * scale);
     }
+    // de middenkamer in één keer (als je hem gezien hebt)
+    if (seenBits[key(7, 7)]) { g.fillStyle = '#c9c2b2'; g.fillRect(px(cellX(ROOM[0]) - BL), pz(cellZ(ROOM[0]) - BL), (cellX(ROOM[1]) - cellX(ROOM[0]) + 2 * BL) * scale, (cellZ(ROOM[1]) - cellZ(ROOM[0]) + 2 * BL) * scale); }
     for (const d of doors) {
       if (!zone.isSeen(cellX(d.a.i), cellZ(d.a.j)) && !zone.isSeen(cellX(d.b.i), cellZ(d.b.j))) continue;
       g.fillStyle = d.open ? 'rgba(255,255,255,0.5)' : '#' + d.color.toString(16).padStart(6, '0');
