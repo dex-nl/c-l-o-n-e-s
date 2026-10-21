@@ -123,7 +123,7 @@ export function createWorld(scene) {
   });
 
   house(10, -9, 0xd1495b);
-  house(13, 3, 0x3a86ff);
+  house(13, 4.2, 0x3a86ff);
   house(-13, 4, 0x9b5de5);
   const inventorHouse = house(-10, -10, 0x2a9d8f, 0xe0e7ff);
   // propeller op het dak van de uitvinder
@@ -216,7 +216,7 @@ export function createWorld(scene) {
     updaters.push((t) => { top.rotation.z = Math.sin(t * 1.3 + ph) * 0.05; top.rotation.x = Math.cos(t * 1.1 + ph) * 0.04; });
     if (collide) colliders.push({ x, z, r: 0.6 * size });
   }
-  const villageTrees = [[-16, -3], [-18, 2], [-6, 16], [-11, 13], [15, -4], [18, -1], [3, -17], [-2, -18], [17, 10], [-19, -9], [9, 17], [13, 14], [-15, 12], [6, -14]];
+  const villageTrees = [[-16, -3], [-18, 2], [-6, 16], [-11, 13], [15, -4], [18.5, -5], [3, -17], [-2, -18], [17, 10], [-19, -9], [9, 17], [13, 14], [-15, 12], [6, -14]];
   villageTrees.forEach(([x, z]) => tree(x, z, 0.9 + rand() * 0.4));
   for (let i = 0; i < 90; i++) {
     const a = rand() * Math.PI * 2, r = VILLAGE_RADIUS + 3 + rand() * 30;
@@ -241,7 +241,8 @@ export function createWorld(scene) {
   const woodM = mat(0xc68b59);
   const posts = 48;
   for (let i = 0; i < posts; i++) {
-    if (i === 35 || i === 36) continue; // hier zit de poort
+    if (i === 35 || i === 36) continue; // hier zit de poort naar het Slijmbos
+    if (i === 47 || i === 0) continue;  // hier zit de poort naar De Stad (oostkant)
     const a1 = (i / posts) * Math.PI * 2, a2 = ((i + 1) / posts) * Math.PI * 2;
     const x1 = Math.cos(a1) * VILLAGE_RADIUS, z1 = Math.sin(a1) * VILLAGE_RADIUS;
     const x2 = Math.cos(a2) * VILLAGE_RADIUS, z2 = Math.sin(a2) * VILLAGE_RADIUS;
@@ -257,6 +258,14 @@ export function createWorld(scene) {
   // ---------- Poort naar het Slijmbos ----------
   world.gate = createGate(scene, updaters);
   path(0, -4, 0, -26, 1.8);
+
+  // ---------- Regenboogpoort naar De Stad (oostkant, altijd open) ----------
+  world.cityGate = createGate(scene, updaters, { angle: -Math.PI / 2, label: 'DE STAD', color: '#e76f51' });
+  world.cityGate.setOpen(true, true);
+  const cityPortal = makePortal(scene, 23.79, 0, -Math.PI / 2, null);
+  cityPortal.group.scale.setScalar(0.6); // past precies onder de balk van de poort
+  updaters.push(cityPortal.update);
+  path(3.8, 0.5, 27, 0, 1.8);
 
   // ---------- Kraam van Koopman Kees ----------
   createStall(scene, 6.6, -2.2);
@@ -329,6 +338,7 @@ export function createWorld(scene) {
     start: { x: 0, z: 5, rot: Math.PI },
     flauw: { x: 0, z: 4.2, rot: 0 },          // hier word je wakker als je flauwvalt
     uitBos: { x: 0, z: -20.3, rot: 0 },       // hier kom je terug uit het Slijmbos
+    uitStad: { x: 20.2, z: 0, rot: -Math.PI / 2 }, // hier kom je terug uit De Stad
   };
   world.gearSpots = [
     { id: 'tandwiel-1', x: 16.5, z: 6.5 },   // achter het blauwe huis
@@ -336,6 +346,53 @@ export function createWorld(scene) {
     { id: 'tandwiel-3', x: -16.8, z: 0 },    // tussen de bomen
   ];
   return world;
+}
+
+// Een draaiende regenboogpoort (een magisch portaal). label = bordje erboven (of null).
+export function makePortal(parent, x, z, rot, label, color = '#e76f51') {
+  const g = new THREE.Group();
+  g.position.set(x, 0, z);
+  g.rotation.y = rot;
+  parent.add(g);
+  const cols = [0xe63946, 0xff8c42, 0xffd23f, 0x52b788, 0x3a86ff, 0x9b5de5];
+  const rings = cols.map((c, i) => {
+    const r = new THREE.Mesh(new THREE.TorusGeometry(2.3 - i * 0.12, 0.07, 4, 20), new THREE.MeshBasicMaterial({ color: c }));
+    r.position.y = 2.1;
+    g.add(r);
+    return r;
+  });
+  const swirl = new THREE.Mesh(new THREE.CircleGeometry(2.0, 20), new THREE.MeshBasicMaterial({
+    color: 0xbde0fe, transparent: true, opacity: 0.45, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending,
+  }));
+  swirl.position.y = 2.1;
+  g.add(swirl);
+  if (label) {
+    for (const sx of [-2.5, 2.5]) g.add(mesh(new THREE.BoxGeometry(0.6, 4.6, 0.6), mat(0xffd6a5), sx, 2.3, 0));
+    // een bordje aan beide kanten, zodat je het van voren en van achteren goed kunt lezen
+    for (const back of [0, 1]) {
+      const sign = new THREE.Mesh(new THREE.PlaneGeometry(3.4, 0.9), new THREE.MeshBasicMaterial({ map: signTexture(label, color) }));
+      sign.position.set(0, 4.95, back ? -0.02 : 0.02);
+      sign.rotation.y = back * Math.PI;
+      g.add(sign);
+    }
+  }
+  const sparks = [];
+  for (let i = 0; i < 10; i++) {
+    const s = new THREE.Mesh(new THREE.OctahedronGeometry(0.09, 0), new THREE.MeshBasicMaterial({ color: cols[i % 6] }));
+    g.add(s); sparks.push(s);
+  }
+  return {
+    group: g,
+    update(t) {
+      rings.forEach((r, i) => { r.rotation.z = t * (i % 2 ? -0.8 : 0.8) + i; });
+      swirl.material.opacity = 0.22 + Math.sin(t * 2.5) * 0.08;
+      swirl.material.color.setHSL((t * 0.1) % 1, 0.7, 0.75);
+      sparks.forEach((s, i) => {
+        const a = t * 1.5 + (i / 10) * Math.PI * 2;
+        s.position.set(Math.cos(a) * 1.7, 2.1 + Math.sin(a) * 1.7, 0.1);
+      });
+    },
+  };
 }
 
 const signCache = new Map();
@@ -346,7 +403,10 @@ export function signTexture(text, bg) {
   const g = c.getContext('2d');
   g.fillStyle = bg; g.fillRect(0, 0, 256, 96);
   g.strokeStyle = '#2d3142'; g.lineWidth = 10; g.strokeRect(5, 5, 246, 86);
-  g.fillStyle = '#fff'; g.font = 'bold 44px sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+  let size = 44; // lange woorden? Dan worden de letters kleiner, zodat alles op het bord past
+  g.font = `bold ${size}px sans-serif`;
+  while (g.measureText(text).width > 226 && size > 18) { size -= 2; g.font = `bold ${size}px sans-serif`; }
+  g.fillStyle = '#fff'; g.textAlign = 'center'; g.textBaseline = 'middle';
   g.fillText(text, 128, 50);
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -355,7 +415,11 @@ export function signTexture(text, bg) {
 }
 
 // De poort in het hek. setOpen(true) zwaait de deuren open.
-function createGate(scene, updaters) {
+// angle draait de poort rond het midden van het dorp (0 = noordkant, -PI/2 = oostkant).
+function createGate(parent, updaters, { angle = 0, label = 'SLIJMBOS', color = '#2d6a4f' } = {}) {
+  const scene = new THREE.Group();
+  scene.rotation.y = angle;
+  parent.add(scene);
   const z = -23.79, px = 3.13;
   const stone = mat(0x9aa0a6), wood = mat(0x8b5a2b);
   for (const sx of [-px, px]) {
@@ -365,7 +429,7 @@ function createGate(scene, updaters) {
     scene.add(top);
   }
   scene.add(mesh(new THREE.BoxGeometry(6.8, 0.4, 0.5), wood, 0, 2.9, z));
-  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.8), new THREE.MeshBasicMaterial({ map: signTexture('SLIJMBOS', '#2d6a4f') }));
+  const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.8), new THREE.MeshBasicMaterial({ map: signTexture(label, color) }));
   sign.position.set(0, 3.5, z + 0.1);
   scene.add(sign);
   scene.add(mesh(new THREE.BoxGeometry(0.1, 0.5, 0.1), wood, -0.9, 3.15, z));

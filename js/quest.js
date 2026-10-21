@@ -14,6 +14,11 @@ export const maxClones = (quest) => (reached(quest, 'held') ? 10 : 5);
 
 export function questText(state, zoneId) {
   const q = state.quest, n = state.clones, max = maxClones(q);
+  if (zoneId === 'stad') {
+    if (!state.cityGift) return '🎁 Praat met <b>Burgemeester Bert</b> bij de fontein';
+    if (state.cars && state.cars.length) return '🚗 Stap in je auto en rij een rondje door <b>De Stad</b>!';
+    return '🛍️ Shoppen in <b>De Stad</b>! Nieuw: de <b>Autowinkel</b> (rechts)';
+  }
   switch (q.state) {
     case 'nieuw': return '💡 Tip: loop naar de uitvinder bij de <b>clonemachine</b>';
     case 'bezig': {
@@ -66,8 +71,65 @@ export function linesFor(id, state) {
     if (reached(q, 'aan') && clones > 0) return ['Wat zie ik nou? Er lopen allemaal kleine jij\'tjes achter je aan!', 'Vroeger hadden we geen clones. Toen moesten we zelf de afwas doen!'];
     return ['Hallo lieverd! Ik ben Oma Pien.', 'Die Professor Bolt is altijd aan het knutselen. Laatst ontplofte zijn broodrooster!'];
   }
+  const city = cityLines(id, state);
+  if (city) return city;
+  if (id === 'hond' && state.toys && state.toys.includes('bal')) return [pick(['Woef! Woef! Gooi de bal!', '*kwispel kwispel* Is dat MIJN bal?!', 'Knoeper rent de bal achterna. Woef!'])];
   if (id === 'hond') return [pick(['Woef! Woef!', '*kwispel kwispel*', 'Knoeper wil spelen! Woef!', '*snuffel snuffel* ...Woef?'])];
   return ['...'];
+}
+
+// Wat zeggen de mensen in De Stad?
+function cityLines(id, state) {
+  const poor = state.crystals < 2;
+  const noMoney = poor ? ['Heb je niet zoveel kristallen? Geen zorgen, kijken is gratis!'] : [];
+  switch (id) {
+    case 'burgemeester':
+      if (!state.cityGift) {
+        return [
+          'Welkom, welkom in De Stad! Ik ben Burgemeester Bert.',
+          'Wij hebben hier vier winkels: speelgoed, snoep, kleding en boeken.',
+          'In De Stad betaal je met kristallen. Hier, een welkomstcadeautje van de stad: 10 kristallen!',
+          'Let op bij het oversteken: loop over het zebrapad. De autootjes stoppen altijd voor je!',
+        ];
+      }
+      return [pick([
+        'Fijne dag in De Stad! Heb je de lolly op het dak van de snoepwinkel al gezien?',
+        'Op is op, maar meer kristallen vind je bij de slijmpjes in het Slijmbos!',
+        'De autootjes rijden rustig rondjes. Ze stoppen netjes als je ervoor staat.',
+      ])];
+    case 'speelgoed':
+      return [pick(['Hallo! Ik ben Toby Tol. Welkom in mijn speelgoedwinkel!', 'Speelgoed, speelgoed! Kom maar kijken!', 'Robotje Bliep is mijn allerbeste uitvinding. Nou ja, na de jojo.']), ...noMoney];
+    case 'snoep':
+      return [pick(['Dag schatje! Ik ben Tante Toffee. Zin in iets lekkers?', 'Raketsnoep maakt je supersnel. Maar niet te veel, hoor!', 'Mmm, ruik je dat? Verse lollies!']), ...noMoney];
+    case 'kleding':
+      return [pick(['Bonjour! Ik ben Madame Mouw. Jij hebt een nieuwe look nodig!', 'Een nieuw shirt? Je clones dragen het meteen ook. Trés chic!', 'Goud staat iedereen goed. Vooral helden!']), ...noMoney];
+    case 'boek':
+      return [pick(['Goedendag. Ik ben Meester Bladwijzer. Lezen is een avontuur!', 'In boeken staan geheimen... en heel veel tips.', 'Het eerste boek krijg je van mij gratis. Lezen is belangrijk!']), ...noMoney];
+    case 'dealer':
+      if (!state.cars || !state.cars.length) {
+        return [
+          'Vroem vroem! Welkom in de Autowinkel! Ik ben Vera Vroem.',
+          'Kijk maar rond: de Mini Muis, de Jungle Jeep, de Bliksem Sport en de Rode Raket!',
+          'Je betaalt met kristallen. Daarna rij je zelf door de garagedeur naar buiten.',
+          ...(state.crystals < 12 ? ['Nog niet genoeg kristallen? In het Slijmbos laten slijmpjes ze vallen!'] : []),
+        ];
+      }
+      return [pick([
+        'Hoe rijdt hij? Lekker, hè! Toet toet!',
+        'Rij voorzichtig, hoor. De autootjes in De Stad stoppen gelukkig altijd voor je.',
+        'Binnenkort krijg ik misschien een vliegende auto binnen... sssst, geheim!',
+      ])];
+    case 'lotte':
+      if (state.clones > 0) return ['Wauw, zijn dat allemaal clones van jou?', 'Ik wil ook een clone! Dan kan die mijn huiswerk maken.'];
+      return ['Hoi! Ik ben Lotte. Ik woon in De Stad.', 'Wist je dat de autootjes altijd stoppen als je ervoor staat? Superveilig!'];
+    case 'opa':
+      return [pick([
+        'Ik ben Opa Duif. Ik voer altijd de duiven. Maar waar zijn ze nou?',
+        'Vroeger was hier alleen maar gras. Nu is het een hele stad!',
+        'Heb je het boek over de verborgen schat al gezien? Er staat iets geheimzinnigs in...',
+      ])];
+    default: return null;
+  }
 }
 
 function boltLines(q, clones) {

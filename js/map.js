@@ -23,7 +23,7 @@ export function buildMap(body, info) {
   g.fillStyle = cave ? '#120d1f' : '#2f5e3a';
   g.fillRect(0, 0, W, H);
   // de plek waar je kunt lopen
-  g.fillStyle = cave ? '#3b3049' : zone.id === 'bos' ? '#6aa84f' : '#8bd36b';
+  g.fillStyle = cave ? '#3b3049' : zone.id === 'bos' ? '#6aa84f' : zone.id === 'stad' ? '#8fcf73' : '#8bd36b';
   if (B.r) { g.beginPath(); g.arc(px(B.x), pz(B.z), B.r * scale, 0, Math.PI * 2); g.fill(); }
   else g.fillRect(px(B.minX), pz(B.minZ), (B.maxX - B.minX) * scale, (B.maxZ - B.minZ) * scale);
 
@@ -79,6 +79,6 @@ export function buildMap(body, info) {
 
   const legend = document.createElement('p');
   legend.className = 'panel-note map-legend';
-  legend.innerHTML = '<span style="color:#e63946">▲</span> jij &nbsp; <span style="color:#1b9fc4">●</span> clones &nbsp; <span style="color:#c9a000">●</span> dorpelingen &nbsp; <span style="color:#ff4d6d">●</span> slijmpjes &nbsp; ⭐ hier moet je heen';
+  legend.innerHTML = '<span style="color:#e63946">▲</span> jij &nbsp; <span style="color:#1b9fc4">●</span> clones &nbsp; <span style="color:#c9a000">●</span> mensen &nbsp; <span style="color:#ff4d6d">●</span> slijmpjes &nbsp; ⭐ hier moet je heen';
   body.appendChild(legend);
 }

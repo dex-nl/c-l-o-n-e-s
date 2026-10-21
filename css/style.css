@@ -269,3 +269,10 @@ body.title #hud, body.title #top-btns, body.title #joy-base, body.title #talk-bt
 @media (prefers-reduced-motion: reduce) {
   #logo, #start-btn, #talk-btn.pulse, #clone-btn, #dialog-next { animation: none; }
 }
+
+/* Te weinig kristallen: de knop ziet er grijs uit, maar je mag er toch op tikken (dan zeggen we het lief) */
+.buy.poor { background: #ece7d8; color: #8a8576; box-shadow: 0 4px 0 #cfc8b4; }
+
+/* Lange woorden op de grote knop (Instappen / Uitstappen) */
+#talk-btn.long { font-size: 21px; }
+@media (max-height: 500px) { #talk-btn.long { font-size: 16px; } }
