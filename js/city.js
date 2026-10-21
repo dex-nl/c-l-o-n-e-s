@@ -114,7 +114,7 @@ export function createCity(group) {
     g.add(sign);
     // spulletjes in de etalage en iets groots op het dak
     deco(g, updaters);
-    boxes.push({ x, z: cz, hw: W / 2, hd: D / 2 });
+    boxes.push({ x, z: cz, hw: W / 2, hd: D / 2, h: 7.5 }); // (met de dingen op het dak)
     shopSpots.push({ x, z: FRONT + 1.9 });
     shopGroups.push(g);
     return g;

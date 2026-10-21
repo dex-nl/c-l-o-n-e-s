@@ -19,7 +19,7 @@ export function treeBatch(rand, colliders) {
   return {
     add(x, z, s = 1, collide = true) {
       list.push({ x, z, s, c: [0x52b788, 0x40916c, 0x74c69d][Math.floor(rand() * 3)], ry: rand() * 6 });
-      if (collide) colliders.push({ x, z, r: 0.55 * s });
+      if (collide) colliders.push({ x, z, r: 0.55 * s, h: 3.2 * s });
     },
     build(group) {
       instanced(group, new THREE.CylinderGeometry(0.18, 0.26, 1.4, 5), mat(0x8b5a2b),
@@ -46,7 +46,7 @@ export function makeHouse(group, { boxes, fadeables }, x, z, rot, roof, tall = 1
   g.rotation.y = rot;
   group.add(g);
   const m = mergeGroup(g, { transparent: true });
-  boxes.push({ x, z, hw: 2.3, hd: 2.3 });
+  boxes.push({ x, z, hw: 2.3, hd: 2.3, h: h + 2.2 });
   fadeables.push({ x, z, r: 2.4, mats: [m], k: 1 });
 }
 
@@ -78,7 +78,7 @@ function makeFlat(group, { boxes, fadeables }, x, z, w, d, h, color, trim, fade 
   g.position.set(x, 0, z);
   group.add(g);
   const m = mergeGroup(g, { transparent: fade });
-  boxes.push({ x, z, hw: w / 2 + 0.1, hd: d / 2 + 0.1 });
+  boxes.push({ x, z, hw: w / 2 + 0.1, hd: d / 2 + 0.1, h: h + 2.5 }); // flats: te hoog om overheen te vliegen
   if (fade) fadeables.push({ x, z, r: Math.max(w, d) / 2 + 0.4, mats: [m], k: 1, tall: h });
 }
 
@@ -136,7 +136,7 @@ export function createBigCity(group, { colliders, boxes, fadeables, updaters, ra
   const gem = mesh(new THREE.OctahedronGeometry(1.0, 0), mat(0x7af7ff, { emissive: 0x1b6ca8, emissiveIntensity: 0.7, roughness: 0.3 }), T.x, 2.6, T.z, group);
   gem.scale.y = 1.5;
   updaters.push((t) => { gem.rotation.y = t * 0.8; gem.position.y = 2.6 + Math.sin(t * 1.6) * 0.15; });
-  colliders.push({ x: T.x, z: T.z, r: T.island + 0.1 });
+  colliders.push({ x: T.x, z: T.z, r: T.island + 0.1, h: 3.6 });
 
   // ---------- Flats (hoge gebouwen) ----------
   makeFlat(group, ctx, -32, -14.2, 6, 5.6, 13.3, 0xbde0fe, 0x3a86ff);
@@ -245,7 +245,7 @@ export function createBigCity(group, { colliders, boxes, fadeables, updaters, ra
   for (let x = -34; x <= 36; x += 10) if (Math.abs(x) > 17.5) lamps.push([x, R.minZ + 2.3]);
   for (let x = -34; x <= 36; x += 10) if (Math.abs(x - T.x) > 8) lamps.push([x, R.maxZ + 2.3]);
   for (let z = -12; z <= 26; z += 12) lamps.push([R.minX - 2.3, z], [R.maxX + 2.3, z]);
-  for (const [x, z] of lamps) colliders.push({ x, z, r: 0.25 });
+  for (const [x, z] of lamps) colliders.push({ x, z, r: 0.25, h: 3.9 });
   instanced(group, new THREE.CylinderGeometry(0.08, 0.1, 3.6, 6), mat(0x2d3142), lamps.map(([x, z]) => ({ x, y: 1.8, z })));
   instanced(group, new THREE.SphereGeometry(0.25, 6, 4), mat(0xfff3b0, { emissive: 0xffd23f, emissiveIntensity: 0.6 }), lamps.map(([x, z]) => ({ x, y: 3.7, z })), { cast: false });
   // alle witte streepjes in één keer

@@ -14,8 +14,11 @@ export const CARS = {
   jeep: { icon: '🚙', name: 'Jungle Jeep', price: 25, speed: 9, info: 'Grote wielen voor elk avontuur.' },
   sport: { icon: '🏎️', name: 'Bliksem Sport', price: 40, speed: 10.5, info: 'Glimmend blauw met een spoiler!' },
   race: { icon: '🏁', name: 'Rode Raket', price: 60, speed: 12, info: 'De snelste auto van De Stad!' },
+  // De Wolkenflitser: een vliegende elektrische auto (wens van Dex). Heel duur, maar hij kan VLIEGEN!
+  wolk: { icon: '🛸', name: 'Wolkenflitser', price: 10000, speed: 12, fly: true, flySpeed: 14, info: 'Wit, stil en elektrisch. En... hij kan VLIEGEN!' },
 };
-export const CAR_ORDER = ['mini', 'jeep', 'sport', 'race'];
+export const CAR_ORDER = ['mini', 'jeep', 'sport', 'race', 'wolk'];
+export const FLY_CEILING = 8; // hoger vlieg je niet: onder de hoge flats en de skyline blijven
 
 // ---------- 3D-modellen ----------
 // Alle auto's zijn open (cabrio), zodat je jezelf ziet zitten als je rijdt.
@@ -76,6 +79,43 @@ export function makeCarModel(id) {
     lights(1.36, 0.55, 0.5, true);
     lights(-1.36, 0.55, 0.5, false);
     for (const [x, z] of [[-0.72, 0.85], [0.72, 0.85], [-0.72, -0.85], [0.72, -0.85]]) wheel(x, z, 0.3, 0.26);
+  } else if (id === 'wolk') {
+    // De Wolkenflitser: strak, wit en glad, met een glazen koepel en blauw gloeiende straalmotoren eronder
+    const white = mat(0xf8f9fa, { metalness: 0.35, roughness: 0.18 });
+    const black = mat(0x1d1d1d, { metalness: 0.3, roughness: 0.3 });
+    mesh(new THREE.BoxGeometry(1.6, 0.42, 3.1), white, 0, 0.5, 0, g);
+    const nose = mesh(new THREE.BoxGeometry(1.56, 0.26, 0.9), white, 0, 0.6, 1.5, g); nose.rotation.x = 0.22;
+    const tail = mesh(new THREE.BoxGeometry(1.58, 0.3, 0.7), white, 0, 0.72, -1.3, g); tail.rotation.x = -0.15;
+    mesh(new THREE.BoxGeometry(1.62, 0.1, 3.12), black, 0, 0.28, 0, g); // zwarte onderkant
+    // glazen koepel (doorzichtig, zodat je jezelf ziet zitten)
+    const dome = new THREE.Mesh(new THREE.SphereGeometry(0.8, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2),
+      mat(0x7fb7ff, { transparent: true, opacity: 0.32, roughness: 0.05, metalness: 0.2, emissive: 0x1b3a66, emissiveIntensity: 0.4, depthWrite: false }));
+    dome.scale.set(0.95, 0.7, 1.45); dome.position.set(0, 0.7, -0.05); g.add(dome);
+    // lichtbalk voor en achter
+    mesh(new THREE.BoxGeometry(1.3, 0.06, 0.05), mat(0xffffff, { emissive: 0xbfe9ff, emissiveIntensity: 1 }), 0, 0.62, 1.93, g);
+    mesh(new THREE.BoxGeometry(1.4, 0.07, 0.05), mat(0xff4d6d, { emissive: 0xaa0022, emissiveIntensity: 1 }), 0, 0.8, -1.66, g);
+    // kleine vleugeltjes (klappen uit als je vliegt)
+    const wings = [];
+    for (const s of [-1, 1]) {
+      const w = new THREE.Group(); w.position.set(s * 0.8, 0.5, -0.4); g.add(w);
+      mesh(new THREE.BoxGeometry(0.7, 0.05, 0.8), white, s * 0.35, 0, 0, w);
+      mesh(new THREE.BoxGeometry(0.06, 0.06, 0.8), mat(0x7af7ff, { emissive: 0x1b8fd8, emissiveIntensity: 1 }), s * 0.7, 0, 0, w);
+      w.rotation.z = s * 1.35; // ingeklapt
+      wings.push(w);
+    }
+    // straalmotoren onder de auto: gloeiende blauwe rondjes
+    const glowM = new THREE.MeshBasicMaterial({ color: 0x7af7ff, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false });
+    const thrusters = [];
+    for (const [x, z] of [[-0.55, 1.0], [0.55, 1.0], [-0.55, -1.0], [0.55, -1.0]]) {
+      mesh(new THREE.CylinderGeometry(0.26, 0.3, 0.1, 10), mat(0x495057, { metalness: 0.6 }), x, 0.22, z, g);
+      const glow = new THREE.Mesh(new THREE.CircleGeometry(0.24, 12).rotateX(Math.PI / 2), glowM);
+      glow.position.set(x, 0.16, z); g.add(glow);
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.22, 0.6, 10, 1, true).rotateX(Math.PI), glowM);
+      cone.position.set(x, -0.15, z); g.add(cone);
+      thrusters.push(cone);
+    }
+    for (const [x, z] of [[-0.75, 1.0], [0.75, 1.0], [-0.75, -1.0], [0.75, -1.0]]) wheel(x, z, 0.28, 0.22);
+    return { g, wheels, wings, thrusters, glowM };
   } else {
     // De Rode Raket: een raceauto met een nummer, een grote spoiler en uitlaten
     const red = mat(0xe8101f, { metalness: 0.6, roughness: 0.2 });
@@ -148,7 +188,7 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
   const wall = (x1, z1, x2, z2, h = S.h, material = wallM) => {
     const w = Math.abs(x2 - x1) || T, d = Math.abs(z2 - z1) || T;
     const m = mesh(new THREE.BoxGeometry(w, h, d), material, (x1 + x2) / 2, h / 2, (z1 + z2) / 2, group);
-    boxes.push({ x: (x1 + x2) / 2, z: (z1 + z2) / 2, hw: w / 2, hd: d / 2 });
+    boxes.push({ x: (x1 + x2) / 2, z: (z1 + z2) / 2, hw: w / 2, hd: d / 2, h: h + 0.4 }); // h: zo hoog (voor de vliegende auto)
     return m;
   };
   // achtermuur, zijmuren
@@ -230,13 +270,14 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
   colliders.push({ x: dealer.pos.x, z: dealer.pos.z, r: 0.45 });
 
   // ---------- Draaischijven met auto's en prijsbordjes ----------
-  const spots = { mini: [26.6, 3.4], jeep: [30.4, 3.4], sport: [34.0, 3.4], race: [34.0, 7.8] };
+  const spots = { mini: [26.6, 3.4], jeep: [30.4, 3.4], sport: [34.0, 3.4], race: [34.0, 7.8], wolk: [30.4, 7.8] }; // de Wolkenflitser staat op de plek waar eerst BINNENKORT stond
   const displays = {};
   const signs = [];
   for (const id of CAR_ORDER) {
     const [x, z] = spots[id];
     const gold = id === 'race';
-    const disc = mesh(new THREE.CylinderGeometry(1.75, 1.85, 0.2, 18), mat(gold ? 0xffd23f : 0xadb5bd, { metalness: 0.5, roughness: 0.3, emissive: gold ? 0x553300 : 0x000000 }), x, 0.1, z, group);
+    const fly = id === 'wolk';
+    const disc = mesh(new THREE.CylinderGeometry(1.75, 1.85, 0.2, 18), mat(fly ? 0x9b5de5 : gold ? 0xffd23f : 0xadb5bd, { metalness: 0.5, roughness: 0.3, emissive: fly ? 0x2a0d4f : gold ? 0x553300 : 0x000000 }), x, 0.1, z, group);
     disc.castShadow = false;
     const spin = new THREE.Group();
     spin.position.set(x, 0.2, z);
@@ -259,14 +300,9 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
     displays[id] = { spin, sold, x, z };
     signs.push({ id, x: st.position.x, z: st.position.z });
   }
-  // lege plek: binnenkort de vliegende auto!
-  const empty = mesh(new THREE.CylinderGeometry(1.75, 1.85, 0.2, 18), mat(0x9b5de5, { emissive: 0x2a0d4f }), 30.4, 0.1, 7.8, group);
-  empty.castShadow = false;
-  colliders.push({ x: 30.4, z: 7.8, r: 1.85 });
-  const soon = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 0.75), new THREE.MeshBasicMaterial({ map: wideSign('BINNENKORT!', '#9b5de5', 384, 96), side: THREE.DoubleSide }));
-  soon.position.set(30.4, 1.6, 7.8);
-  group.add(soon);
-  const qm = mesh(new THREE.OctahedronGeometry(0.35, 0), mat(0xffd23f, { emissive: 0x664400 }), 30.4, 2.5, 7.8, group);
+  // de Wolkenflitser zweeft een beetje boven zijn draaischijf
+  const wolkSpin = displays.wolk.spin;
+  const wolkModel = wolkSpin.children[0];
 
   // ---------- Het parkeerterrein voor de deur (de "lot") ----------
   const lot = mesh(new THREE.PlaneGeometry(18.5, 7.3).rotateX(-Math.PI / 2), mat(0x8d939c, { polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3 }), 27.6, 0.03, 15.65, group);
@@ -302,7 +338,7 @@ export function createShowroom(group, { colliders, boxes, updaters, wideSign }) 
       }
       for (const m of fadeInside) m.opacity += ((inside ? 0.3 : 1) - m.opacity) * Math.min(1, dt * 6);
       for (const id of CAR_ORDER) displays[id].spin.rotation.y = t * 0.4 + CAR_ORDER.indexOf(id);
-      qm.rotation.y = t * 2; qm.position.y = 2.5 + Math.sin(t * 2) * 0.15;
+      wolkModel.position.y = 0.35 + Math.sin(t * 2) * 0.12;
     },
   };
   return showroom;
@@ -342,12 +378,5 @@ export function buildCarShop(body, state, { onBuy, onPick, onTooPoor }) {
     card.appendChild(btn);
     grid.appendChild(card);
   }
-  const soon = document.createElement('div');
-  soon.className = 'card';
-  soon.innerHTML = '<div class="card-icon">🛸</div><div class="card-name">Vliegende auto</div><div class="card-info">Komt binnenkort... misschien!</div>';
-  const sb = document.createElement('button');
-  sb.type = 'button'; sb.className = 'buy'; sb.disabled = true; sb.textContent = 'Binnenkort';
-  soon.appendChild(sb);
-  grid.appendChild(soon);
   body.appendChild(grid);
 }

@@ -8,12 +8,16 @@ export class Controls {
     this.taps = new Map();
     this.base = base; this.knob = knob;
     this.onAction = onAction; this.onClone = onClone; this.onTap = onTap;
+    this.flyMode = false;          // aan als je in de vliegende auto zit
+    this.flyBtn = { up: false, down: false };
 
     // Toetsenbord
     window.addEventListener('keydown', (e) => {
       // Typ je in een tekstvakje (de geheime code)? Dan doen de toetsen niks in het spel.
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) { if (e.key === 'Escape') onKey('escape'); return; }
       const k = e.key.toLowerCase();
+      // In de Wolkenflitser: spatie = omhoog, Shift = omlaag (uitstappen/landen blijft E of Enter)
+      if (this.flyMode && (k === ' ' || k === 'shift')) { this.keys.add(k); e.preventDefault(); return; }
       if (['e', ' ', 'enter'].includes(k)) { if (!e.repeat) this.onAction(); e.preventDefault(); return; }
       if (k === 'c') { if (!e.repeat) this.onClone(); return; }
       if (['m', 'b', 'i', 'h', 'escape'].includes(k)) { if (!e.repeat) onKey(k); return; }
@@ -83,6 +87,21 @@ export class Controls {
   }
 
   // Geeft de beweging terug: x = links/rechts, y = vooruit/achteruit (-1..1)
+  // Omhoog (1), omlaag (-1) of niks (0) voor de vliegende auto
+  get lift() {
+    if (!this.flyMode) return 0;
+    return ((this.keys.has(' ') || this.flyBtn.up) ? 1 : 0) - ((this.keys.has('shift') || this.flyBtn.down) ? 1 : 0);
+  }
+
+  // Ingedrukt-houden knoppen voor vliegen (iPad/iPhone)
+  holdButton(el, which) {
+    const on = (e) => { e.preventDefault(); e.stopPropagation(); this.flyBtn[which] = true; el.classList.add('down'); try { el.setPointerCapture(e.pointerId); } catch (_) {} };
+    const off = () => { this.flyBtn[which] = false; el.classList.remove('down'); };
+    el.addEventListener('pointerdown', on);
+    for (const ev of ['pointerup', 'pointercancel', 'lostpointercapture']) el.addEventListener(ev, off);
+    el.addEventListener('contextmenu', (e) => e.preventDefault());
+  }
+
   get move() {
     let x = 0, y = 0;
     const k = this.keys;
