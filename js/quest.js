@@ -102,7 +102,9 @@ export function questText(state, zoneId) {
       if (zoneId === 'piramide') return '🦂 Versla <b>Schorpioen Sjors</b> in de troonzaal!';
       if (zoneId === 'woestijn') return '🚪 De piramide is open! Ga naar binnen (helemaal achterin)';
       return '🏜️ Ga naar de <b>Grote Piramide</b> in de woestijn';
-    case 'kaart': return '📜 Breng het stukje <b>schatkaart</b> naar <b>Professor Bolt</b>';
+    case 'kaart':
+      if (zoneId === 'doolhof') return mazeText(state); // je mag het doolhof al in
+      return '📜 Breng het stukje <b>schatkaart</b> naar <b>Professor Bolt</b>';
     case 'schat':
       if (zoneId === 'doolhof') return mazeText(state);
       if (zoneId === 'woestijn') return '🌀 Ga door de groene poort naar <b>Het Doolhof</b> (naast de piramide)';
@@ -117,6 +119,7 @@ export function questText(state, zoneId) {
 // In het doolhof: hoeveel deuren zijn al open?
 function mazeText(state) {
   const m = state.maze || {}, open = (m.doors || []).length;
+  if ((state.mapPieces || []).includes('doolhof')) return '📜 Breng stukje 2 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
   if (m.bram) return '📜 Pak het stukje <b>schatkaart</b> in het midden!';
   if (open >= 3) return '🍃 Ga naar het midden en versla <b>Bladkoning Bram</b>!';
   return `🍃 Vind de weg naar het midden. Deuren open: <b>${open}/3</b>`;

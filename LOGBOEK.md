@@ -115,3 +115,15 @@
   - **🚀 Boost** (knop of **R**): 2 seconden dubbel zo snel, blauwe vlammen, en dan 4 seconden opladen (ringetje om de knop). Je botst nog gewoon (de auto beweegt nu in kleine stapjes, zodat hij nooit door een muur schiet).
   - Een **geheime auto-code**: de Wolkenflitser gratis (in De Stad naast je, ergens anders bij de ingang van De Stad). Net als Dex zijn code: alleen een hash, nergens opgeschreven.
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
+
+## 21 oktober 2026: Hoofdstuk 4, Het Doolhof (wens van Dex)
+- Gemaakt met een AI-helper op de tak `doolhof`. **Dex of papa beslist of het erin komt.**
+- De schatkaart heeft nu **10 stukjes** (was 4). Oude saves houden hun stukje.
+- Na Schorpioen Sjors verschijnt naast de Grote Piramide een groene poort naar **Het Doolhof**: hoge heggen, 3 gekleurde deuren met knoppen (je clones helpen), doornen, rollende rotsen, 8 schatkisten, 3 kristalbloemen met een glinsterspoor en veel heggenslijmpjes. De kaart laat alleen zien waar je al was.
+- In het midden: **Bladkoning Bram** (72 levens). Hij geeft **stukje 2 van 10**.
+- **Meer clones**: elk stukje schatkaart = 1 clone meer (10, 11, 12, ... tot 20). Linksboven staat *Clones 3/11*.
+- **Moeilijker** (Dex vond het te makkelijk): de woestijn heeft sterkere en meer mummies, Sjors heeft 48 levens en een staartzwaai, en het doolhof is nog moeilijker. Alles over moeilijkheid staat op één plek: `js/difficulty.js`.
+- Een supergeheime code voor **100.000 kristallen**, met een moeilijke route (3 steentjes en een geheim kamertje, zonder hints). De route staat alleen in GAME.md onder "Geheim!".
+- De camera kijkt door de heggen heen, zodat je jezelf altijd ziet. Snel genoeg: de heggen worden in één keer getekend.
+- Save naar versie 8 (wat je in het doolhof hebt gedaan). Oude saves blijven werken (getest met versie 6, 7 en rare saves).
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.

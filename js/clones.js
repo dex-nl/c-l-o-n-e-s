@@ -167,8 +167,10 @@ export class CloneSquad {
       }
 
       let goal;
-      if (foe) goal = { x: foe.pos.x - ((foe.pos.x - c.pos.x) / (foeD || 1)) * (foe.r + 0.6), z: foe.pos.z - ((foe.pos.z - c.pos.z) / (foeD || 1)) * (foe.r + 0.6) };
-      else goal = this.holds.get(c) || this.spotInLine(i, pp);
+      const held = this.holds.get(c); // op een knop staan gaat voor (vechten doet hij dan vanaf de knop)
+      if (held) goal = held;
+      else if (foe) goal = { x: foe.pos.x - ((foe.pos.x - c.pos.x) / (foeD || 1)) * (foe.r + 0.6), z: foe.pos.z - ((foe.pos.z - c.pos.z) / (foeD || 1)) * (foe.r + 0.6) };
+      else goal = this.spotInLine(i, pp);
 
       const dx = goal.x - c.pos.x, dz = goal.z - c.pos.z;
       const d = Math.hypot(dx, dz);
@@ -180,6 +182,14 @@ export class CloneSquad {
         walking = step > dt * 1.5;
         if (walking) turn(c, Math.atan2(dx, dz), dt);
       }
+      // Zit een clone vast achter een muur op weg naar een knop? Dan hopt hij er even heen.
+      // (Ook als hij de speler niet meer kan volgen: dan hopt hij na 3 seconden naar zijn plekje in de rij.)
+      if ((held || !foe) && d > (held ? 0.3 : 2.5)) {
+        const moved = c.lastHold ? Math.hypot(c.pos.x - c.lastHold.x, c.pos.z - c.lastHold.z) : 1;
+        c.lastHold = { x: c.pos.x, z: c.pos.z };
+        c.stuckT = moved < 0.03 ? (c.stuckT || 0) + dt : 0;
+        if (c.stuckT > (held ? 1.5 : 3)) { c.pos.x = goal.x; c.pos.z = goal.z; c.stuckT = 0; }
+      } else { c.stuckT = 0; c.lastHold = null; }
       c.walk += ((walking ? 1 : 0) - c.walk) * Math.min(1, dt * 8);
       c.phase += dt * (walking ? 11 : 4);
       animateWalk(c.ch, c.phase, c.walk);

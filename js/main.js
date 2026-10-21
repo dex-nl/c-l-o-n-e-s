@@ -237,12 +237,14 @@ const game = {
     s.chasing = true;
     enemies.push(s);
     fx.poof({ x, z }, SLIME_COLORS[kind] || 0x5aa9e6);
+    return s;
   },
   onSlimeDefeated(s) {
     fx.poof(s.pos, s.color || SLIME_COLORS[s.kind] || 0x7bd389, s.king || s.boss ? 3 : 1);
     sfx.poof();
     pickups.spawn('kristal', s.pos.x, s.pos.z, s.loot + Math.floor(Math.random() * 2));
-    if (hearts < state.maxHearts && Math.random() < difficulty(game.zone.id).heartDrop) pickups.spawn('hart', s.pos.x, s.pos.z); // minder hartjes in moeilijke werelden
+    // hulpjes van een baas geven altijd een hartje (zo blijft het eerlijk)
+    if (hearts < state.maxHearts && (s.helper || Math.random() < difficulty(game.zone.id).heartDrop)) pickups.spawn('hart', s.pos.x, s.pos.z); // minder hartjes in moeilijke werelden
     if (s.bram) { game.onBramDefeated(s); return; }
     if (s.king) {
       state.quest.kingBeaten = true; // onthouden, ook als de iPad de pagina opnieuw laadt

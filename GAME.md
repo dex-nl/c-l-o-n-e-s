@@ -34,7 +34,27 @@ Het spel van Dex (11 jaar).
 - Puzzel: sla de 3 **zonnestenen** met je zwaard (bij de Oude Ruïne, de Kleine Piramide en de Vergeten Tempel). Een gouden lichtstraal laat zien welke al schijnen. Schijnen ze alle 3? Dan gaat de deur van de **Grote Piramide** open (helemaal achterin, ver van de poort).
 - **In de Grote Piramide**: gangen met fakkels, vazen, een sarcofaag, hiërogliefen op de muren en meer mummieslijmpjes.
 - In de troonzaal woont de baas: **Schorpioen Sjors** 🦂 (grote ogen, roze wangetjes, een rood hoedje). Hij knijpt met zijn scharen, stampt met zijn staart (kijk naar de ring op de grond) en als hij boos wordt graaft hij zich in en springt hij onder je vandaan omhoog (kijk naar de schaduw!).
-- Versla hem en je krijgt het **1e stukje van de schatkaart** (1 van 4). Breng het naar Professor Bolt. Je kunt de schatkaart altijd bekijken in je **rugzak**. Wordt vervolgd...
+- Versla hem en je krijgt het **1e stukje van de schatkaart** (1 van 10). Breng het naar Professor Bolt. Je kunt de schatkaart altijd bekijken in je **rugzak**.
+- Woestijn en piramide zijn **moeilijker** dan het bos: mummieslijmpjes hebben meer leven (6), zijn sneller, er staan er meer bij de zonnestenen en er vallen minder hartjes. Sjors heeft **48 levens** en als hij boos wordt zwaait hij ook met zijn staart.
+
+### Hoofdstuk 4: Het Doolhof (idee van Dex!)
+- Heb je het stukje van Sjors gepakt? Dan verschijnt in de woestijn, **naast de Grote Piramide**, een groene poort (met glitters en *"Er is een nieuwe poort verschenen!"*). Op de kaart staat **Het Doolhof**.
+- **Het Doolhof** is een groot doolhof van hoge heggen (15 bij 15 vakjes). De camera kijkt van boven, en heggen tussen jou en de camera worden doorzichtig, zodat je jezelf altijd ziet.
+- **De kaart** laat alleen zien waar je al geweest bent. Het spel onthoudt het.
+- **3 gekleurde deuren** (rood, blauw, geel) op de weg naar het midden. Elke deur heeft knoppen ergens in een doodlopend gangetje: rood en blauw hebben er 2, geel heeft er 3. Ga op een knop staan: dan lopen je clones naar de andere knoppen. Te weinig clones? *"Er zijn 3 knoppen... Je hebt 2 clones nodig!"* Clones weg (👻)? *"Je clones zijn weg! Haal ze terug, dan kunnen ze helpen."*
+- **Vallen**: doornen in de grond (eerst een rood vlak als waarschuwing) en **rollende rotsen** in lange gangen. Ze kosten 1 hartje.
+- **8 schatkisten** in doodlopende gangetjes (kristallen) en **3 kristalbloemen**: raak er een aan en 30 seconden lang wijzen glinsters de weg naar je volgende doel.
+- Veel **heggenslijmpjes** (sterker dan de mummies).
+- In het midden woont **Bladkoning Bram** 🍃: een heel groot, vriendelijk bladerslijm met een kroon en een snor. Hij is taai (**72 levens**). Hij springt en landt met een klap (2 hartjes, kijk naar de schaduw), maakt een **doornenkrans** (rode ring: ga eruit, heel dichtbij of ver weg) en roept heggenslijmpjes (die geven altijd een hartje). Bij de helft wordt hij boos. Samen met je clones kun je hem verslaan!
+- Dan krijg je **stukje 2 van 10** van de schatkaart. Breng het naar Professor Bolt: *"Hoofdstuk 4 uitgespeeld!"* Wordt vervolgd...
+
+### Meer clones 🧬
+- Linksboven zie je hoeveel clones je hebt: **🧬 Clones 3/10**.
+- Elk stukje schatkaart geeft **1 clone meer**: *"🧬 Je kunt nu 1 clone meer maken!"*
+- De getallen: aan het begin 5, met de Superbatterij 10, met stukje 1 = 11, stukje 2 = 12, ... alle 10 stukjes = 20.
+
+### Moeilijkheid
+- Elke nieuwe wereld is een beetje moeilijker. Dat staat op één plek: `js/difficulty.js` (bos 1, woestijn 2, piramide 2,2, doolhof 3). Slijmpjes krijgen meer leven en zijn iets sneller, bazen slaan harder en er vallen minder hartjes. Met je clones blijft het altijd te halen.
 
 ### Clones even weg 👻
 - Vind je je clones soms in de weg lopen? Tik op de knop **👻 Clones weg** rechtsboven (naast de kaart; op een iPhone alleen 👻), of druk op **H** (de C is al voor clonen). Je clones zijn even weg: onzichtbaar, ze volgen niet, botsen niet en vechten niet. Nog een keer (**🧬 Clones terug**) en ze staan meteen weer achter je. Maak je een nieuwe clone, dan komen ze ook terug. Het spel onthoudt het. Werkt overal, ook in je auto.
@@ -45,6 +65,13 @@ Het spel van Dex (11 jaar).
 - **Waar typ je de code?** Tik (of klik) **5 keer snel** (binnen 2,5 seconde) op je **kristallen** 💎 linksboven. Dan komt er een vakje.
 - Foute code: *"Die code klopt niet."* Al gebruikt: *"Deze code heb je al gebruikt!"*
 - Er is ook een **geheime auto-code**: die zet de **Wolkenflitser gratis** voor je klaar (zo vaak je wilt, hoofdletters maken niet uit). Ben je in De Stad? Dan staat hij meteen naast je. Ben je ergens anders (daar kun je niet rijden)? Dan wacht hij bij de ingang van De Stad: *"De Wolkenflitser staat voor je klaar in De Stad!"*. Ook deze code staat nergens opgeschreven (alleen een hash). Zit je al in een auto? Dan eerst uitstappen.
+- Er is een **supergeheime code** die je **100.000 kristallen** geeft (één keer per save). Hij is heel goed verstopt en er zijn **geen hints** in het spel. Zo vind je hem:
+  1. **Steentje 1 (KRIS)**: in de **woestijn**, een paar stappen ten noordoosten van Sfinx Sam (de reuzenkat), ligt een klein steentje in het zand (op ongeveer x 29,8, z -18,6). Lees het (sta er vlak voor): *"K R I S"* en *\*klik\**.
+  2. **Steentje 2 (TAL)**: in het **doolhof**, voorbij de **blauwe deur**, helemaal aan de **westkant** (3e vakje van links), halverwege (8e rij van boven). Ligt in een doodlopend gangetje.
+  3. **Steentje 3 (100K)**: in het **doolhof**, voorbij de **gele deur**, in de **noordoosthoek** (13e vakje van links, 2e rij van boven). Ook in een doodlopend gangetje.
+  4. Heb je alle 3 de steentjes gelezen (de volgorde maakt niet uit)? Dan zakt er (met een gerommel) een stukje heg weg aan de **noordrand** van het doolhof (6e vakje van links, bovenste rij, voorbij de gele deur). Daar is een **geheim kamertje** met een stenen bord: `KRISTAL100K`.
+  5. Typ de code in hetzelfde vakje (5 keer snel op je kristallen). *"🎉 Gelukt! +100.000 kristallen 💎"*.
+  - Het doolhof is altijd hetzelfde (het wordt gemaakt met een vast getal: 2029), dus deze route klopt altijd. Je kunt maximaal 9.999.999 kristallen hebben.
 - Er is ook **Dex zijn eigen code (geheim)**: die geeft **elke keer +1.000 kristallen** (hoofdletters maken niet uit). Hij staat nergens: niet in het spel, niet in deze tekst en niet in de code (alleen een geheime vingerafdruk, een *hash*). Alleen Dex weet hem. Je typt hem in hetzelfde vakje.
 
 ### In het dorp
@@ -134,7 +161,23 @@ Het spel van Dex (11 jaar).
 - [x] Hoofdstuk 3: De Grote Woestijn met piramides, cactussen, een zandstorm, Schorpioen Sjors en het 1e stukje van de schatkaart (idee van Dex)
 - [x] Een geheime code voor 100 kristallen (idee van Dex)
 - [x] Clones even wegsturen met de 👻-knop (idee van Dex)
-- [ ] De andere 3 stukjes van de schatkaart (waar liggen ze? Dex bedenkt het!)
+- [x] Hoofdstuk 4: Het Doolhof met deuren, knoppen, vallen, schatkisten, Bladkoning Bram en stukje 2 van de schatkaart (idee van Dex)
+- [x] Een supergeheime code voor 100.000 kristallen
+- [x] Meer clones per stukje schatkaart
+- [ ] De andere 8 stukjes van de schatkaart (zie hieronder, Dex kiest!)
+
+## De schatkaart: 10 stukjes 🗺️
+Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. Stukje 1 en 2 zijn klaar, de rest zijn ideeën (Dex mag ze veranderen!):
+1. ✅ De Grote Woestijn: Schorpioen Sjors
+2. ✅ Het Doolhof: Bladkoning Bram
+3. De IJsberg: glijden over ijs, een sneeuwpopslijm als baas
+4. De Vulkaan: lava-stenen springen, een vuurdraak
+5. Het Spookkasteel: lichtjes aandoen, een spook dat verstoppertje speelt
+6. Onder water: met een duikboot, een grote octopus
+7. De Wolkenstad: vliegen met de Wolkenflitser van wolk naar wolk
+8. De Jungle: lianen en een gorilla-koning
+9. Het Piratenschip: de schatkaart van de piraat zelf, kanonnen
+10. Het Schateiland: alle stukjes samen... en de verborgen schat!
 
 ## Ideeën voor later (Dex kiest!)
 - Clones commando's geven: "wacht hier", "volg mij", "val aan".
@@ -145,4 +188,4 @@ Het spel van Dex (11 jaar).
 - Dag en nacht, met lantaarns in het dorp.
 - Een boot op de vijver, of een eiland.
 - Een racebaan of een garage om je auto te verven.
-- De verborgen schat zoeken met een kaart in stukjes: stukje 1 ligt in de woestijn, waar liggen de andere 3?
+- De verborgen schat zoeken met een kaart in 10 stukjes: waar liggen stukje 3 tot en met 10? (zie de lijst hierboven)

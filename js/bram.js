@@ -1,8 +1,8 @@
 // Bladkoning Bram: de baas van het doolhof. Een HEEL groot slijm van bladeren met een kroon van blaadjes
 // en een snor. Hij is vriendelijk (hij test alleen of je sterk genoeg bent), maar hij is wel taai!
 // - Hij springt hoog en landt met een KLAP (2 hartjes!). Kijk naar de schaduw.
-// - Doornenkrans: hij knippert, er komt een rode ring om hem heen... weglopen! Dan prikken er doornen omhoog.
-// - Bij 3/4, 1/2 en 1/4 van zijn leven roept hij 2 heggenslijmpjes.
+// - Doornenkrans: hij knippert, er komt een rode ring om hem heen... weg uit de ring (heel dichtbij of ver weg)! Dan prikken er doornen omhoog.
+// - Bij 3/4, 1/2 en 1/4 van zijn leven roept hij 2 heggenslijmpjes (die geven altijd een hartje).
 // - Bij de helft wordt hij boos (fase 2): vaker springen en vaker doornen.
 import * as THREE from 'three';
 import { Slime } from './enemies.js';
@@ -58,8 +58,10 @@ export class Bram extends Slime {
       // hulp roepen
       while (this.summons.length && this.hp <= this.maxHp * this.summons[0]) {
         this.summons.shift();
-        game.spawnSlime(this.pos.x + 3, this.pos.z + 1, 'heg');
-        game.spawnSlime(this.pos.x - 3, this.pos.z - 1, 'heg');
+        for (const [dx, dz] of [[3, 1], [-3, -1]]) {
+          const h = game.spawnSlime(this.pos.x + dx, this.pos.z + dz, 'heg');
+          if (h) h.helper = true; // geeft altijd een hartje
+        }
       }
       if (!this.angry && this.hp <= this.maxHp / 2) {
         this.angry = true;
@@ -84,8 +86,8 @@ export class Bram extends Slime {
           game.sfx.slam?.();
           game.fx.ring(this.pos, 3.9, 0xff9f1c, 0.5);
           const p = game.player.pos, d = Math.hypot(p.x - this.pos.x, p.z - this.pos.z);
-          if (d > 2.0 && d < 4.2) game.hurtPlayer(this.D.bossDamage, this.pos.x, this.pos.z, 15);
-          else if (d <= 2.0) game.hurtPlayer(1, this.pos.x, this.pos.z, 15);
+          // in de rode ring: 1 hartje. Vlak bij Bram (binnen de ring) of ver weg ben je veilig!
+          if (d > 2.0 && d < 4.2) game.hurtPlayer(1, this.pos.x, this.pos.z, 15);
         }
         this.spikes.position.y = th.hit ? Math.max(-1.4, -Math.max(0, th.t - 1.6) * 3) : -1.4;
         if (th.t > 2.2) { this.thorn = null; this.spikes.visible = false; this.ring.visible = false; this.thornCool = this.angry ? 4 : 6.5; }
