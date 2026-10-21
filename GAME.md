@@ -45,7 +45,7 @@ Het spel van Dex (11 jaar).
 - **Vallen**: doornen in de grond (eerst een rood vlak als waarschuwing) en **rollende rotsen** in lange gangen. Ze kosten 1 hartje.
 - **8 schatkisten** in doodlopende gangetjes (kristallen) en **3 kristalbloemen**: raak er een aan en 30 seconden lang wijzen glinsters de weg naar je volgende doel.
 - Veel **heggenslijmpjes** (sterker dan de mummies).
-- In het midden woont **Bladkoning Bram** 🍃: een heel groot, vriendelijk bladerslijm met een kroon en een snor. Hij is taai (**72 levens**). Hij springt en landt met een klap (2 hartjes, kijk naar de schaduw), maakt een **doornenkrans** (rode ring: ga eruit, heel dichtbij of ver weg) en roept heggenslijmpjes (die geven altijd een hartje). Bij de helft wordt hij boos. Samen met je clones kun je hem verslaan!
+- In het midden woont **Bladkoning Bram** 🍃: een heel groot, vriendelijk bladerslijm met een kroon en een snor. Hij is taai (**72 levens**). Hij springt en landt met een klap (1 hartje, als hij boos is 2; kijk naar de schaduw), maakt een **doornenkrans** (rode ring: ga eruit, heel dichtbij of ver weg) en roept heggenslijmpjes (die geven altijd een hartje). Bij de helft wordt hij boos. Samen met je clones kun je hem verslaan!
 - Dan krijg je **stukje 2 van 10** van de schatkaart. Breng het naar Professor Bolt: *"Hoofdstuk 4 uitgespeeld!"* Wordt vervolgd...
 
 ### Meer clones 🧬

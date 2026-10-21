@@ -1,6 +1,6 @@
 // Bladkoning Bram: de baas van het doolhof. Een HEEL groot slijm van bladeren met een kroon van blaadjes
 // en een snor. Hij is vriendelijk (hij test alleen of je sterk genoeg bent), maar hij is wel taai!
-// - Hij springt hoog en landt met een KLAP (2 hartjes!). Kijk naar de schaduw.
+// - Hij springt hoog en landt met een KLAP (1 hartje, als hij boos is 2!). Kijk naar de schaduw.
 // - Doornenkrans: hij knippert, er komt een rode ring om hem heen... weg uit de ring (heel dichtbij of ver weg)! Dan prikken er doornen omhoog.
 // - Bij 3/4, 1/2 en 1/4 van zijn leven roept hij 2 heggenslijmpjes (die geven altijd een hartje).
 // - Bij de helft wordt hij boos (fase 2): vaker springen en vaker doornen.
@@ -17,7 +17,7 @@ export class Bram extends Slime {
     this.name = 'Bladkoning Bram';
     this.D = difficulty('doolhof');
     this.split = true;        // (niet de blauwe slijmpjes van Koning Slijm)
-    this.slamDamage = this.D.bossDamage;
+    this.slamDamage = 1;      // eerst 1 hartje per klap; als hij boos is 2 (bossDamage)
     this.slamColor = 0x2d9b4e;
     this.summons = [0.75, 0.5, 0.25];
     this.angry = false;
@@ -66,6 +66,7 @@ export class Bram extends Slime {
       if (!this.angry && this.hp <= this.maxHp / 2) {
         this.angry = true;
         this.speed *= 1.2;
+        this.slamDamage = this.D.bossDamage;
         game.onBossPhase?.(this, '🍃 Bladkoning Bram wordt boos! Pas op voor zijn doornen!');
       }
       this.crownLeaves.rotation.y = t * (this.angry ? 2 : 0.6);
