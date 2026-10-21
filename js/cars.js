@@ -3,6 +3,9 @@
 import * as THREE from 'three';
 import { mat } from './characters.js';
 import { mesh } from './props.js';
+import { mergeGroup } from './optimize.js';
+
+const wheelM = mat(0x2d2d2d);
 
 // Een weg als een rechthoek met ronde hoeken. Geeft punten terug, met de afstand tot het begin.
 export function roundedLoop(minX, maxX, minZ, maxZ, r = 2.5, step = 0.25) {
@@ -30,6 +33,28 @@ export function roundedLoop(minX, maxX, minZ, maxZ, r = 2.5, step = 0.25) {
   return { pts, total };
 }
 
+// Een weg langs punten (een rondje). Elk punt mag een ronde hoek hebben: { x, z, r }.
+export function roundedPath(wps) {
+  const pts = [];
+  const n = wps.length;
+  for (let i = 0; i < n; i++) {
+    const P = wps[i], A = wps[(i - 1 + n) % n], B = wps[(i + 1) % n];
+    if (!P.r) { pts.push({ x: P.x, z: P.z }); continue; }
+    const la = Math.hypot(A.x - P.x, A.z - P.z), lb = Math.hypot(B.x - P.x, B.z - P.z);
+    const ra = Math.min(P.r, la / 2), rb = Math.min(P.r, lb / 2);
+    const s0 = { x: P.x + ((A.x - P.x) / la) * ra, z: P.z + ((A.z - P.z) / la) * ra };
+    const s1 = { x: P.x + ((B.x - P.x) / lb) * rb, z: P.z + ((B.z - P.z) / lb) * rb };
+    for (let k = 0; k <= 8; k++) {
+      const u = k / 8, a = (1 - u) * (1 - u), b = 2 * u * (1 - u), c = u * u;
+      pts.push({ x: a * s0.x + b * P.x + c * s1.x, z: a * s0.z + b * P.z + c * s1.z });
+    }
+  }
+  let s = 0;
+  pts.forEach((p, i) => { if (i) s += Math.hypot(p.x - pts[i - 1].x, p.z - pts[i - 1].z); p.s = s; });
+  const last = pts[pts.length - 1];
+  return { pts, total: s + Math.hypot(pts[0].x - last.x, pts[0].z - last.z) };
+}
+
 function pointAt(loop, s) {
   s = ((s % loop.total) + loop.total) % loop.total;
   const { pts } = loop;
@@ -41,7 +66,7 @@ function pointAt(loop, s) {
   return { x: a.x + (b.x - a.x) * k, z: a.z + (b.z - a.z) * k };
 }
 
-function makeCar(color) {
+export function makeCar(color) {
   const g = new THREE.Group();
   const body = mat(color);
   mesh(new THREE.BoxGeometry(1.3, 0.55, 2.4), body, 0, 0.5, 0, g);
@@ -50,12 +75,21 @@ function makeCar(color) {
   mesh(new THREE.BoxGeometry(1.0, 0.36, 0.06), glass, 0, 1.02, 0.52, g);
   mesh(new THREE.BoxGeometry(1.0, 0.36, 0.06), glass, 0, 1.02, -0.82, g);
   for (const sx of [-0.59, 0.59]) mesh(new THREE.BoxGeometry(0.06, 0.32, 1.0), glass, sx, 1.02, -0.15, g);
+  for (const sx of [-0.4, 0.4]) {
+    mesh(new THREE.BoxGeometry(0.25, 0.15, 0.05), mat(0xfff3b0), sx, 0.55, 1.21, g);
+    mesh(new THREE.BoxGeometry(0.25, 0.15, 0.05), mat(0xff4d6d), sx, 0.55, -1.21, g);
+  }
+  mergeGroup(g); // de hele auto wordt één vorm (sneller)
+  // twee assen met elk 2 wielen (die draaien)
   const wheelGeo = new THREE.CylinderGeometry(0.3, 0.3, 0.2, 8).rotateZ(Math.PI / 2);
   const wheels = [];
-  for (const [wx, wz] of [[-0.62, 0.75], [0.62, 0.75], [-0.62, -0.75], [0.62, -0.75]]) wheels.push(mesh(wheelGeo, mat(0x2d2d2d), wx, 0.3, wz, g));
-  for (const sx of [-0.4, 0.4]) {
-    mesh(new THREE.BoxGeometry(0.25, 0.15, 0.05), mat(0xfff3b0, { emissive: 0xffd23f, emissiveIntensity: 0.5 }), sx, 0.55, 1.21, g);
-    mesh(new THREE.BoxGeometry(0.25, 0.15, 0.05), mat(0xff4d6d, { emissive: 0x660011 }), sx, 0.55, -1.21, g);
+  for (const wz of [0.75, -0.75]) {
+    const axle = new THREE.Group();
+    axle.position.set(0, 0.3, wz);
+    for (const wx of [-0.62, 0.62]) mesh(wheelGeo, wheelM, wx, 0, 0, axle);
+    g.add(axle);
+    mergeGroup(axle);
+    wheels.push(axle);
   }
   return { g, wheels };
 }
