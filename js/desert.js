@@ -462,6 +462,8 @@ export function createDesert(group) {
       [24, -44], [40, -46], [50, -34], [44, -50],
       // bij Sfinx Sam en de Grote Piramide
       [18, -4], [-7, DOOR_Z + 8], [7, DOOR_Z + 9], [0, DOOR_Z + 16],
+      // extra wachters rond elke zonnesteen (Dex vond het te makkelijk!)
+      ...SUN_STONES.flatMap((st) => [[st.x + 4.5, st.z + 3.5], [st.x - 4, st.z - 4], [st.x + 3, st.z - 5]]),
     ].map(([x, z]) => ({ x, z, kind: 'mummie' })),
     labels: [
       { x: 0, z: 26, text: 'Naar het dorp' }, { x: OASIS.x, z: OASIS.z, text: 'Oase' },

@@ -11,6 +11,7 @@ import { buildTreasureMap } from './treasure.js';
 import { createJobs } from './jobs.js';
 import { isPrivateCode, PRIVATE_REWARD } from './secret.js';
 import { fmt } from './format.js';
+import { difficulty } from './difficulty.js';
 import { buildCityShop, itemInfo, SHIRTS, DEFAULT_SHIRT, TOYS, CANDIES, BOOKS } from './cityshop.js';
 import { makeSignpost } from './props.js';
 import { Robot } from './robot.js';
@@ -223,7 +224,7 @@ const game = {
     if (hearts <= 0) faint();
   },
   spawnSlime(x, z, kind) {
-    const s = new Slime(game.zone.group, x, z, kind);
+    const s = new Slime(game.zone.group, x, z, kind, game.zone.id);
     s.chasing = true;
     enemies.push(s);
     fx.poof({ x, z }, SLIME_COLORS[kind] || 0x5aa9e6);
@@ -232,7 +233,7 @@ const game = {
     fx.poof(s.pos, s.color || SLIME_COLORS[s.kind] || 0x7bd389, s.king || s.boss ? 3 : 1);
     sfx.poof();
     pickups.spawn('kristal', s.pos.x, s.pos.z, s.loot + Math.floor(Math.random() * 2));
-    if (hearts < state.maxHearts && Math.random() < 0.3) pickups.spawn('hart', s.pos.x, s.pos.z);
+    if (hearts < state.maxHearts && Math.random() < difficulty(game.zone.id).heartDrop) pickups.spawn('hart', s.pos.x, s.pos.z); // minder hartjes in moeilijke werelden
     if (s.king) {
       state.quest.kingBeaten = true; // onthouden, ook als de iPad de pagina opnieuw laadt
       game.showLanding(0, 0, 0);
@@ -258,6 +259,11 @@ const game = {
       save();
     }
   },
+  onBossPhase(boss, msg) {
+    shake = Math.max(shake, 0.8);
+    sfx.rumble();
+    ui.toast(msg, 3200);
+  },
   slam(x, z, r, color = 0x4cc96f) {
     fx.ring({ x, z }, r, color === 0x4cc96f ? 0x9bf6ff : 0xffe8a3, 0.55);
     fx.ring({ x, z }, r * 0.6, 0xffffff, 0.4);
@@ -276,10 +282,10 @@ const game = {
 function spawnEnemies(zone) {
   enemies = [];
   king = null;
-  for (const s of zone.slimeSpots || []) enemies.push(new Slime(zone.group, s.x, s.z, s.kind));
+  for (const s of zone.slimeSpots || []) enemies.push(new Slime(zone.group, s.x, s.z, s.kind, zone.id));
   if (zone.id === 'grot' && state.quest.state === 'grot') {
     if (state.quest.kingBeaten) pickups.spawn('batterij', zone.king.x, zone.king.z);
-    else { king = new Slime(zone.group, zone.king.x, zone.king.z, 'koning'); enemies.push(king); }
+    else { king = new Slime(zone.group, zone.king.x, zone.king.z, 'koning', zone.id); enemies.push(king); }
   }
   sjors = null;
   if (zone.id === 'piramide' && state.quest.state === 'piramide') {
