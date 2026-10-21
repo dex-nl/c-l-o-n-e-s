@@ -102,8 +102,9 @@ export class MyCar {
     let f = 0;
     const R = CAR_R;
     for (const b of zone.airBoxes || []) if (b.h <= this.alt + 0.06 && this.over(b)) f = Math.max(f, b.h + 0.05);
-    for (const c of zone.colliders) if (Math.hypot(this.pos.x - c.x, this.pos.z - c.z) < c.r + R) f = Math.max(f, (c.h ?? 1.5) + 0.05);
-    for (const b of zone.boxes) if (!b.off && Math.abs(this.pos.x - b.x) < b.hw + R && Math.abs(this.pos.z - b.z) < b.hd + R) f = Math.max(f, (b.h ?? 1.5) + 0.05);
+    // Kleine dingen (bankjes, heggen, lantaarns, bomen) duwen je bij het landen gewoon opzij.
+    // Alleen echte daken (winkels, huizen) houden je tegen.
+    for (const b of zone.boxes) if (!b.off && (b.h ?? 0) >= 3 && Math.abs(this.pos.x - b.x) < b.hw + R && Math.abs(this.pos.z - b.z) < b.hd + R) f = Math.max(f, b.h + 0.05);
     return f;
   }
 
