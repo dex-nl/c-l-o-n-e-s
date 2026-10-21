@@ -255,6 +255,12 @@ body.title #hud, body.title #top-btns, body.title #joy-base, body.title #talk-bt
 #fly-btns button span { font-size: 15px; font-weight: 800; margin-top: 3px; }
 #flip-btn { background: #ff8c42 !important; box-shadow: 0 6px 0 #b85a14 !important; }
 #flip-btn.off { opacity: 0.45; }
+/* Boost: het ringetje loopt vol terwijl hij oplaadt (--p = 0..1) */
+#boost-btn { --p: 1; position: relative; background: #3a86ff !important; box-shadow: 0 6px 0 #1b4f9c !important; }
+#boost-btn::before { content: ''; position: absolute; inset: -5px; border-radius: inherit; z-index: -1;
+  background: conic-gradient(#7af7ff calc(var(--p) * 360deg), rgba(0,0,0,0.25) 0); }
+#boost-btn.off { filter: saturate(0.4) brightness(0.85); }
+#boost-btn.on { background: #ff8c42 !important; }
 #fly-btns button.down { transform: translateY(4px); box-shadow: 0 2px 0 #5a2a9c; background: #b388f0; }
 body.title #fly-btns { visibility: hidden; }
 
