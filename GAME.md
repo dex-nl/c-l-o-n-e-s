@@ -26,7 +26,7 @@ Het spel van Dex (11 jaar).
 - Breng de Superbatterij terug naar Professor Bolt: dan kan de machine **10 clones** maken.
 
 ### Hoofdstuk 3: De Grote Woestijn (idee van Dex!)
-- De zandkleurige **woestijnpoort** aan de **westkant van het dorp** verschijnt pas (met glitters en de melding *"Er is een nieuwe poort verschenen!"*) als **De Stad uitgespeeld** is. Voorlopig betekent dat: **je hebt een auto gekocht**. (Dex kiest nog wat het precies wordt; dat staat op één plek: `isCityDone` in `js/quest.js`.)
+- De zandkleurige **woestijnpoort** aan de **westkant van het dorp** verschijnt pas (met glitters en de melding *"Er is een nieuwe poort verschenen!"*) als **De Stad uitgespeeld** is: je hebt alle **4 klusjes van Burgemeester Bert** gedaan (zie hieronder). Dat staat op één plek: `isCityDone` in `js/quest.js`. Had je in een oude save de poort al (je had een auto gekocht of was al in de woestijn)? Dan houd je hem.
 - De poort gaat open als je hoofdstuk 2 hebt uitgespeeld én Professor Bolt je over het eerste stukje van de **schatkaart** heeft verteld (de schat van de piraat uit het boek *De verborgen schat*).
 - **De Grote Woestijn** is **heel groot** (ruim 3 keer zo groot als De Grote Stad): duinen waar je omheen moet, **cactussen**, stenen paden met wegwijzers, een **oase** met palmbomen en **Kameel Karel** (hij geeft tips), **Sfinx Sam** (een reuzenkat van steen), ruïnes en **piramides**.
 - Overal **mummieslijmpjes**: slijmpjes in wc-papier, sterker en sneller dan de slijmpjes in het bos. Je clones vechten mee.
@@ -54,6 +54,12 @@ Het spel van Dex (11 jaar).
 - In De Stad: een plein met een fontein, huizen, een parkje, lantaarnpalen met vlaggetjes en een **autoweg met zebrapaden**.
 - **Autootjes** rijden rustig rondjes. Sta je (of een clone) voor een auto? Dan stopt hij en toetert vriendelijk. Niemand raakt hartjes kwijt.
 - **Burgemeester Bert** bij de fontein geeft je één keer een cadeautje van **10 kristallen**.
+- Daarna heeft Bert **klusjes** voor je (idee van Dex!). Je krijgt ze een voor een: heeft Bert een **!** boven zijn hoofd, dan heeft hij een nieuw klusje. Je ziet ze in het lijstje **📋 Klusjes** (gaat vanzelf open, en staat ook in je rugzak). Bovenin staat bijvoorbeeld *"Klusje 2 van 4"*.
+  1. 🦆 **Eendje Ed** (+3 💎): het eendje met het rode strikje is weggelopen naar de hoge flats. Loop naar hem toe, dan waggelt hij achter je aan. Breng hem naar de vijver in het **Stadspark**: plons!
+  2. 📦 **Pakje voor Toby Tol** (+3 💎): haal het pakje op bij de **parkeerplaats** en breng het naar Toby Tol bij de speelgoedwinkel. Lopen of met de auto, allebei goed.
+  3. 👓 **De bril van Opa Duif** (+4 💎): de bril ligt ergens in De Grote Stad. Hier krijg je geen ster op de kaart: zoeken! (Tip: Opa wandelde bij de hoge flats aan de westkant. Het glinstert.) Breng hem naar Opa Duif, dan draagt hij hem weer.
+  4. 🏁 **Rondje Grote Stad** (+5 💎): rij met je **auto** door de **START** op de lange weg, dan door alle 3 de poortjes (oostweg, rotonde, westweg, in elke volgorde) en weer terug naar de START, binnen **90 seconden**. De tijd staat bovenin. Te laat? Gewoon opnieuw door de START. Nog geen auto? Met het cadeautje en de kristallen van de klusjes kun je de Mini Muis kopen.
+- Na het laatste klusje: *"Alle klusjes van Bert klaar! De Stad is uitgespeeld!"* en dan *"Er is een nieuwe poort verschenen!"*. In het dorp verschijnt de woestijnpoort met glitters en confetti.
 - Vier winkels. Je betaalt met dezelfde **kristallen** 💎 als bij Koopman Kees:
   - **Speelgoedwinkel** (Toby Tol): bal voor Knoeper, jojo, knuffelbeer en **Robotje Bliep** die met je meezweeft.
   - **Snoepwinkel** (Tante Toffee): **Raketsnoep** (20 seconden supersnel), Hartjeslolly (hartjes vol), Knalsnoepje (confetti).

@@ -54,13 +54,15 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/pickups.js` – kristallen, hartjes, de Superbatterij en het stukje schatkaart
 - `js/effects.js` – confetti, glinsters, stofwolkjes, zwaardboog, schokgolf
 - `js/sound.js` – geluidjes én muziek, gemaakt met de Web Audio API (geen geluidsbestanden). Liedjes staan als noten in `SONGS`
-- `js/quest.js` – het verhaal: alle stappen (`QUEST_ORDER`) en wat iedereen zegt. **`isCityDone(state)`** bepaalt wanneer de woestijnpoort verschijnt (voorlopig: een auto gekocht); pas dat alleen daar aan
+- `js/quest.js` – het verhaal: alle stappen (`QUEST_ORDER`) en wat iedereen zegt. **`isCityDone(state)`** bepaalt wanneer de woestijnpoort verschijnt (= alle `JOBS`, de klusjes van Burgemeester Bert, gedaan; of `desertEarly` van een oude save); pas dat alleen daar aan. Ook de klusjes zelf (`JOBS`, `LAP_TIME`) en wat Bert zegt
 - `js/shop.js`, `js/backpack.js`, `js/map.js` – de winkel, de rugzak en de kaart
 - `js/controls.js` – joystick, knoppen en toetsenbord
 - `js/ui.js` – praatwolk (letter voor letter), hartjes, meldingen, panelen, startscherm
-- `js/save.js` – opslaan en oude saves omzetten (nu versie 6: `mapPieces`, `codes`, `clonesHidden`; `quest.stones` en `quest.bossBeaten` tijdens hoofdstuk 3)
+- `js/jobs.js` – de klusjes in De Stad die je ziet: Eendje Ed, het pakje, de bril van Opa Duif en de poortjes voor het rondje (`JOB_SPOTS`)
+- `js/save.js` – opslaan en oude saves omzetten (nu versie 7: `jobs` = `{ done, active, step }`, `desertEarly`; versie 6: `mapPieces`, `codes`, `clonesHidden`; `quest.stones` en `quest.bossBeaten` tijdens hoofdstuk 3)
 - `.github/workflows/pages.yml` – zet het spel op GitHub Pages
 
 ## Testen
-- Testen van hoofdstuk 3: `clones.unlockDesert()` laat de woestijnpoort meteen verschijnen (wordt niet opgeslagen), `clones.goTo('woestijn', clones.desert.spawns.fromDorp)`, `clones.desert.startStorm()`, `clones.toggleClones()`. De geheime code staat in GAME.md: **verklap hem niet in het spel** (geen hints, geen knop).
+- Testen van de klusjes: `clones.state.jobs`, `clones.cityJobs` (bijvoorbeeld `clones.cityJobs.lap`), `clones.openJobs()`, `clones.finishJob(id)` (alleen voor het klusje dat bezig is).
+- Testen van hoofdstuk 3: `clones.unlockDesert()` laat de woestijnpoort meteen verschijnen alsof alle klusjes klaar zijn (wordt niet opgeslagen), `clones.goTo('woestijn', clones.desert.spawns.fromDorp)`, `clones.desert.startStorm()`, `clones.toggleClones()`. De geheime code staat in GAME.md: **verklap hem niet in het spel** (geen hints, geen knop).
 - In de browser-console staat `window.clones` met handige dingen, bijvoorbeeld `clones.goTo('bos', clones.forest.spawns.fromDorp)`, `clones.goTo('stad', clones.city.spawns.fromDorp)` of `clones.state.crystals = 50`.
