@@ -32,8 +32,19 @@ export const ui = {
   },
 
   // ---------- Hartjes, kristallen en de baas ----------
-  setStats(show, hearts, max, crystals) {
+  setStats(show, hearts, max, crystals, clones = null) {
     $('stats').classList.toggle('hidden', !show);
+    const cc = $('clone-count');
+    cc.classList.toggle('hidden', !clones);
+    if (clones) {
+      const txt = `${clones.n}/${clones.max}`, b = cc.querySelector('b');
+      if (b.textContent !== txt) {
+        const grew = cc.dataset.max && +cc.dataset.max < clones.max;
+        b.textContent = txt;
+        cc.dataset.max = clones.max;
+        if (grew) { cc.classList.remove('bump'); void cc.offsetWidth; cc.classList.add('bump'); }
+      }
+    }
     const h = '❤️'.repeat(Math.max(0, hearts)) + '🤍'.repeat(Math.max(0, max - hearts));
     if ($('hearts').textContent !== h) $('hearts').textContent = h;
     const c = `💎 ${fmt(crystals)}`;

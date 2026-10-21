@@ -13,8 +13,10 @@ const KINDS = {
   mummie: { color: 0xf1e3c2, size: 0.62, hp: 4, speed: 3.4, aggro: 9, loot: 2 },
   // Heggenslijm (doolhof): een slijmpje van bladeren. Taai! Verstopt zich tussen de heggen.
   heg: { color: 0x2d9b4e, size: 0.66, hp: 4, speed: 3.5, aggro: 9, loot: 3 },
+  // Bladkoning Bram (de baas van het doolhof, zie bram.js)
+  bladkoning: { color: 0x3fa34d, size: 1.9, hp: 36, speed: 2.5, aggro: 18, loot: 20 },
 };
-export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e };
+export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e, bladkoning: 0x3fa34d };
 const REST = 0.45, HOP = 0.5; // even stilzitten, dan een sprongetje
 
 // Vormen en kleuren die alle slijmpjes delen (scheelt geheugen)
@@ -33,7 +35,7 @@ export class Slime {
     const k = KINDS[kind];
     const D = difficulty(zoneId); // moeilijker in elke volgende wereld (zie difficulty.js)
     this.kind = kind;
-    this.king = kind === 'koning';
+    this.king = kind === 'koning' || kind === 'bladkoning';
     this.hp = this.maxHp = Math.round(k.hp * (this.king ? D.bossHp : D.hp));
     this.r = k.size;
     this.speed = k.speed * D.speed;
@@ -261,7 +263,7 @@ export class Slime {
       this.t = 0;
       this.hopping = false;
       this.setSize(1.3, 0.6);
-      game.slam(this.pos.x, this.pos.z, 4.5);
+      game.slam(this.pos.x, this.pos.z, 4.5, this.slamColor, this.slamDamage || 1);
     }
   }
 

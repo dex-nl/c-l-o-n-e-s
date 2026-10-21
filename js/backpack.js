@@ -31,7 +31,7 @@ export function buildBackpack(body, state, hearts, onWear, city = null) {
   if (state.sword) item(stuff, '⚔️', state.sword > 1 ? 'Superzwaard' : 'Zwaard', state.sword > 1 ? 'Goud!' : 'Van Professor Bolt');
   item(stuff, '❤️', 'Hartjes', `${hearts} van ${state.maxHearts}`);
   item(stuff, '💎', 'Kristallen', fmt(state.crystals));
-  if (reached(q, 'aan')) item(stuff, '🧬', 'Clones', `${state.clones} van ${maxClones(q)}`);
+  if (reached(q, 'aan')) item(stuff, '🧬', 'Clones', `${state.clones} van ${maxClones(state)}`);
   if (q.state === 'bezig') item(stuff, '⚙️', 'Tandwielen', `${q.gears.length} van ${GEARS_NEEDED}`);
   if (q.state === 'batterij') item(stuff, '🔋', 'Superbatterij', 'Voor Professor Bolt');
   if (state.mapPieces && state.mapPieces.length && city && city.onMap) {

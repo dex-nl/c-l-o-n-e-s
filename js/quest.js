@@ -4,13 +4,15 @@
 //   Hoofdstuk 2: 'zwaard' (naar het Slijmbos) -> 'grot' (deur open: versla Koning Slijm)
 //                -> 'batterij' (breng hem naar Bolt) -> 'held' (klaar! nu 10 clones)
 //   Hoofdstuk 3: 'woestijn' (laat de 3 zonnestenen schijnen) -> 'piramide' (versla Schorpioen Sjors)
-//                -> 'kaart' (breng het stukje schatkaart naar Bolt) -> 'schat' (wordt vervolgd!)
+//                -> 'kaart' (breng het stukje schatkaart naar Bolt) -> 'schat' (op naar Het Doolhof!)
+//   Hoofdstuk 4: Het Doolhof (de poort verschijnt in de woestijn als Sjors verslagen is)
+//                -> 'kaart2' (stukje 2 gevonden: breng het naar Bolt) -> 'schat2' (wordt vervolgd!)
 export const NPC_NAME = 'Professor Bolt';
 export const GEARS_NEEDED = 3;
 export const TEAM_SIZE = 3; // zoveel clones heb je nodig voordat Bolt over het Slijmbos vertelt
-export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat'];
-export const MAP_PIECES = ['woestijn']; // de stukjes van de schatkaart die er al zijn (er komen er 4)
-export const MAP_PIECES_TOTAL = 4;
+export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat', 'kaart2', 'schat2'];
+export const MAP_PIECES = ['woestijn', 'doolhof']; // de stukjes van de schatkaart die er al zijn (er komen er 10, zie GAME.md)
+export const MAP_PIECES_TOTAL = 10;
 export const SUN_STONE_IDS = ['west', 'oost', 'tempel']; // de zonnestenen in de woestijn (zie desert.js)
 
 // ---------- De klusjes van Burgemeester Bert (De Stad) ----------
@@ -44,10 +46,16 @@ export const cityDoneHint = (state) => `help <b>Burgemeester Bert</b> in De Stad
 
 // Ben je al bij deze stap (of verder)?
 export const reached = (quest, step) => QUEST_ORDER.indexOf(quest.state) >= QUEST_ORDER.indexOf(step);
-export const maxClones = (quest) => (reached(quest, 'held') ? 10 : 5);
+// Hoeveel clones mag je hebben? 5, na Koning Slijm 10, en daarna +1 voor elk stukje schatkaart (max 20).
+export const CLONES_PER_PIECE = 1;
+export const maxClones = (state) => {
+  const q = state.quest || state;
+  if (!reached(q, 'held')) return 5;
+  return 10 + CLONES_PER_PIECE * ((state.mapPieces || []).length);
+};
 
 export function questText(state, zoneId) {
-  const q = state.quest, n = state.clones, max = maxClones(q);
+  const q = state.quest, n = state.clones, max = maxClones(state);
   if (zoneId === 'stad') {
     if (!state.cityGift) return '🎁 Praat met <b>Burgemeester Bert</b> bij de fontein';
     const job = activeJob(state), step = state.jobs ? state.jobs.step : 0, k = `Klusje ${jobsDone(state) + 1} van ${JOBS.length}`;
@@ -95,15 +103,29 @@ export function questText(state, zoneId) {
       if (zoneId === 'woestijn') return '🚪 De piramide is open! Ga naar binnen (helemaal achterin)';
       return '🏜️ Ga naar de <b>Grote Piramide</b> in de woestijn';
     case 'kaart': return '📜 Breng het stukje <b>schatkaart</b> naar <b>Professor Bolt</b>';
-    case 'schat': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
+    case 'schat':
+      if (zoneId === 'doolhof') return mazeText(state);
+      if (zoneId === 'woestijn') return '🌀 Ga door de groene poort naar <b>Het Doolhof</b> (naast de piramide)';
+      if (zoneId === 'piramide') return '🌀 Ga terug naar buiten: daar is een <b>nieuwe poort</b>!';
+      return '🌀 Zoek stukje 2: ga naar <b>Het Doolhof</b> (de nieuwe poort in de woestijn)';
+    case 'kaart2': return '📜 Breng stukje 2 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
+    case 'schat2': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
     default: return `⭐ Held van het dorp! Clones: <b>${n}/${max}</b>. Wat wordt je volgende avontuur?`;
   }
+}
+
+// In het doolhof: hoeveel deuren zijn al open?
+function mazeText(state) {
+  const m = state.maze || {}, open = (m.doors || []).length;
+  if (m.bram) return '📜 Pak het stukje <b>schatkaart</b> in het midden!';
+  if (open >= 3) return '🍃 Ga naar het midden en versla <b>Bladkoning Bram</b>!';
+  return `🍃 Vind de weg naar het midden. Deuren open: <b>${open}/3</b>`;
 }
 
 // Heeft Professor Bolt iets nieuws te vertellen? (dan staat er een ! boven zijn hoofd)
 export function boltHasNews(state) {
   const q = state.quest;
-  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart'
+  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart' || q.state === 'kaart2'
     || (q.state === 'bezig' && q.gears.length >= GEARS_NEEDED)
     || (q.state === 'aan' && state.clones >= TEAM_SIZE);
 }
@@ -121,7 +143,7 @@ export function linesFor(id, state) {
         'Als De Stad klaar is met jou... dan heb ik misschien een nieuw avontuur. Hihi!',
       ];
     }
-    return boltLines(q, clones);
+    return boltLines(q, clones, state);
   }
   if (id === 'koopman') {
     if (!reached(q, 'zwaard')) {
@@ -256,7 +278,7 @@ function cityLines(id, state) {
   }
 }
 
-function boltLines(q, clones) {
+function boltLines(q, clones, state) {
   switch (q.state) {
     case 'nieuw':
       return [
@@ -339,12 +361,28 @@ function boltLines(q, clones) {
       return [
         'Is dat... het stukje van de schatkaart?! Laat eens zien!',
         'Kijk: een piramide, een palmboom... en een stippellijn die verder loopt!',
-        'Dit is stukje 1 van 4. De andere stukjes liggen nog ergens verstopt in de wereld.',
-        'Ik bewaar alles in je rugzak. Wordt vervolgd... Jij bent een echte schattenjager!',
+        'Dit is stukje 1 van 10. De andere stukjes liggen nog ergens verstopt in de wereld.',
+        'En weet je wat? Elk stukje geeft de clonemachine extra kracht: je kunt nu 1 clone meer maken!',
+        'Ik bewaar alles in je rugzak. En kijk: in de woestijn, naast de piramide, staat een NIEUWE poort...',
+        'Hij gaat naar Het Doolhof. Daar ligt stukje 2! Maar pas op: het is daar nog moeilijker. Neem je clones mee!',
       ];
     case 'schat':
       return [
-        'Hoe gaat het met de schatkaart? Nog 3 stukjes te gaan!',
+        'Het Doolhof is groot. Kijk op de kaart: je ziet alleen waar je al geweest bent!',
+        'Er zijn gekleurde deuren. Sta op een knop, dan gaan je clones op de andere knoppen staan.',
+        'Zie je een gele bloem? Raak hem aan, dan wijzen glimmende kristallen je de weg!',
+        'En pas op voor rollende stenen en doornen die uit de grond prikken...',
+      ];
+    case 'kaart2':
+      return [
+        'Stukje 2! Uit het midden van Het Doolhof! Wat ben je knap!',
+        'Kijk: een doolhof met een kruisje in het midden. De stippellijn loopt alweer verder...',
+        'Nu heb je 2 van de 10 stukjes. En de machine kan weer 1 clone meer maken!',
+        'Waar zou stukje 3 liggen? Wordt vervolgd... Jij bent een echte schattenjager!',
+      ];
+    case 'schat2':
+      return [
+        `Hoe gaat het met de schatkaart? Nog ${MAP_PIECES_TOTAL - (state.mapPieces || []).length} stukjes te gaan!`,
         'Ik ben benieuwd waar het volgende stukje ligt... Misschien heeft Dex een idee?',
       ];
     default:

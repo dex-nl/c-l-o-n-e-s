@@ -28,6 +28,10 @@ export const SUN_STONES = [
   { id: 'tempel', name: 'de Vergeten Tempel', x: -43, z: 10 },
 ];
 const OASIS = { x: -17, z: -9, r: 5 };
+// De groene poort naar Het Doolhof (verschijnt als Schorpioen Sjors verslagen is)
+export const MAZE_PORTAL = { x: 21, z: -62 };
+// (geheim: zie GAME.md)
+const PEBBLE = { x: 29.8, z: -18.6 };
 
 function segDist(x, z, [x1, z1, x2, z2]) {
   const dx = x2 - x1, dz = z2 - z1, L = dx * dx + dz * dz;
@@ -84,6 +88,7 @@ export function createDesert(group) {
     { x: PYRAMID.x, z: PYRAMID.z, r: PYRAMID.half + 6 }, { x: OASIS.x, z: OASIS.z, r: OASIS.r + 5 },
     ...SUN_STONES.map((s) => ({ x: s.x, z: s.z, r: 9 })), { x: 0, z: 24, r: 8 },
     { x: 24, z: -12, r: 9 }, { x: -50, z: -58, r: 12 }, { x: 50, z: -58, r: 11 }, { x: 42, z: 14, r: 9 },
+    { x: MAZE_PORTAL.x, z: MAZE_PORTAL.z, r: 6 },
   ];
   const free = (x, z, r) => !avoid.some((a) => Math.hypot(a.x - x, a.z - z) < a.r + r);
 
@@ -416,6 +421,24 @@ export function createDesert(group) {
     camel,
   ];
 
+  // ---------- Een klein steentje ----------
+  const pebM = mat(0x9b8f72, { roughness: 1 });
+  const peb = mesh(new THREE.DodecahedronGeometry(0.2, 0), pebM, PEBBLE.x, 0.13, PEBBLE.z, group);
+  peb.scale.set(1.2, 0.7, 1);
+  const pebble = {
+    id: 'steen-kris', name: 'Klein steentje', voice: 1.3, mesh: peb, pos: peb.position, sign: true, lever: 'kris',
+    lines: ['Een klein steentje... er zijn letters in gekrast:', 'K R I S', '*klik*'],
+    showMarker() {}, update() {},
+    distanceTo(p) { return Math.hypot(p.x - PEBBLE.x, p.z - PEBBLE.z); },
+  };
+  talkables.push(pebble);
+
+  // ---------- De groene poort naar Het Doolhof ----------
+  const mazePortal = makePortal(group, MAZE_PORTAL.x, MAZE_PORTAL.z, 0, 'HET DOOLHOF', '#2d9b4e');
+  mazePortal.group.userData.keep = true;
+  mazePortal.group.visible = false;
+  updaters.push(mazePortal.update);
+
   // ---------- Terug naar het dorp: een regenboogpoort ----------
   const portal = makePortal(group, 0, 29.4, 0, 'HET DORP', '#2d6a4f');
   portal.group.userData.keep = true;
@@ -445,7 +468,8 @@ export function createDesert(group) {
     music: 'woestijn',
     env: { sky: [0x5aa9e6, 0xfbe3b0], fog: [0xf6ddb0, 40, 110], hemi: [0xfff4dc, 0xd9a35a, 1.25], sun: [0xfff0c8, 2.6], cam: [0, 9, 11] },
     stormFog: [0xe2b874, 6, 26],
-    spawns: { fromDorp: { x: 0, z: 22, rot: Math.PI }, fromPiramide: { x: 0, z: DOOR_Z + 3.6, rot: 0 } },
+    spawns: { fromDorp: { x: 0, z: 22, rot: Math.PI }, fromPiramide: { x: 0, z: DOOR_Z + 3.6, rot: 0 }, fromDoolhof: { x: MAZE_PORTAL.x, z: MAZE_PORTAL.z + 3.4, rot: 0 } },
+    mazePortal: { ...MAZE_PORTAL, visible: false }, pebble,
     exit: { x: 0, z: 29.2 },
     door: { x: 0, z: DOOR_Z + 0.9 },
     doorOpen: false,
@@ -473,6 +497,15 @@ export function createDesert(group) {
     mapItems: [{ x: OASIS.x, z: OASIS.z, r: OASIS.r, color: '#4fb3e8' }, { x: PYRAMID.x, z: PYRAMID.z, r: PYRAMID.half, color: '#e9c46a' }],
     update: (t, dt) => updaters.forEach((f) => f(t, dt)),
   };
+  // de doolhofpoort laten zien (of niet)
+  zone.setMazePortal = (yes) => {
+    zone.mazePortal.visible = yes;
+    mazePortal.group.visible = yes;
+    const has = zone.labels.some((l) => l.maze);
+    if (yes && !has) zone.labels.push({ x: MAZE_PORTAL.x, z: MAZE_PORTAL.z + 3, text: 'Het Doolhof', maze: true });
+    if (!yes && has) zone.labels = zone.labels.filter((l) => !l.maze);
+  };
+  zone.setPebbleOn = (on) => { pebM.color.set(on ? 0xc7f9cc : 0x9b8f72); pebM.emissive.set(on ? 0x2d6a4f : 0x000000); };
   // een zonnesteen laten schijnen
   zone.setStoneLit = (s, yes) => {
     s.lit = yes;
@@ -527,7 +560,7 @@ export function createDesert(group) {
   zone.merged = mergeStatic(group, {
     probe: (t) => updaters.forEach((f) => f(t, 0.016)),
     reset: () => updaters.forEach((f) => f(0, 0)),
-    skip: [camel.mesh, door, sand, ...stoneLive, portal.group],
+    skip: [camel.mesh, door, sand, ...stoneLive, portal.group, mazePortal.group, peb],
   });
   zone.collidePoint = (p, r) => collide(p, r, zone);
   return zone;
