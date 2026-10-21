@@ -37,7 +37,7 @@ Het spel van Dex (11 jaar).
 - Versla hem en je krijgt het **1e stukje van de schatkaart** (1 van 4). Breng het naar Professor Bolt. Je kunt de schatkaart altijd bekijken in je **rugzak**. Wordt vervolgd...
 
 ### Clones even weg 👻
-- Vind je je clones soms in de weg lopen? Tik op **👻** rechtsboven (of druk op **H**): je clones zijn even weg (onzichtbaar, ze volgen en vechten niet). Nog een keer (**🧬**) en ze staan meteen weer achter je. Het spel onthoudt het. Werkt overal, ook in je auto.
+- Vind je je clones soms in de weg lopen? Tik op de knop **👻 Clones weg** rechtsboven (naast de kaart; op een iPhone alleen 👻), of druk op **H** (de C is al voor clonen). Je clones zijn even weg: onzichtbaar, ze volgen niet, botsen niet en vechten niet. Nog een keer (**🧬 Clones terug**) en ze staan meteen weer achter je. Maak je een nieuwe clone, dan komen ze ook terug. Het spel onthoudt het. Werkt overal, ook in je auto.
 
 ### Geheim! 🤫 (niet verklappen in het spel)
 - Er is een **geheime code** die je **100 kristallen** geeft, maar één keer per save.

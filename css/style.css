@@ -284,3 +284,12 @@ body.title #hud, body.title #top-btns, body.title #joy-base, body.title #talk-bt
 .code-row input { font-size: 22px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; padding: 10px 14px; border-radius: 12px; border: 3px solid #b08d57; width: min(280px, 60vw); }
 .code-row button { font-size: 22px; padding: 10px 20px; border-radius: 14px; border: 0; background: var(--gold, #ffd23f); color: #2d3142; box-shadow: 0 4px 0 rgba(0,0,0,0.18); }
 .code-msg { font-size: 19px; font-weight: 800; min-height: 26px; }
+
+/* De knop 'Clones weg' / 'Clones terug' (rechtsboven). Op een klein scherm alleen het plaatje. */
+.round.pill { width: auto; padding: 0 14px 0 10px; border-radius: 28px; gap: 6px; display: inline-flex; align-items: center; justify-content: center; }
+.round.pill.hidden { display: none !important; }
+.round.pill .lbl { font-size: 17px; white-space: nowrap; }
+@media (max-height: 500px), (max-width: 900px) {
+  .round.pill { width: 44px; padding: 0; border-radius: 50%; }
+  .round.pill .lbl { display: none; }
+}

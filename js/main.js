@@ -418,7 +418,8 @@ function refresh() {
   }
   const ghost = document.getElementById('ghost-btn');
   ghost.classList.toggle('hidden', !(reached(q, 'aan') && state.clones > 0));
-  ghost.textContent = state.clonesHidden ? '🧬' : '👻';
+  ghost.querySelector('.ico').textContent = state.clonesHidden ? '🧬' : '👻';
+  ghost.querySelector('.lbl').textContent = state.clonesHidden ? 'Clones terug' : 'Clones weg';
   ghost.setAttribute('aria-label', state.clonesHidden ? 'Clones terug' : 'Clones weg');
   ghost.title = state.clonesHidden ? 'Clones terug (H)' : 'Clones weg (H)';
   ghost.classList.toggle('off', !!state.clonesHidden);
