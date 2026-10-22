@@ -1,8 +1,12 @@
-// Dex zijn eigen code (geheim!). De code zelf staat NERGENS in het spel: alleen een "vingerafdruk" (hash).
+// Geheime codes die NERGENS in het spel staan (ook niet in de docs): alleen een "vingerafdruk" (hash).
+// - Dex zijn eigen code (geheim): elke keer +1.000 kristallen
+// - de geheime auto-code: de Wolkenflitser, gratis (zie main.js, giveSecretCar)
 // We maken van wat je intypt (in kleine letters) een SHA-256-hash en vergelijken die.
 // Werkt crypto.subtle niet (bijvoorbeeld zonder https)? Dan gebruiken we een kleine eigen hash (cyrb53).
-const SHA = '84fc133ecc97dfc579e484249fcd0b46718b0867ed19ed9b605f84be9e08fa9b';
-const SMALL = 'dq49n2c7h9';
+const SECRETS = [
+  { id: 'dex', sha: '84fc133ecc97dfc579e484249fcd0b46718b0867ed19ed9b605f84be9e08fa9b', small: 'dq49n2c7h9' },
+  { id: 'auto', sha: '06926a5203efb021c91f58f63ac8b106efecd712b60b8e79473851222ab3dbd6', small: '1ixbj9yrxmk' },
+];
 export const PRIVATE_REWARD = 1000; // elke keer opnieuw
 
 function cyrb53(str, seed = 7) {
@@ -19,15 +23,19 @@ function cyrb53(str, seed = 7) {
   return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
 }
 
-// Is dit Dex zijn eigen code? (hoofdletters maken niet uit)
-export async function isPrivateCode(raw) {
+// Welke geheime code is dit? Geeft 'dex', 'auto' of null (hoofdletters maken niet uit)
+export async function secretCode(raw) {
   const s = String(raw || '').trim().toLowerCase();
-  if (!s) return false;
+  if (!s) return null;
   try {
     if (globalThis.crypto && crypto.subtle) {
       const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s));
-      return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('') === SHA;
+      const hex = [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
+      return SECRETS.find((c) => c.sha === hex)?.id ?? null;
     }
   } catch (e) { /* dan de kleine hash */ }
-  return cyrb53(s) === SMALL;
+  const h = cyrb53(s);
+  return SECRETS.find((c) => c.small === h)?.id ?? null;
 }
+// Is dit Dex zijn eigen code?
+export const isPrivateCode = async (raw) => (await secretCode(raw)) === 'dex';
