@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { mat, makeHat, disposeTree } from './characters.js';
 import { collide } from './physics.js';
+import { difficulty } from './difficulty.js';
 
 const KINDS = {
   groen: { color: 0x7bd389, size: 0.55, hp: 2, speed: 2.6, aggro: 7, loot: 1 },
@@ -10,8 +11,12 @@ const KINDS = {
   koning: { color: 0x4cc96f, size: 1.7, hp: 24, speed: 2.2, aggro: 16, loot: 12 },
   // Mummieslijm (woestijn en piramide): een slijmpje dat in wc-papier is gerold. Sterker dan een blauw slijmpje!
   mummie: { color: 0xf1e3c2, size: 0.62, hp: 4, speed: 3.4, aggro: 9, loot: 2 },
+  // Heggenslijm (doolhof): een slijmpje van bladeren. Taai! Verstopt zich tussen de heggen.
+  heg: { color: 0x2d9b4e, size: 0.66, hp: 4, speed: 3.5, aggro: 9, loot: 3 },
+  // Bladkoning Bram (de baas van het doolhof, zie bram.js)
+  bladkoning: { color: 0x3fa34d, size: 1.9, hp: 36, speed: 2.5, aggro: 18, loot: 20 },
 };
-export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6 };
+export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e, bladkoning: 0x3fa34d };
 const REST = 0.45, HOP = 0.5; // even stilzitten, dan een sprongetje
 
 // Vormen en kleuren die alle slijmpjes delen (scheelt geheugen)
@@ -23,16 +28,18 @@ const shineGeo = new THREE.BoxGeometry(0.2, 0.12, 0.05);
 const white = mat(0xffffff), black = mat(0x1d1d1d), shineM = mat(0xffffff, { emissive: 0x888888 });
 const bandGeo = new THREE.TorusGeometry(0.93, 0.07, 3, 14);
 const bandM = mat(0xfffaf0), sleepyGeo = new THREE.BoxGeometry(0.3, 0.06, 0.08);
+const leafGeo = new THREE.ConeGeometry(0.22, 0.5, 4), leafM = mat(0x55c26b);
 
 export class Slime {
-  constructor(group, x, z, kind = 'groen') {
+  constructor(group, x, z, kind = 'groen', zoneId = null) {
     const k = KINDS[kind];
+    const D = difficulty(zoneId); // moeilijker in elke volgende wereld (zie difficulty.js)
     this.kind = kind;
-    this.king = kind === 'koning';
-    this.hp = this.maxHp = k.hp;
+    this.king = kind === 'koning' || kind === 'bladkoning';
+    this.hp = this.maxHp = Math.round(k.hp * (this.king ? D.bossHp : D.hp));
     this.r = k.size;
-    this.speed = k.speed;
-    this.aggro = k.aggro;
+    this.speed = k.speed * D.speed;
+    this.aggro = k.aggro * D.aggro;
     this.loot = k.loot;
     this.home = { x, z };
     this.group = group;
@@ -70,6 +77,22 @@ export class Slime {
         const lid = new THREE.Mesh(sleepyGeo, bandM);
         lid.position.set(sx, 0.3, 0.97);
         face.add(lid);
+      }
+    }
+    if (kind === 'heg') {
+      // blaadjes bovenop en boze (maar lieve) wenkbrauwen
+      for (let i = 0; i < 5; i++) {
+        const leaf = new THREE.Mesh(leafGeo, leafM);
+        const a = (i / 5) * Math.PI * 2;
+        leaf.position.set(Math.cos(a) * 0.45, 0.85, Math.sin(a) * 0.45);
+        leaf.rotation.set(Math.sin(a) * 0.7, a, Math.cos(a) * 0.7);
+        face.add(leaf);
+      }
+      for (const sx of [-0.32, 0.32]) {
+        const brow = new THREE.Mesh(browGeo, black);
+        brow.position.set(sx, 0.36, 0.93);
+        brow.rotation.z = sx > 0 ? 0.3 : -0.3;
+        face.add(brow);
       }
     }
     const shine = new THREE.Mesh(shineGeo, shineM);
@@ -240,7 +263,7 @@ export class Slime {
       this.t = 0;
       this.hopping = false;
       this.setSize(1.3, 0.6);
-      game.slam(this.pos.x, this.pos.z, 4.5);
+      game.slam(this.pos.x, this.pos.z, 4.5, this.slamColor, this.slamDamage || 1);
     }
   }
 

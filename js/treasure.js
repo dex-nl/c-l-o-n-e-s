@@ -1,12 +1,30 @@
-// De schatkaart van de piraat (uit het boek "De verborgen schat"): 4 stukjes.
+// De schatkaart van de piraat (uit het boek "De verborgen schat"): 10 stukjes.
 // Elk stukje dat je vindt wordt op de kaart getekend. De rest is nog een vraagteken.
-import { MAP_PIECES_TOTAL } from './quest.js';
+// De kaart is 5 stukjes breed en 2 hoog (stukje 1 linksboven, stukje 10 rechtsonder).
+import { MAP_PIECES, MAP_PIECES_TOTAL } from './quest.js';
 
-// Wat staat er op elk stukje? (linksboven, rechtsboven, linksonder, rechtsonder)
-const PIECES = [
-  { id: 'woestijn', name: 'De Grote Woestijn' },
-  { id: null }, { id: null }, { id: null }, // komen nog!
-];
+const NAMES = { woestijn: 'De Grote Woestijn', doolhof: 'Het Doolhof' };
+// Wat staat er op elk stukje? (de stukjes 3 t/m 10 komen nog, zie GAME.md)
+const PIECES = Array.from({ length: MAP_PIECES_TOTAL }, (_, i) => ({ id: MAP_PIECES[i] || null, name: NAMES[MAP_PIECES[i]] }));
+const COLS = 5;
+
+function drawMaze(g, x, y, w, h) {
+  // heg-groen met een kronkelpad naar het midden
+  g.fillStyle = '#6fbf73'; g.fillRect(x + 8, y + 8, w - 16, h - 16);
+  g.strokeStyle = '#2d6a3e'; g.lineWidth = 4;
+  const cx = x + w / 2, cy = y + h / 2;
+  for (let r = 1; r <= 3; r++) {
+    const rw = (w - 20) * r / 7, rh = (h - 20) * r / 7, gap = r * 1.7;
+    g.beginPath(); g.ellipse(cx, cy, rw, rh, 0, gap, gap + Math.PI * 1.65); g.stroke();
+  }
+  // het pad (rode stippellijn) van de rand naar het midden
+  g.strokeStyle = '#c1121f'; g.lineWidth = 3; g.setLineDash([5, 5]);
+  g.beginPath(); g.moveTo(x + 6, y + h * 0.82); g.quadraticCurveTo(x + w * 0.3, y + h * 0.95, cx, cy); g.stroke();
+  g.setLineDash([]);
+  // een kruisje in het midden
+  g.strokeStyle = '#c1121f'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(cx - 6, cy - 6); g.lineTo(cx + 6, cy + 6); g.moveTo(cx + 6, cy - 6); g.lineTo(cx - 6, cy + 6); g.stroke();
+}
 
 function drawDesert(g, x, y, w, h) {
   // zand
@@ -30,9 +48,9 @@ function drawDesert(g, x, y, w, h) {
 export function drawTreasureMap(canvas, pieces) {
   const g = canvas.getContext('2d'), W = canvas.width, H = canvas.height;
   g.clearRect(0, 0, W, H);
-  const pw = W / 2, ph = H / 2;
+  const pw = W / COLS, ph = H / Math.ceil(PIECES.length / COLS);
   PIECES.forEach((p, i) => {
-    const x = (i % 2) * pw, y = Math.floor(i / 2) * ph;
+    const x = (i % COLS) * pw, y = Math.floor(i / COLS) * ph;
     const have = p.id && pieces.includes(p.id);
     // perkament (een beetje scheef afgescheurd)
     g.fillStyle = have ? '#f5e6c4' : 'rgba(120,110,90,0.18)';
@@ -42,11 +60,15 @@ export function drawTreasureMap(canvas, pieces) {
     g.strokeStyle = have ? '#b08d57' : 'rgba(120,110,90,0.5)'; g.lineWidth = 3;
     g.setLineDash(have ? [] : [8, 6]); g.stroke(); g.setLineDash([]);
     if (have && p.id === 'woestijn') drawDesert(g, x, y, pw, ph);
+    if (have && p.id === 'doolhof') drawMaze(g, x, y, pw, ph);
+    g.textAlign = 'center'; g.textBaseline = 'middle';
     if (!have) {
       g.fillStyle = 'rgba(90,80,60,0.6)'; g.font = `bold ${Math.round(ph * 0.4)}px sans-serif`;
-      g.textAlign = 'center'; g.textBaseline = 'middle';
       g.fillText('?', x + pw / 2, y + ph / 2);
     }
+    // het nummer van het stukje (klein, in de hoek)
+    g.fillStyle = have ? '#5c4320' : 'rgba(90,80,60,0.7)'; g.font = `bold ${Math.round(ph * 0.13)}px sans-serif`;
+    g.fillText(String(i + 1), x + 16, y + 18);
   });
 }
 
@@ -57,15 +79,16 @@ export function buildTreasureMap(body, state) {
   p.innerHTML = `Je hebt <b>${pieces.length} van de ${MAP_PIECES_TOTAL}</b> stukjes van de schatkaart van de piraat.`;
   body.appendChild(p);
   const c = document.createElement('canvas');
-  c.width = 480; c.height = 320;
+  c.width = 600; c.height = 280;
   c.className = 'treasure-map';
   c.id = 'treasure-canvas';
   body.appendChild(c);
   drawTreasureMap(c, pieces);
   const n = document.createElement('p');
   n.className = 'panel-note';
-  n.textContent = pieces.includes('woestijn')
-    ? 'Stukje 1: De Grote Woestijn. De rode stippellijn loopt verder... Waar zou het volgende stukje liggen? Wordt vervolgd!'
+  const names = PIECES.map((p, i) => (p.id && pieces.includes(p.id) ? `Stukje ${i + 1}: ${p.name}.` : null)).filter(Boolean);
+  n.textContent = names.length
+    ? `${names.join(' ')} De rode stippellijn loopt verder... Waar zou het volgende stukje liggen?${pieces.length < MAP_PIECES.length ? '' : ' Wordt vervolgd!'}`
     : 'Nog geen stukjes gevonden. Misschien weet Professor Bolt meer...';
   body.appendChild(n);
 }

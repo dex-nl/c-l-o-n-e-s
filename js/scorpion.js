@@ -6,6 +6,7 @@
 import * as THREE from 'three';
 import { mat, disposeTree } from './characters.js';
 import { collide } from './physics.js';
+import { difficulty } from './difficulty.js';
 
 const box = (w, h, d, m, x = 0, y = 0, z = 0) => {
   const o = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), m);
@@ -26,7 +27,8 @@ export class Scorpion {
     this.boss = true;
     this.king = false;
     this.color = 0xf4a259;
-    this.hp = this.maxHp = 30;
+    this.D = difficulty('piramide');
+    this.hp = this.maxHp = Math.round(30 * this.D.bossHp); // (zie difficulty.js)
     this.r = 1.5;
     this.loot = 15;
     this.group = group;
@@ -39,6 +41,8 @@ export class Scorpion {
     this.tailCool = 4;
     this.burrowCool = 0;
     this.angry = false;
+    this.furious = false; // 2e fase (bij 1/3 leven): de grote staartzwaai
+    this.spinCool = 0;
 
     const g = new THREE.Group();
     this.mesh = g;
@@ -182,12 +186,22 @@ export class Scorpion {
       game.spawnSlime(this.pos.x - 3, this.pos.z, 'mummie');
     }
 
+    // Fase 2: bij een derde van zijn leven wordt Sjors HEEL boos: hij zwaait rond met zijn staart
+    if (this.angry && !this.furious && this.hp <= this.maxHp / 3) {
+      this.furious = true;
+      this.spinCool = 0.8;
+      game.spawnSlime(this.pos.x, this.pos.z + 3, 'mummie');
+      game.spawnSlime(this.pos.x, this.pos.z - 3, 'mummie');
+      game.onBossPhase?.(this, '🦂 Sjors wordt HEEL boos! Pas op voor zijn staartzwaai!');
+    }
+    this.spinCool -= dt;
     switch (this.state) {
       case 'wait':
         if (near && this.t > 0.6) { this.state = 'walk'; this.t = 0; }
         break;
       case 'walk': {
         this.face(p.x, p.z, dt, 4);
+        if (this.furious && this.spinCool <= 0 && d < 6) { this.state = 'spin'; this.t = 0; break; }
         if (this.angry && this.burrowCool <= 0 && d > 3) { this.state = 'burrow'; this.t = 0; game.sfx.rumble?.(); break; }
         if (this.tailCool <= 0 && d < 7) { this.state = 'tail'; this.t = 0; break; }
         if (d < this.r + 1.4) { this.state = 'pinch'; this.t = 0; break; }
@@ -228,6 +242,24 @@ export class Scorpion {
           this.state = 'walk'; this.t = 0;
           this.tailBits.forEach((s) => { s.rotation.x = -0.45; });
         }
+        break;
+      }
+      case 'spin': {
+        // eerst knipperen en een rode ring (wegwezen!), dan draait hij 2 keer rond met zijn staart
+        const R = 4.4;
+        if (this.t < 0.9) {
+          this.flash = Math.max(this.flash, Math.sin(this.t * 40) > 0 ? 0.03 : 0);
+          game.showLanding(this.pos.x, this.pos.z, R * Math.min(1, this.t / 0.5));
+          this.tailBits.forEach((s) => { s.rotation.x = -0.2; });
+        } else {
+          game.showLanding(0, 0, 0);
+          this.rot += dt * 14;
+          this.mesh.rotation.y = this.rot;
+          if (!this.spun) { this.spun = true; game.sfx.slam?.(); game.fx.ring(this.pos, R, 0xffb4a2, 0.5); }
+          const p = game.player.pos;
+          if (Math.hypot(p.x - this.pos.x, p.z - this.pos.z) < R) game.hurtPlayer(this.D.bossDamage, this.pos.x, this.pos.z, 18);
+        }
+        if (this.t > 1.8) { this.state = 'walk'; this.t = 0; this.spun = false; this.spinCool = 6; this.tailBits.forEach((s) => { s.rotation.x = -0.45; }); }
         break;
       }
       case 'burrow': {

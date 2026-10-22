@@ -25,14 +25,15 @@ export function buildMap(body, info) {
   g.fillRect(0, 0, W, H);
   // de plek waar je kunt lopen
   g.fillStyle = zone.id === 'piramide' ? '#c9a46a' : zone.id === 'woestijn' ? '#f2d38f' : cave ? '#3b3049' : zone.id === 'bos' ? '#6aa84f' : zone.id === 'stad' ? '#8fcf73' : '#8bd36b';
-  if (B.r) { g.beginPath(); g.arc(px(B.x), pz(B.z), B.r * scale, 0, Math.PI * 2); g.fill(); }
+  if (zone.drawMap) zone.drawMap(g, px, pz, scale); // het doolhof tekent zelf (alleen wat je al gezien hebt)
+  else if (B.r) { g.beginPath(); g.arc(px(B.x), pz(B.z), B.r * scale, 0, Math.PI * 2); g.fill(); }
   else g.fillRect(px(B.minX), pz(B.minZ), (B.maxX - B.minX) * scale, (B.maxZ - B.minZ) * scale);
 
   // muren en rotsen
   g.fillStyle = sand ? '#8d6e3f' : cave ? '#5a4d6b' : '#7d7068';
-  for (const b of zone.boxes) if (!b.off) g.fillRect(px(b.x - b.hw), pz(b.z - b.hd), b.hw * 2 * scale, b.hd * 2 * scale);
+  if (!zone.drawMap) for (const b of zone.boxes) if (!b.off) g.fillRect(px(b.x - b.hw), pz(b.z - b.hd), b.hw * 2 * scale, b.hd * 2 * scale);
   // bomen en gebouwen
-  for (const c of zone.colliders) {
+  if (!zone.drawMap) for (const c of zone.colliders) {
     g.fillStyle = sand ? (c.r < 0.8 ? '#3f8a3a' : '#d9a65e') : c.r < 1.3 ? '#1b4332' : '#e9cf8f';
     g.beginPath(); g.arc(px(c.x), pz(c.z), Math.max(2.5, c.r * scale), 0, Math.PI * 2); g.fill();
   }
@@ -48,7 +49,8 @@ export function buildMap(body, info) {
     g.beginPath(); g.arc(px(x), pz(z), r, 0, Math.PI * 2); g.fill();
     if (stroke) { g.strokeStyle = stroke; g.lineWidth = 2; g.stroke(); }
   };
-  for (const e of info.enemies) if (!e.dead) dot(e.pos.x, e.pos.z, e.king || e.boss ? 10 : 5, '#ff4d6d', '#5c0018');
+  const seen = (x, z) => !zone.isSeen || zone.isSeen(x, z);
+  for (const e of info.enemies) if (!e.dead && seen(e.pos.x, e.pos.z)) dot(e.pos.x, e.pos.z, e.king || e.boss ? 10 : 5, '#ff4d6d', '#5c0018');
   for (const n of info.npcs) dot(n.pos.x, n.pos.z, 6, '#ffd23f', '#7a5c00');
   for (const c of info.clones) dot(c.pos.x, c.pos.z, 4.5, '#7af7ff', '#1b6ca8');
 

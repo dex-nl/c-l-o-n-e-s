@@ -43,14 +43,17 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/desert.js` – De Grote Woestijn (hoofdstuk 3): duinen, cactussen, paden (`PATHS`), oase met Kameel Karel, Sfinx Sam, ruïnes, piramides, de 3 zonnestenen (`SUN_STONES`), de piramidedeur en de zandstorm (`startStorm`/`stopStorm`)
 - `js/pyramid.js` – binnen in de Grote Piramide, ook **getekend met letters** (`MAP`): `#` muur, `.` vloer, `S` Schorpioen Sjors, `m` mummieslijmpje, `t` fakkel, `p` vaas, `c` sarcofaag, `H` oude muur met tekens, `E` ingang
 - `js/scorpion.js` – Schorpioen Sjors, de baas van de piramide (knijpen, staartstamp, ingraven)
-- `js/treasure.js` – de schatkaart in 4 stukjes (getekend op een canvas)
+- `js/treasure.js` – de schatkaart in 10 stukjes (getekend op een canvas; `MAP_PIECES` en `MAP_PIECES_TOTAL` in `quest.js`)
+- `js/maze.js` – Het Doolhof (hoofdstuk 4): wordt **gemaakt met een vast getal** (`buildMazeLayout`, seed 2029; verandert het, dan klopt de route in GAME.md niet meer!). Heggen als InstancedMesh met een doorzicht-shader (`uCut`), 3 deuren met knoppen, kisten, kristalbloemen (`route`/`showTrail`), rotsen, doornen, het geheime kamertje (`setSecretOpen`) en de ontdekte vakjes voor de kaart (`seenHex`/`explore`)
+- `js/bram.js` – Bladkoning Bram, de baas van het doolhof (sprong, doornenkrans, hulpjes roepen, boos bij de helft)
+- `js/difficulty.js` – **alle moeilijkheid op één plek**: `WORLD_LEVEL` per wereld en `difficulty(zone)` (leven, snelheid, baasklap, hartjes). Nieuwe wereld? Geef hem hier een hoger level.
 - `js/cave.js` – de Slijmgrot. **De kerker is getekend met letters** (`MAP`): `#` muur, `.` vloer, `K` Koning Slijm, `s`/`b` slijmpjes, `v` vuurschaal, `E` ingang
 - `js/props.js` – borden, paddenstoelen, vuurvliegjes
 - `js/physics.js` – botsen tegen bomen, huizen en muren
 - `js/player.js`, `js/characters.js` – de speler, de poppetjes, het zwaard en de hoedjes
 - `js/npc.js` – Professor Bolt, Koopman Kees, Oma Pien en Knoeper de hond
 - `js/clones.js` – de clones: volgen, dansen, meevechten, op knoppen staan
-- `js/enemies.js` – de slijmpjes (groen, blauw, mummie) en Koning Slijm
+- `js/enemies.js` – de slijmpjes (groen, blauw, mummie, heg) en Koning Slijm (`KINDS`; leven en snelheid worden geschaald met `difficulty.js`)
 - `js/pickups.js` – kristallen, hartjes, de Superbatterij en het stukje schatkaart
 - `js/effects.js` – confetti, glinsters, stofwolkjes, zwaardboog, schokgolf
 - `js/sound.js` – geluidjes én muziek, gemaakt met de Web Audio API (geen geluidsbestanden). Liedjes staan als noten in `SONGS`
@@ -63,7 +66,7 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/secret.js` – Dex zijn eigen code (geheim) en de geheime auto-code: alleen SHA-256-hashes (met een kleine reserve-hash als `crypto.subtle` er niet is). `secretCode(tekst)` geeft `'dex'`, `'auto'` of `null`. **Schrijf de codes nooit ergens op** (niet in code, docs, tests in de repo, commits, PR's of in het spel)
 - Kickflip en Boost van de Wolkenflitser: `myCar.kickflip()` / `myCar.boost()` in `drive.js` (tijden: `KICKFLIP_*`, `BOOST_*`); knoppen `#flip-btn` / `#boost-btn` in `#fly-btns`, toetsen F en R (alleen in de Wolkenflitser)
 - `js/format.js` – `fmt(n)`: grote getallen met een punt (10.000)
-- `js/save.js` – opslaan en oude saves omzetten (nu versie 7: `jobs` = `{ done, active, step }`, `desertEarly`; versie 6: `mapPieces`, `codes`, `clonesHidden`; `quest.stones` en `quest.bossBeaten` tijdens hoofdstuk 3)
+- `js/save.js` – opslaan en oude saves omzetten (nu versie 8: `maze` = `{ seen, doors, chests, levers, secret, bram }`, codes in `CODE_REWARDS`, max `MAX_CRYSTALS`; versie 7: `jobs` = `{ done, active, step }`, `desertEarly`; versie 6: `mapPieces`, `codes`, `clonesHidden`; `quest.stones` en `quest.bossBeaten` tijdens hoofdstuk 3)
 - `.github/workflows/pages.yml` – zet het spel op GitHub Pages
 
 ## Testen

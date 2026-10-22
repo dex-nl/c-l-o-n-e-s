@@ -48,7 +48,10 @@ button:focus-visible { outline: 4px solid var(--gold); outline-offset: 3px; }
 #stats { display: flex; gap: 14px; align-items: center; padding: 6px 14px; font-size: 22px; }
 #hearts { letter-spacing: 1px; }
 #crystals { font-family: var(--font-title); font-size: 22px; color: #1b6ca8; display: inline-block; }
-#crystals.bump { animation: bump .35s ease-out; }
+#crystals.bump, #clone-count.bump { animation: bump .35s ease-out; }
+#stats { flex-wrap: wrap; row-gap: 2px; }
+#clone-count { font-family: var(--font-title); font-size: 20px; color: #0f7a8a; display: inline-block; white-space: nowrap; }
+#clone-count b { font-weight: inherit; }
 @keyframes bump { 40% { transform: scale(1.35); } }
 
 /* ---------- Rechtsboven: kleine ronde knoppen ---------- */
@@ -270,6 +273,8 @@ body.title #fly-btns { visibility: hidden; }
   #quest { font-size: 15px; padding: 7px 12px; }
   #stats { font-size: 17px; padding: 4px 10px; }
   #crystals { font-size: 17px; }
+  #clone-count { font-size: 16px; }
+  #clone-count .lbl { display: none; } /* iPhone: alleen 🧬 12/20 */
   .round { width: 44px; height: 44px; font-size: 21px; }
   #top-btns { gap: 7px; }
   #joy-base { width: 116px; height: 116px; left: calc(24px + env(safe-area-inset-left)); bottom: calc(20px + env(safe-area-inset-bottom)); }

@@ -7,14 +7,20 @@ import { SHIRTS, TOYS, CANDIES, BOOKS, MAX_CANDY } from './cityshop.js';
 import { CARS } from './autowinkel.js';
 
 export const SAVE_KEY = 'clones-save';
-export const SAVE_VERSION = 7;
-export const SECRET_CODES = ['KRISTAL100']; // geheime codes (zie GAME.md, niet verder vertellen!)
+export const SAVE_VERSION = 8;
+// geheime codes (zie GAME.md, niet verder vertellen!) en hoeveel kristallen ze geven (elke code 1 keer per save)
+export const CODE_REWARDS = { KRISTAL100: 100, KRISTAL100K: 100000 };
+export const SECRET_CODES = Object.keys(CODE_REWARDS);
+export const MAX_CRYSTALS = 9999999;
+export const LEVER_IDS = ['kris', 'tal', '100k']; // de 3 geheime steentjes (zie GAME.md, "Geheim!")
+const MAZE_DOORS = ['rood', 'blauw', 'geel'];
+export const defaultMaze = () => ({ seen: '', doors: [], chests: [], levers: [], secret: false, bram: false });
 export const MAX_HEARTS = 8;
 
 export function defaultSave() {
   return {
     version: SAVE_VERSION,
-    zone: 'dorp',       // 'dorp' | 'bos' | 'grot' | 'stad' | 'woestijn' | 'piramide'
+    zone: 'dorp',       // 'dorp' | 'bos' | 'grot' | 'stad' | 'woestijn' | 'piramide' | 'doolhof'
     player: { x: 0, z: 5, rot: Math.PI },
     quest: { state: 'nieuw', gears: [] }, // zie quest.js voor alle stappen
     clones: 0,          // hoeveel clones je hebt gemaakt
@@ -41,6 +47,8 @@ export function defaultSave() {
     clonesHidden: false, // clones even weg (👻-knop)
     // Versie 7: de klusjes van Burgemeester Bert (na alle klusjes is De Stad uitgespeeld)
     jobs: { done: [], active: null, step: 0 },
+    // Versie 8: Het Doolhof (welke vakjes je al gezien hebt, open deuren, open kistjes, geheime steentjes, Bram verslagen?)
+    maze: defaultMaze(),
   };
 }
 
@@ -90,8 +98,14 @@ export function migrate(data) {
     if (hadPortal) data.desertEarly = true;
     v = 7;
   }
+  if (v === 7) {
+    // Versie 8: Het Doolhof en een schatkaart van 10 stukjes. Stukjes, kristallen en clones blijven hetzelfde
+    // (en je mag nu 1 clone meer per stukje: dat rekent maxClones() vanzelf uit).
+    data = { ...data, maze: defaultMaze(), version: 8 };
+    v = 8;
+  }
   // Voorbeeld voor later:
-  // if (v === 7) { data.huisdier = null; data.version = 8; v = 8; }
+  // if (v === 8) { data.huisdier = null; data.version = 9; v = 9; }
 
   // Vul ontbrekende velden aan en controleer of alles klopt.
   delete data._desertForced; // alleen voor testen, niet bewaren
@@ -111,6 +125,21 @@ export function migrate(data) {
   else delete quest.stones;
   let mapPieces = Array.isArray(data.mapPieces) ? [...new Set(data.mapPieces.filter((id) => MAP_PIECES.includes(id)))] : [];
   if (reached(quest, 'kaart') && !mapPieces.includes('woestijn')) mapPieces.push('woestijn');
+  if (reached(quest, 'kaart2') && !mapPieces.includes('doolhof')) mapPieces.push('doolhof');
+  if (!reached(quest, 'kaart')) mapPieces = mapPieces.filter((id) => id !== 'doolhof');
+  // stukje 2 gevonden voordat Bolt stukje 1 zag? Dan gaat het verhaal gewoon verder
+  if (mapPieces.includes('doolhof') && quest.state === 'schat') quest.state = 'kaart2';
+  // het doolhof
+  const rm = data.maze && typeof data.maze === 'object' ? data.maze : {};
+  const strs = (list, ok) => (Array.isArray(list) ? [...new Set(list.filter(ok))] : []);
+  const maze = {
+    seen: typeof rm.seen === 'string' && /^[0-9a-f]*$/.test(rm.seen) ? rm.seen.slice(0, 64) : '',
+    doors: strs(rm.doors, (d) => MAZE_DOORS.includes(d)),
+    chests: strs(rm.chests, (id) => typeof id === 'string' && /^kist\d{1,2}$/.test(id)),
+    levers: strs(rm.levers, (id) => LEVER_IDS.includes(id)),
+    secret: false, bram: rm.bram === true || mapPieces.includes('doolhof'),
+  };
+  maze.secret = rm.secret === true || maze.levers.length === LEVER_IDS.length;
   const codes = Array.isArray(data.codes) ? [...new Set(data.codes.filter((c) => SECRET_CODES.includes(c)))] : [];
   // klusjes: altijd op volgorde, en pas na het welkomstcadeautje van Bert
   const rawJobs = data.jobs && typeof data.jobs === 'object' ? data.jobs : {};
@@ -124,10 +153,11 @@ export function migrate(data) {
   }
   if (data.cityGift !== true) { jobs.done = []; jobs.active = null; jobs.step = 0; }
   const int = (n, lo, hi, d) => (Number.isInteger(n) ? Math.min(Math.max(n, lo), hi) : d);
-  const clones = reached(quest, 'aan') ? int(data.clones, 0, maxClones(quest), 0) : 0;
-  let zone = ['dorp', 'bos', 'grot', 'stad', 'woestijn', 'piramide'].includes(data.zone) ? data.zone : 'dorp';
+  const clones = reached(quest, 'aan') ? int(data.clones, 0, maxClones({ quest, mapPieces }), 0) : 0;
+  let zone = ['dorp', 'bos', 'grot', 'stad', 'woestijn', 'piramide', 'doolhof'].includes(data.zone) ? data.zone : 'dorp';
   if ((zone === 'bos' && !reached(quest, 'zwaard')) || (zone === 'grot' && !reached(quest, 'grot'))) zone = 'dorp';
   if ((zone === 'woestijn' && !reached(quest, 'woestijn')) || (zone === 'piramide' && !reached(quest, 'piramide'))) zone = 'dorp';
+  if (zone === 'doolhof' && !reached(quest, 'kaart')) zone = 'dorp';
   let sword = int(data.sword, 0, 2, 0);
   if (reached(quest, 'zwaard')) sword = Math.max(sword, 1);
   const hats = Array.isArray(data.hats) ? data.hats.filter((h) => h in HAT_NAMES) : [];
@@ -142,9 +172,9 @@ export function migrate(data) {
   return {
     ...data, version: Math.max(v, SAVE_VERSION), zone, player, quest, clones, sword, hats, hat,
     shirts, shirt, toys, books, candy, cityGift: data.cityGift === true, cars, car,
-    mapPieces, codes, clonesHidden: data.clonesHidden === true, jobs,
+    mapPieces, codes, clonesHidden: data.clonesHidden === true, jobs, maze,
     sound: data.sound !== false, music: data.music !== false,
-    crystals: int(data.crystals, 0, 99999, 0), maxHearts: int(data.maxHearts, 5, MAX_HEARTS, 5),
+    crystals: int(data.crystals, 0, MAX_CRYSTALS, 0), maxHearts: int(data.maxHearts, 5, MAX_HEARTS, 5),
   };
 }
 

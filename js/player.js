@@ -23,7 +23,10 @@ export class Player {
   }
 
   setPosition(x, z, rot = 0) {
-    this.pos.set(x, 0, z);
+    // nooit een kapotte plek (NaN/null): dan blijf je gewoon staan
+    const ok = (v, alt) => (Number.isFinite(v) ? v : Number.isFinite(alt) ? alt : 0);
+    this.pos.set(ok(x, this.pos.x), 0, ok(z, this.pos.z));
+    rot = ok(rot, this.rot);
     this.rot = rot;
     this.mesh.rotation.y = rot;
     this.kx = this.kz = 0;
