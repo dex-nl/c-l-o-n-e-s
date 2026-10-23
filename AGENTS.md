@@ -20,7 +20,7 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - Gaat er iets stuk? Ga terug naar een **eerdere commit**.
 
 ## Het spel
-- Spelen op de **iPad, liggend**: aanraakbediening (joystick links, grote Praat-knop rechts, tikken op personages), een hint als het scherm rechtop staat, en een **manifest + icoon** zodat "Zet op beginscherm" het spel beeldvullend opent.
+- Spelen op de **iPad, liggend**: aanraakbediening (joystick links, grote Praat-knop rechts, tikken op personages), een hint als het scherm rechtop staat, en een **manifest + iconen + service worker** zodat "Zet op beginscherm" (Safari > Deel-knop) het spel als app beeldvullend opent. Nieuwe knoppen of panelen aan de rand? Gebruik `env(safe-area-inset-*)` (notch en home-balk op de iPhone).
 - Ook te spelen met het toetsenbord (WASD/pijltjes, E/spatie, C, M, B, H).
 - Soort spel: avontuur in een wereld (zoals Zelda of Pokémon).
 - Stijl: **low-poly 3D** met echte schaduwen, golvend water en dingen die bewegen.
@@ -29,6 +29,8 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 ## Bestanden
 - `index.html` – de pagina, laadt Three.js via de CDN (en twee lettertypes van Google Fonts)
 - `css/style.css` – knoppen, praatwolk, opdracht, panelen, startscherm
+- `manifest.webmanifest`, `icons/` – de app voor op het beginscherm. Iconen opnieuw maken: `python3 icons/maak_iconen.py` (Pillow; zelf getekend, geen plaatjes van anderen)
+- `sw.js` + `js/pwa.js` – service worker: **altijd eerst internet** (eigen bestanden met `cache: 'no-cache'`), cache alleen als je offline bent. Bewaart ook Three.js/PeerJS/lettertypes (jsdelivr, Google Fonts); andere sites (de PeerJS-server) blijven met rust. Verander je wat in `sw.js` zelf? Verhoog dan `CACHE` (`clones-v1` → `clones-v2`)
 - `js/main.js` – start het spel, de zones, de spel-lus, praten, vechten, clonen
 - `js/world.js` – het dorp, de vijver, de poorten (Slijmbos, De Stad en De Grote Woestijn), de kraam en de clonemachine
 - `js/forest.js` – het Slijmbos, de grotdeur en de 3 drukknoppen

@@ -364,3 +364,13 @@ body.title #fly-btns { visibility: hidden; }
   .coop-code { font-size: 36px; padding: 4px 10px; }
   .coop-choice { font-size: 18px; padding: 10px 16px; min-height: 48px; }
 }
+
+/* ---------- App op het beginscherm (iPhone/iPad) ---------- */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+button, img, canvas { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; -webkit-user-drag: none; }
+input, textarea { -webkit-user-select: text; user-select: text; touch-action: manipulation; }
+#start, #rotate-hint, #error {
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  box-sizing: border-box;
+}
+#error { padding: max(30px, env(safe-area-inset-top)) max(30px, env(safe-area-inset-right)) max(30px, env(safe-area-inset-bottom)) max(30px, env(safe-area-inset-left)); }

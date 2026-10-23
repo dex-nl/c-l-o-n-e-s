@@ -143,3 +143,11 @@
 - Niet in het doolhof en niet in de Grote Piramide: dat blijft lopen (anders is het te makkelijk). De woestijn blijft moeilijk: de zonnestenen en Sjors doe je nog steeds te voet, en de zandstorm blaast je auto opzij.
 - Bomen, cactussen, duinen, zuilen en piramides hebben nu een hoogte, zodat je over kleine dingen heen vliegt maar niet over de rotswand of de piramides.
 - De save is niet veranderd (nog steeds versie 8).
+
+## 23 oktober 2026: Als app op de iPhone (wens van de oom van Dex)
+- Gemaakt met een AI-helper op de tak `app-op-iphone`. **Dex of papa beslist of het erin komt.**
+- Via Safari > **Deel-knop** > **Zet op beginscherm** wordt C.L.O.N.E.S een app: beeldvullend, liggend, met een nieuw low-poly icoontje (3 clones en een kristal, zelf getekend met code: `icons/maak_iconen.py`).
+- Knoppen en tekst blijven buiten de camera-hoek en het streepje onderin (ook rechtop: de draai-hint zegt nu "Draai je scherm!").
+- Nieuw: een service worker (`sw.js`). Die haalt altijd eerst de nieuwste versie van internet; alleen zonder internet pakt hij de bewaarde kopie. Zo werkt het spel ook offline.
+- De app op het beginscherm heeft een eigen save (los van Safari). De save is niet veranderd (nog steeds versie 8).
+- Getest op de computer in iPhone-formaat (liggend en rechtop), iPad-formaat en MacBook-formaat, ook zonder internet. Nog niet getest op een echte iPhone.

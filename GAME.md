@@ -159,6 +159,12 @@ Het spel van Dex (11 jaar).
 - Praatwolken worden letter voor letter getypt, en iedereen heeft een eigen stemmetje.
 - Het spel slaat je voortgang vanzelf op.
 
+### Als app op je iPhone of iPad 📱
+- Open [de speel-link](https://dex-nl.github.io/c-l-o-n-e-s/) in **Safari**, tik op de **Deel-knop** (vierkantje met pijltje omhoog) en kies **Zet op beginscherm**. Dan staat C.L.O.N.E.S als app tussen je andere apps, met een eigen icoontje (3 clones en een kristal).
+- Tik je op het icoontje, dan opent het spel over het hele scherm, zonder adresbalk. Knoppen blijven weg van de camera-hoek en het streepje onderin.
+- Updates komen er vanzelf in: de app kijkt elke keer of er een nieuwe versie is. Geen internet? Dan start het spel toch (samen spelen werkt dan niet).
+- **Let op:** de app op het beginscherm heeft een **eigen save**, los van Safari. Je begint daar dus opnieuw (je voortgang in Safari blijft gewoon bewaard).
+
 ## Besturing
 - **iPad:** sleep met je vinger op de linkerkant van het scherm om te lopen. De grote knop rechts is **Praat** (bij iemand), **Lees** (bij een bord) of **⚔️** (zwaard). Bij de machine: druk op **Clone!**
 - **Samen spelen:** tik op **🤝** rechtsboven.
