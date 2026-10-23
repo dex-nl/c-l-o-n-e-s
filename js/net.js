@@ -12,7 +12,7 @@ export const PEERJS_URL = 'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs
 export const PEER_PREFIX = 'clones-dex-'; // zo botsen we niet met andere spellen op de PeerJS-server
 export const MAX_PLAYERS = 4;
 export const SEND_HZ = 10;
-const JOIN_TIMEOUT = 12000;
+const JOIN_TIMEOUT = 20000;
 // Kindvriendelijke codes: een woordje en 4 cijfers, bijvoorbeeld BOS-4821
 const WORDS = ['BOS', 'ZON', 'MAAN', 'KAT', 'UIL', 'VOS', 'BIJ', 'EEND', 'HAAI', 'ROOS', 'STER', 'WOLK', 'BEER', 'VIS'];
 export const PLAYER_COLORS = [0xff8c42, 0xff595e, 0x8ac926, 0xb15eff]; // speler 1 (host), 2, 3, 4
@@ -32,6 +32,7 @@ export const peerIdFor = (code) => PEER_PREFIX + code.toLowerCase();
 
 let peerLib = null;
 function loadPeerJS() {
+  if (window.__clonesTestPeer) return Promise.resolve(window.__clonesTestPeer); // alleen voor de tests (nep-netwerk)
   if (window.Peer) return Promise.resolve(window.Peer);
   if (peerLib) return peerLib;
   peerLib = new Promise((ok, fail) => {
@@ -142,7 +143,8 @@ export function createNet({ scene, zones, getLocal, onChange, onToast }) {
     slot: 0,
     error: '',
     remotes: new Map(), // slot -> Remote
-    get friends() { return [...this.remotes.values()].filter((r) => r.target).length; },
+    // hoeveel anderen doen mee? (de host weet het meteen; een vriend zodra hij van iemand iets hoort)
+    get friends() { return this.mode === 'host' ? conns.size : [...this.remotes.values()].filter((r) => r.target).length; },
   };
   let peer = null, hostConn = null, sendT = 0, joinTimer = null;
   const conns = new Map(); // (host) slot -> conn
@@ -229,15 +231,21 @@ export function createNet({ scene, zones, getLocal, onChange, onToast }) {
     try { Peer = await loadPeerJS(); } catch (e) { fail('Samen spelen lukt nu niet (geen internet?)'); return; }
     if (net.mode !== 'join') return;
     peer = new Peer();
-    joinTimer = setTimeout(() => { if (net.status !== 'verbonden') fail('Code niet gevonden'); }, JOIN_TIMEOUT);
+    joinTimer = setTimeout(() => {
+      if (net.status === 'verbonden') return;
+      net.lastError = 'timeout ' + net.status;
+      // de code is wel gevonden, maar de computers komen niet bij elkaar (bijvoorbeeld een streng wifi-netwerk)
+      fail(net.status === 'verbinden' ? 'Verbinden lukt niet. Probeer het nog eens, of een ander wifi-netwerk.' : 'Code niet gevonden');
+    }, JOIN_TIMEOUT);
     peer.on('error', (err) => {
+      net.lastError = err && err.type; // (handig bij testen)
       if (err && err.type === 'peer-unavailable') { fail('Code niet gevonden'); return; }
       if (net.status === 'verbonden') return;
       fail('Samen spelen lukt nu niet. Probeer het later nog eens.');
     });
     peer.on('open', () => {
       net.status = 'verbinden'; changed();
-      hostConn = peer.connect(peerIdFor(code), { reliable: true });
+      hostConn = peer.connect(peerIdFor(code), { reliable: true, serialization: 'json' });
       hostConn.on('data', (d) => {
         if (!d || typeof d !== 'object') return;
         if (d.t === 'welkom' && Number.isInteger(d.slot) && d.slot > 0 && d.slot < MAX_PLAYERS) {
@@ -256,6 +264,7 @@ export function createNet({ scene, zones, getLocal, onChange, onToast }) {
       });
       hostConn.on('close', () => {
         if (net.mode !== 'join') return;
+        net.lastError = 'close';
         const was = net.status === 'verbonden';
         fail(was ? 'De verbinding is weg. Maak een nieuwe code of probeer opnieuw.' : 'Code niet gevonden');
         if (was) onToast && onToast('📴 De verbinding is weg.');
