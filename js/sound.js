@@ -170,6 +170,15 @@ const SONGS = {
       'B5 ~ ~ A5 G5 ~ F5 ~', 'F5 ~ ~ ~ E5 ~ ~ ~', 'C5 ~ E5 ~ A5 ~ G#5 ~', 'E5 ~ ~ ~ - - - -',
     ],
   },
+  // De Vulkaan: snel en spannend (met Bb erin klinkt het heet en gevaarlijk)
+  vulkaan: {
+    bpm: 132, lead: 'square', drums: true, busyBass: true,
+    chords: ['Dm', 'Eb', 'Dm', 'C', 'Dm', 'Eb', 'F', 'A'],
+    melody: [
+      'D5 - D5 F5 A5 ~ G5 F5', 'Eb5 ~ G5 ~ Bb5 ~ G5 ~', 'D5 - F5 - A5 - D6 ~', 'C6 ~ A5 ~ G5 ~ E5 ~',
+      'F5 - F5 A5 D6 ~ C6 A5', 'Bb5 ~ G5 ~ Eb5 ~ G5 ~', 'A5 ~ F5 ~ C5 ~ F5 ~', 'E5 ~ C#5 ~ A4 ~ - -',
+    ],
+  },
   baas: {
     bpm: 150, lead: 'square', drums: true, busyBass: true,
     chords: ['Em', 'C', 'D', 'B', 'Em', 'C', 'D', 'B'],

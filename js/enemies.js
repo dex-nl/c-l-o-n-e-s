@@ -15,8 +15,10 @@ const KINDS = {
   heg: { color: 0x2d9b4e, size: 0.66, hp: 4, speed: 3.5, aggro: 9, loot: 3 },
   // Bladkoning Bram (de baas van het doolhof, zie bram.js)
   bladkoning: { color: 0x3fa34d, size: 1.9, hp: 36, speed: 2.5, aggro: 18, loot: 20 },
+  // Lavamonster (vulkaan): een gloeiend slijmpje met stukjes steen erop. Heet en taai!
+  lava: { color: 0xff6a1f, size: 0.7, hp: 4, speed: 3.4, aggro: 9, loot: 3, glow: 0x7a1d00 },
 };
-export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e, bladkoning: 0x3fa34d };
+export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e, bladkoning: 0x3fa34d, lava: 0xff6a1f };
 const REST = 0.45, HOP = 0.5; // even stilzitten, dan een sprongetje
 
 // Vormen en kleuren die alle slijmpjes delen (scheelt geheugen)
@@ -29,6 +31,7 @@ const white = mat(0xffffff), black = mat(0x1d1d1d), shineM = mat(0xffffff, { emi
 const bandGeo = new THREE.TorusGeometry(0.93, 0.07, 3, 14);
 const bandM = mat(0xfffaf0), sleepyGeo = new THREE.BoxGeometry(0.3, 0.06, 0.08);
 const leafGeo = new THREE.ConeGeometry(0.22, 0.5, 4), leafM = mat(0x55c26b);
+const crustGeo = new THREE.DodecahedronGeometry(0.28, 0), crustM = mat(0x3b2a26, { roughness: 1 });
 
 export class Slime {
   constructor(group, x, z, kind = 'groen', zoneId = null) {
@@ -46,6 +49,8 @@ export class Slime {
 
     this.mesh = new THREE.Group();
     this.bodyM = mat(k.color, { transparent: true, opacity: 0.9, roughness: 0.35 });
+    this.glow = k.glow || 0; // lavamonsters gloeien een beetje
+    if (this.glow) this.bodyM.emissive.setHex(this.glow);
     this.body = new THREE.Mesh(bodyGeo, this.bodyM);
     this.body.castShadow = true;
     this.mesh.add(this.body);
@@ -92,6 +97,20 @@ export class Slime {
         const brow = new THREE.Mesh(browGeo, black);
         brow.position.set(sx, 0.36, 0.93);
         brow.rotation.z = sx > 0 ? 0.3 : -0.3;
+        face.add(brow);
+      }
+    }
+    if (kind === 'lava') {
+      // stukjes afgekoelde lava bovenop en boze (maar lieve) wenkbrauwen
+      [[0, 0.95, 0], [0.45, 0.7, -0.2], [-0.5, 0.65, 0.1], [0.1, 0.6, -0.6]].forEach(([x, y, z], i) => {
+        const c = new THREE.Mesh(crustGeo, crustM);
+        c.position.set(x, y, z); c.rotation.set(i, i * 2, 0);
+        face.add(c);
+      });
+      for (const sx of [-0.32, 0.32]) {
+        const brow = new THREE.Mesh(browGeo, black);
+        brow.position.set(sx, 0.36, 0.93);
+        brow.rotation.z = sx > 0 ? 0.35 : -0.35;
         face.add(brow);
       }
     }
@@ -164,7 +183,8 @@ export class Slime {
     this.invuln = Math.max(0, this.invuln - dt);
     if (this.flash > 0) {
       this.flash = Math.max(0, this.flash - dt);
-      this.bodyM.emissive.setScalar(this.flash > 0 ? 0.9 : 0);
+      if (this.flash > 0) this.bodyM.emissive.setScalar(0.9);
+      else this.bodyM.emissive.setHex(this.glow);
     }
 
     if (this.jump) this.updateJump(dt, game);
