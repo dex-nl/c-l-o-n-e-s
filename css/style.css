@@ -344,3 +344,23 @@ body.title #fly-btns { visibility: hidden; }
   .job-name { font-size: 15px; } .job-info { font-size: 12px; }
   .jobs-progress { font-size: 15px; margin: 0 0 6px; }
 }
+
+/* ---------- Samen spelen ---------- */
+#coop-status { padding: 6px 14px; font-size: 18px; font-weight: 800; color: #1d6f42; white-space: nowrap; }
+#coop-btn.on { background: #c7f9cc; }
+.coop-row { display: flex; gap: 14px; flex-wrap: wrap; margin: 10px 0; }
+.coop-choice { font-family: var(--font-title, inherit); font-size: 22px; padding: 16px 22px; min-height: 60px; border-radius: 18px; border: 0; background: #ffd23f; color: #2d3142; box-shadow: 0 5px 0 rgba(0,0,0,0.18); cursor: pointer; }
+.coop-choice:active { transform: translateY(3px); box-shadow: 0 2px 0 rgba(0,0,0,0.18); }
+.coop-choice.enter { background: #9bf6ff; }
+.coop-choice.stop { background: #ffadad; margin-top: 12px; font-size: 18px; padding: 12px 18px; min-height: 48px; }
+.coop-choice.back { background: #e9ecef; font-size: 17px; padding: 10px 16px; min-height: 44px; margin-top: 6px; }
+.coop-code { font-family: var(--font-title, inherit); font-size: 52px; letter-spacing: 4px; text-align: center; background: #fff8e1; border: 4px dashed #ffb703; border-radius: 18px; padding: 8px 12px; margin: 6px 0 10px; color: #2d3142; user-select: all; }
+.coop-list { display: flex; gap: 10px; flex-wrap: wrap; margin: 8px 0; }
+.coop-player { font-weight: 800; font-size: 18px; padding: 6px 12px; border: 4px solid #999; border-radius: 20px; background: #fff; }
+.coop-err { color: #c1121f; font-weight: 800; }
+.panel-note.small { font-size: 15px; opacity: 0.85; }
+@media (max-height: 500px) {
+  #coop-status { font-size: 14px; padding: 4px 10px; }
+  .coop-code { font-size: 36px; padding: 4px 10px; }
+  .coop-choice { font-size: 18px; padding: 10px 16px; min-height: 48px; }
+}
