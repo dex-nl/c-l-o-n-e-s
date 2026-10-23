@@ -62,7 +62,7 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/controls.js` – joystick, knoppen en toetsenbord
 - `js/ui.js` – praatwolk (letter voor letter), hartjes, meldingen, panelen, startscherm
 - `js/jobs.js` – de klusjes in De Stad die je ziet: Eendje Ed, het pakje, de bril van Opa Duif en de poortjes voor het rondje (`JOB_SPOTS`)
-- `js/drive.js` – je eigen auto rijden, en vliegen met de Wolkenflitser (`fly()`, plafond `FLY_CEILING` in `autowinkel.js`). Voor vliegen hebben botsdingen een hoogte `h` (bomen, huizen, winkels, flats); zonder `h` telt 1,5 m. Daken en gevels in de lucht staan in `zone.airBoxes` (`low`..`h`)
+- `js/drive.js` – je eigen auto rijden (de Wolkenflitser ook in het bos en de woestijn: `WOLK_ZONES` in `main.js`, de auto verhuist met `myCar.attach`), en vliegen met de Wolkenflitser (`fly()`, plafond `FLY_CEILING` in `autowinkel.js`). Voor vliegen hebben botsdingen een hoogte `h` (bomen, huizen, winkels, flats); zonder `h` telt 1,5 m. Daken en gevels in de lucht staan in `zone.airBoxes` (`low`..`h`)
 - `js/secret.js` – Dex zijn eigen code (geheim) en de geheime auto-code: alleen SHA-256-hashes (met een kleine reserve-hash als `crypto.subtle` er niet is). `secretCode(tekst)` geeft `'dex'`, `'auto'` of `null`. **Schrijf de codes nooit ergens op** (niet in code, docs, tests in de repo, commits, PR's of in het spel)
 - Kickflip en Boost van de Wolkenflitser: `myCar.kickflip()` / `myCar.boost()` in `drive.js` (tijden: `KICKFLIP_*`, `BOOST_*`); knoppen `#flip-btn` / `#boost-btn` in `#fly-btns`, toetsen F en R (alleen in de Wolkenflitser)
 - `js/format.js` – `fmt(n)`: grote getallen met een punt (10.000)

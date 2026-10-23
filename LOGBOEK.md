@@ -127,3 +127,10 @@
 - De camera kijkt door de heggen heen, zodat je jezelf altijd ziet. Snel genoeg: de heggen worden in één keer getekend.
 - Save naar versie 8 (wat je in het doolhof hebt gedaan). Oude saves blijven werken (getest met versie 6, 7 en rare saves).
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
+
+## 21 oktober 2026: De Wolkenflitser ook in het bos en de woestijn (wens van Dex)
+- Gemaakt met een AI-helper op de tak `wolkenflitser-overal`. **Dex of papa beslist of het erin komt.**
+- Heb je de Wolkenflitser, dan staat hij nu ook in het Slijmbos en in de woestijn klaar. Rijden, vliegen, kickflip en boost werken daar ook.
+- Niet in het doolhof en niet in de Grote Piramide: dat blijft lopen (anders is het te makkelijk). De woestijn blijft moeilijk: de zonnestenen en Sjors doe je nog steeds te voet, en de zandstorm blaast je auto opzij.
+- Bomen, cactussen, duinen, zuilen en piramides hebben nu een hoogte, zodat je over kleine dingen heen vliegt maar niet over de rotswand of de piramides.
+- De save is niet veranderd (nog steeds versie 8).
