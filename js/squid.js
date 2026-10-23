@@ -63,7 +63,7 @@ export class Squid {
     smile.rotation.z = Math.PI; smile.position.set(0, 0.05, 1.32); this.rig.add(smile);
     // een strik op haar kop
     for (const s of [-1, 1]) { const b = new THREE.Mesh(new THREE.ConeGeometry(0.35, 0.7, 4), bow); b.position.set(s * 0.4, 2.95, 0.6); b.rotation.z = s * Math.PI / 2; this.rig.add(b); }
-    this.rig.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), bow), { position: new THREE.Vector3(0, 2.95, 0.62) }));
+    { const knot = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), bow); knot.position.set(0, 2.95, 0.62); this.rig.add(knot); }
     // 8 tentakels (elk 4 stukjes)
     this.arms = [];
     for (let i = 0; i < 8; i++) {

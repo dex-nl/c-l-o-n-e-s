@@ -9,6 +9,7 @@ export class Controls {
     this.base = base; this.knob = knob;
     this.onAction = onAction; this.onClone = onClone; this.onTap = onTap;
     this.flyMode = false;          // aan als je in de vliegende auto zit
+    this.swimMode = false;         // aan als je onder water zwemt (R = omhoog, F of Shift = omlaag)
     this.flyBtn = { up: false, down: false };
 
     // Toetsenbord
@@ -91,6 +92,10 @@ export class Controls {
   // Geeft de beweging terug: x = links/rechts, y = vooruit/achteruit (-1..1)
   // Omhoog (1), omlaag (-1) of niks (0) voor de vliegende auto
   get lift() {
+    if (this.swimMode && !this.flyMode) {
+      const k = this.keys;
+      return ((k.has('r') || this.flyBtn.up) ? 1 : 0) - ((k.has('f') || k.has('shift') || this.flyBtn.down) ? 1 : 0);
+    }
     if (!this.flyMode) return 0;
     return ((this.keys.has(' ') || this.flyBtn.up) ? 1 : 0) - ((this.keys.has('shift') || this.flyBtn.down) ? 1 : 0);
   }
