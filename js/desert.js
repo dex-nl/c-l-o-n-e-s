@@ -141,9 +141,10 @@ export function createDesert(group) {
     // botsen: een paar cirkels over de lengte van de duin
     const ax = Math.sin(ry), az = Math.cos(ry), r = Math.min(sx, sz) * 0.8;
     const len = Math.max(0, (sz - sx)) * 0.6, len2 = Math.max(0, (sx - sz)) * 0.6;
-    colliders.push({ x, z, r });
-    if (len > 0.5) colliders.push({ x: x + ax * len, z: z + az * len, r: r * 0.85 }, { x: x - ax * len, z: z - az * len, r: r * 0.85 });
-    if (len2 > 0.5) colliders.push({ x: x + az * len2, z: z - ax * len2, r: r * 0.85 }, { x: x - az * len2, z: z + ax * len2, r: r * 0.85 });
+    const h = sy + 0.2; // (voor de Wolkenflitser: over een duin kun je heen vliegen)
+    colliders.push({ x, z, r, h });
+    if (len > 0.5) colliders.push({ x: x + ax * len, z: z + az * len, r: r * 0.85, h }, { x: x - ax * len, z: z - az * len, r: r * 0.85, h });
+    if (len2 > 0.5) colliders.push({ x: x + az * len2, z: z - ax * len2, r: r * 0.85, h }, { x: x - az * len2, z: z + ax * len2, r: r * 0.85, h });
   }
   const duneGeo = new THREE.SphereGeometry(1, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2);
   instanced(group, duneGeo, mat(0xffffff), dunes);
@@ -167,7 +168,7 @@ export function createDesert(group) {
     const s = 0.7 + rand() * 0.7;
     if (pathDist(x, z) < 2.6 || !free(x, z, 1) || colliders.some((c) => Math.hypot(c.x - x, c.z - z) < c.r + 0.8)) continue;
     cacti.push({ x, z, ry: rand() * 6, s, color: rand() < 0.5 ? 0xffffff : 0xdff5d0 });
-    colliders.push({ x, z, r: 0.42 * s });
+    colliders.push({ x, z, r: 0.42 * s, h: 2.4 * s });
   }
   // nog meer cactussen buiten de rand (alleen om naar te kijken)
   for (let i = 0; i < 70; i++) {
@@ -211,7 +212,7 @@ export function createDesert(group) {
       c.rotation.y = Math.PI / 4;
     }
     group.add(g);
-    if (collide) boxes.push({ x, z, hw: half, hd: half });
+    if (collide) boxes.push({ x, z, hw: half, hd: half, h: Math.max(h, 30) }); // piramides: ook vliegend kom je er niet overheen of in
     return g;
   }
   pyramid(PYRAMID.x, PYRAMID.z, PYRAMID.half, PYRAMID.h);
@@ -227,7 +228,7 @@ export function createDesert(group) {
   // De deur van de Grote Piramide
   for (const sx of [-1.9, 1.9]) {
     mesh(new THREE.BoxGeometry(1.1, 5, 1.8), sand2, sx, 2.5, DOOR_Z + 0.3, group);
-    boxes.push({ x: sx, z: DOOR_Z + 0.3, hw: 0.55, hd: 0.9 });
+    boxes.push({ x: sx, z: DOOR_Z + 0.3, hw: 0.55, hd: 0.9, h: 30 });
   }
   mesh(new THREE.BoxGeometry(5, 1.2, 2), sand2, 0, 5.4, DOOR_Z + 0.3, group);
   const sunSign = mesh(new THREE.CylinderGeometry(0.7, 0.7, 0.12, 12), gold, 0, 5.4, DOOR_Z + 1.35, group);
@@ -247,7 +248,7 @@ export function createDesert(group) {
   mesh(new THREE.BoxGeometry(1.6, 0.12, 0.06), mat(0x8d6e3f), 0, 2.0, 0.27, door);
   door.position.set(0, 0, DOOR_Z + 0.5);
   group.add(door);
-  const doorBox = { x: 0, z: DOOR_Z + 0.5, hw: 1.4, hd: 0.3 };
+  const doorBox = { x: 0, z: DOOR_Z + 0.5, hw: 1.4, hd: 0.3, h: 30 };
   boxes.push(doorBox);
 
   // Twee lieve kattenbeelden naast het pad naar de deur
@@ -268,7 +269,7 @@ export function createDesert(group) {
     g.rotation.y = rot;
     g.scale.setScalar(s);
     group.add(g);
-    colliders.push({ x, z, r: 1.4 * s });
+    colliders.push({ x, z, r: 1.4 * s, h: 3.3 * s });
   }
   catStatue(-4.5, DOOR_Z + 6, 0, 1.3);
   catStatue(4.5, DOOR_Z + 6, 0, 1.3);
@@ -293,8 +294,8 @@ export function createDesert(group) {
     g.position.set(26, 0, -13);
     g.rotation.y = -0.6;
     group.add(g);
-    boxes.push({ x: 26, z: -13, hw: 3.6, hd: 3.6 });
-    colliders.push({ x: 26 + Math.sin(-0.6) * 4.5, z: -13 + Math.cos(-0.6) * 4.5, r: 2.4 });
+    boxes.push({ x: 26, z: -13, hw: 3.6, hd: 3.6, h: 4 });
+    colliders.push({ x: 26 + Math.sin(-0.6) * 4.5, z: -13 + Math.cos(-0.6) * 4.5, r: 2.4, h: 5 });
   }
 
   // ---------- De oase: water, palmen, riet en Kameel Karel ----------
@@ -325,7 +326,7 @@ export function createDesert(group) {
     g.rotation.y = rand() * 6;
     g.scale.setScalar(s);
     group.add(g);
-    if (collide) colliders.push({ x, z, r: 0.35 * s });
+    if (collide) colliders.push({ x, z, r: 0.35 * s, h: 4 * s });
   }
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2 + 0.3;
@@ -339,7 +340,7 @@ export function createDesert(group) {
     r.castShadow = false;
   }
   const camel = new Camel(group, OASIS.x + 7.5, OASIS.z - 3.2, -1.2);
-  colliders.push({ x: camel.pos.x, z: camel.pos.z, r: 1.1 });
+  colliders.push({ x: camel.pos.x, z: camel.pos.z, r: 1.1, h: 2.6 });
 
   // ---------- Ruïnes met zuilen (bij elke zonnesteen) ----------
   const pillarM = mat(0xe6cfa0), pillarM2 = mat(0xd4b98a);
@@ -352,7 +353,7 @@ export function createDesert(group) {
       const h = i % 3 === 0 ? 1 + rand() : 3 + rand() * 1.5; // sommige zijn omgevallen
       mesh(new THREE.CylinderGeometry(0.45, 0.5, h, 8), i % 2 ? pillarM : pillarM2, px, h / 2, pz, group);
       mesh(new THREE.BoxGeometry(1.2, 0.3, 1.2), pillarM2, px, h + 0.15, pz, group);
-      colliders.push({ x: px, z: pz, r: 0.6 });
+      colliders.push({ x: px, z: pz, r: 0.6, h: h + 0.3 });
       if (i % 3 === 0) { // een stuk zuil op de grond
         const piece = mesh(new THREE.CylinderGeometry(0.45, 0.45, 1.6, 8), pillarM, px + 1.2, 0.45, pz + 0.3, group);
         piece.rotation.set(0, rand() * 3, Math.PI / 2);
@@ -386,7 +387,7 @@ export function createDesert(group) {
     const disc = mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.06, 10), mat(0xd4a017), 0, 3.0, 0.62, g);
     disc.rotation.x = Math.PI / 2 - 0.1;
     group.add(g);
-    colliders.push({ x: s.x, z: s.z, r: 1.0 });
+    colliders.push({ x: s.x, z: s.z, r: 1.0, h: 3.4 });
     return { ...s, g, gem, beam, lit: false };
   });
 
