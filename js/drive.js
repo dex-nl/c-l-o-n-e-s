@@ -40,6 +40,19 @@ export class MyCar {
     colliders.push(this.parkedA, this.parkedB);
   }
 
+  // Verhuizen naar een andere wereld (de Wolkenflitser mag ook in het bos en de woestijn)
+  attach(group, colliders) {
+    if (this.group === group) return;
+    if (this.model) { this.group.remove(this.model.g); group.add(this.model.g); }
+    for (const c of [this.parkedA, this.parkedB]) {
+      const i = this.colliders.indexOf(c);
+      if (i >= 0) this.colliders.splice(i, 1);
+      colliders.push(c);
+    }
+    this.group = group;
+    this.colliders = colliders;
+  }
+
   get canFly() { return !!(this.id && CARS[this.id].fly); }
   get flying() { return this.alt > 0.05; }
 
