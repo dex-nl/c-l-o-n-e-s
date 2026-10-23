@@ -233,6 +233,7 @@ const game = {
   player, squad, fx, sfx, zone: null,
   hurtPlayer(n, x, z, power = 10) {
     if (player.invuln > 0 || fainting || transition) return;
+    if (driving && myCar.alt > 1.5) return; // hoog in de lucht met de Wolkenflitser kan niemand je raken
     hearts = Math.max(0, hearts - n);
     player.invuln = 1.1;
     player.knock(x, z, power);
@@ -389,9 +390,18 @@ function updateStorm(dt, paused) {
   sun.intensity = env.sun[1] * (1 - 0.45 * k);
   // de wind duwt je een beetje opzij (geen pijn!)
   if (!paused && !transition && !fainting && started && k > 0.3) {
-    player.pos.x += st.wind.x * 2.2 * k * dt;
-    player.pos.z += st.wind.z * 2.2 * k * dt;
-    player.resolveCollisions(desert);
+    if (driving && myCar.model) {
+      // ook de Wolkenflitser waait opzij (in de lucht nog harder!)
+      const f = (myCar.flying ? 3.2 : 1.6) * k * dt;
+      myCar.pos.x += st.wind.x * f;
+      myCar.pos.z += st.wind.z * f;
+      collide(myCar.pos, CAR_R, myCar.flying ? myCar.airZone(desert) : desert);
+      myCar.syncMesh();
+    } else {
+      player.pos.x += st.wind.x * 2.2 * k * dt;
+      player.pos.z += st.wind.z * 2.2 * k * dt;
+      player.resolveCollisions(desert);
+    }
   }
   if (st.active !== stormWas) {
     stormWas = st.active;
@@ -402,6 +412,8 @@ function updateStorm(dt, paused) {
 let exitCooldown = 0;
 function setZone(id, spawn) {
   const old = game.zone;
+  if (driving) { driving = false; myCar.setDriving(false); stopFlying(); player.legsSit = false; player.pos.y = 0; } // (bijvoorbeeld flauwgevallen in de auto)
+  if (old && myCar.model && myCar.group === old.group) carSpots[old.id] = { x: myCar.pos.x, z: myCar.pos.z, rot: myCar.rot };
   if (old) {
     old.group.visible = false;
     for (const e of enemies) e.remove();
@@ -423,7 +435,7 @@ function setZone(id, spawn) {
   player.resolveCollisions(zone);
   squad.regroup(player);
   robot.snap(player);
-  if (id === 'stad' && state.car && myCar.id !== state.car) myCar.place(state.car, city.showroom.pickup);
+  if (id === 'stad' || WOLK_ZONES.includes(id)) placeCarIn(zone, state.car);
   spawnEnemies(zone);
   if (id === 'dorp') hearts = state.maxHearts; // thuis word je weer helemaal beter
   playMusic(zone.music);
@@ -921,7 +933,32 @@ const CITY_TITLES = { speelgoed: 'Speelgoedwinkel', snoep: 'Snoepwinkel', kledin
 
 // ---------- De Autowinkel en zelf rijden ----------
 const CAR_ENTER_DISTANCE = 2.6;
-const nearMyCar = () => game.zone === city && !driving && myCar.distanceTo(player.pos) < CAR_ENTER_DISTANCE;
+// De Wolkenflitser mag ook in het bos en de woestijn (niet in het doolhof en niet in de piramide: dat is te makkelijk)
+const WOLK_ZONES = ['bos', 'woestijn'];
+const carHere = () => game.zone === city || (WOLK_ZONES.includes(game.zone.id) && myCar.id === 'wolk' && myCar.group === game.zone.group);
+const nearMyCar = () => carHere() && !driving && myCar.distanceTo(player.pos) < CAR_ENTER_DISTANCE;
+const carSpots = {}; // waar je auto in elke wereld geparkeerd staat (zolang het spel open is)
+// Een vrije plek voor de Wolkenflitser vlak bij een punt (niet in een muur, niet voor een poort)
+function wolkSpotNear(zone, at, rot = at.rot ?? 0) {
+  const d = { x: Math.sin(rot), z: Math.cos(rot) };
+  for (const [nx, nz, k] of [[d.z, -d.x, 3.2], [-d.z, d.x, 3.2], [d.x, d.z, 4], [d.z, -d.x, 5], [-d.z, d.x, 5], [-d.x, -d.z, 4], [d.x, d.z, 7]]) {
+    const p = { x: at.x + nx * k, z: at.z + nz * k, rot };
+    if (carSpotOk(p, zone)) return p;
+  }
+  return null;
+}
+function carDefaultSpot(zone) {
+  if (zone === city) return city.showroom.pickup;
+  const sp = zone === forest ? forest.spawns.fromDorp : desert.spawns.fromDorp;
+  return wolkSpotNear(zone, sp) || { x: sp.x + 3, z: sp.z, rot: sp.rot ?? 0 };
+}
+// Zet je auto in de wereld waar je nu bent (als dat mag)
+function placeCarIn(zone, id) {
+  if (zone !== city && !(WOLK_ZONES.includes(zone.id) && state.car === 'wolk' && state.cars.includes('wolk'))) return;
+  if (!state.car) return;
+  myCar.attach(zone.group, zone.colliders);
+  myCar.place(state.car, carSpots[zone.id] || carDefaultSpot(zone));
+}
 const SEAT_Y = { mini: 0.22, jeep: 0.5, sport: 0.12, race: 0.08, wolk: 0.18 };
 
 function openCarShop() {
@@ -1003,8 +1040,13 @@ function exitCar() {
   player.ch.legs.forEach((l) => { l.rotation.x = 0; });
   // Geparkeerd voor de poort? Dan zet Vera hem netjes terug, zodat je er lopend door kunt
   if (game.zone.exits.some((ex) => Math.hypot(ex.x - myCar.pos.x, ex.z - myCar.pos.z) < 5)) {
-    myCar.place(myCar.id, city.showroom.pickup);
-    ui.toast('🚗 Vera Vroem zet je auto weer netjes bij de Autowinkel.', 2600);
+    if (game.zone === city) {
+      myCar.place(myCar.id, city.showroom.pickup);
+      ui.toast('🚗 Vera Vroem zet je auto weer netjes bij de Autowinkel.', 2600);
+    } else {
+      myCar.place(myCar.id, carDefaultSpot(game.zone));
+      ui.toast('🛸 De Wolkenflitser parkeert zichzelf even opzij.', 2600);
+    }
   }
   sfx.click();
   save();
@@ -1208,12 +1250,12 @@ async function useCode(raw) {
 }
 // De geheime auto-code: de Wolkenflitser, gratis (zo vaak je wilt)
 // In De Stad: hij staat meteen naast je. Ergens anders (daar kun je niet rijden): hij wacht bij de ingang van De Stad.
-function carSpotOk(p) {
+function carSpotOk(p, zone = city) {
   const q = { x: p.x, z: p.z };
-  collide(q, CAR_R, city);
+  collide(q, CAR_R, zone);
   if (Math.hypot(q.x - p.x, q.z - p.z) > 0.05) return false;
-  if (city.exits.some((ex) => Math.hypot(ex.x - p.x, ex.z - p.z) < 6)) return false;
-  return !city.npcs.some((n) => Math.hypot(n.pos.x - p.x, n.pos.z - p.z) < CAR_R + 0.8);
+  if (zone.exits.some((ex) => Math.hypot(ex.x - p.x, ex.z - p.z) < 6)) return false;
+  return !(zone.npcs || []).some((n) => Math.hypot(n.pos.x - p.x, n.pos.z - p.z) < CAR_R + 0.8);
 }
 function giveSecretCar() {
   if (driving) { sfx.nope(); return { ok: false, msg: 'Stap eerst uit je auto!' }; }
@@ -1221,19 +1263,24 @@ function giveSecretCar() {
   state.car = 'wolk';
   myCar.place(null); // de oude auto even weg (anders botst de nieuwe ertegen)
   let spot = null;
-  const here = game.zone === city;
+  // In De Stad, het bos en de woestijn staat hij meteen naast je; ergens anders wacht hij in De Stad
+  const here = game.zone === city || WOLK_ZONES.includes(game.zone.id);
+  const zone = here ? game.zone : city;
+  myCar.attach(zone.group, zone.colliders);
   if (here) {
     const d = { x: Math.sin(player.rot), z: Math.cos(player.rot) };
     for (const [nx, nz, k] of [[d.z, -d.x, 2.8], [-d.z, d.x, 2.8], [d.x, d.z, 3.2], [-d.x, -d.z, 3.2], [d.z, -d.x, 4.2], [-d.z, d.x, 4.2]]) {
       const p = { x: player.pos.x + nx * k, z: player.pos.z + nz * k, rot: player.rot };
-      if (carSpotOk(p)) { spot = p; break; }
+      if (carSpotOk(p, zone)) { spot = p; break; }
     }
+    if (!spot && zone !== city) spot = carDefaultSpot(zone);
   } else {
     const a = city.spawns.fromDorp;
     for (const [dx, dz] of [[3.6, -5], [-3.6, -5], [0, -7.5]]) { const p = { x: a.x + dx, z: a.z + dz, rot: Math.PI }; if (carSpotOk(p)) { spot = p; break; } }
   }
   if (!spot) spot = city.showroom.pickup; // geen plekje? dan bij de Autowinkel
   myCar.place('wolk', spot);
+  carSpots[zone.id] = { ...spot };
   city.showroom.setOwned(state.cars);
   sfx.tada();
   if (here) {
@@ -1335,7 +1382,7 @@ function onTap(x, y) {
     }
   }
   if (game.zone === world && reached(state.quest, 'aan') && raycaster.intersectObject(world.machine.group, true).length) makeClone();
-  if (game.zone === city && myCar.model && !driving && raycaster.intersectObject(myCar.model.g, true).length) {
+  if (carHere() && myCar.model && !driving && raycaster.intersectObject(myCar.model.g, true).length) {
     if (nearMyCar()) enterCar(); else ui.toast('Loop eerst wat dichterbij!');
   }
 }
@@ -1682,7 +1729,7 @@ function frame() {
   }
   player.speed = boost > 0 ? 9.5 : 6;
   const before = player.pos.clone();
-  if (driving && zone === city) {
+  if (driving && carHere()) {
     const people = zone.npcs.map((n) => n.pos);
     const wasFlying = myCar.flying;
     myCar.fly(dt, paused || transition ? 0 : controls.lift, zone);

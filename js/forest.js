@@ -11,8 +11,8 @@ export function createForest(group) {
   const colliders = [], updaters = [];
   // De rotswand achterin, met een gat voor de deur
   const boxes = [
-    { x: -16.6, z: -26, hw: 15, hd: 5 },
-    { x: 16.6, z: -26, hw: 15, hd: 5 },
+    { x: -16.6, z: -26, hw: 15, hd: 5, h: 30 }, // (h: ook vliegend kom je er niet overheen)
+    { x: 16.6, z: -26, hw: 15, hd: 5, h: 30 },
   ];
   const doorBox = { x: 0, z: -21.6, hw: 1.6, hd: 0.5 };
   boxes.push(doorBox);
@@ -106,7 +106,7 @@ export function createForest(group) {
     group.add(g);
     const ph = rand() * 6;
     updaters.push((t) => { top.rotation.z = Math.sin(t * 1.1 + ph) * 0.04; });
-    if (collide) colliders.push({ x, z, r: 0.6 * size });
+    if (collide) colliders.push({ x, z, r: 0.6 * size, h: 3.3 * size }); // h: hoe hoog (voor de Wolkenflitser)
   }
   // dicht bos rondom
   for (let i = 0; i < 120; i++) {
@@ -136,7 +136,7 @@ export function createForest(group) {
   }
   for (const [x, z] of [[-6, -18], [5.5, -19], [-14, 3], [15, -2]]) {
     makeMushroom(group, x, z, 2.6, true);
-    colliders.push({ x, z, r: 0.5 });
+    colliders.push({ x, z, r: 0.5, h: 2.8 });
   }
   for (const [x, z, rot] of [[-9, 13, 0.4], [11, -11, 1.2], [-15, -9, -0.6]]) {
     const log = mesh(new THREE.CylinderGeometry(0.45, 0.45, 3.2, 7), mat(0x7f5539), x, 0.45, z, group);

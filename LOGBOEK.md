@@ -137,6 +137,13 @@
 - Nog niet: samen vechten, slijmpjes en kisten delen, of elkaars hoedjes en clones zien.
 - Getest met 2 tot 5 browsers tegelijk op de computer. De testcomputer kan zelf geen echte WebRTC-verbinding maken, dus daar gingen de berichten via een nep-netwerk. De echte PeerJS-server is wel getest: codes maken en een foute code. Nog niet getest op twee echte iPads.
 
+## 21 oktober 2026: De Wolkenflitser ook in het bos en de woestijn (wens van Dex)
+- Gemaakt met een AI-helper op de tak `wolkenflitser-overal`. **Dex of papa beslist of het erin komt.**
+- Heb je de Wolkenflitser, dan staat hij nu ook in het Slijmbos en in de woestijn klaar. Rijden, vliegen, kickflip en boost werken daar ook.
+- Niet in het doolhof en niet in de Grote Piramide: dat blijft lopen (anders is het te makkelijk). De woestijn blijft moeilijk: de zonnestenen en Sjors doe je nog steeds te voet, en de zandstorm blaast je auto opzij.
+- Bomen, cactussen, duinen, zuilen en piramides hebben nu een hoogte, zodat je over kleine dingen heen vliegt maar niet over de rotswand of de piramides.
+- De save is niet veranderd (nog steeds versie 8).
+
 ## 23 oktober 2026: Hoofdstuk 5, De Vulkaan (wens van Dex)
 - Gemaakt met een AI-helper op de tak `vulkaan`. **Dex of papa beslist of het erin komt.**
 - Na Bladkoning Bram verschijnt links van de Grote Piramide een rode poort naar **De Vulkaan** (wereld 3 van de schatkaart, moeilijkheid 4).
