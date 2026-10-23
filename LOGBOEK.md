@@ -152,3 +152,13 @@
 - De Wolkenflitser mag niet in de vulkaan. De vulkaan heeft een eigen liedje.
 - Save naar versie 9 (draak verslagen en open kistjes). Oude saves blijven werken (getest met versie 7 en 8 en rare saves).
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt gevecht tegen de draak op het iPad-formaat. Nog niet getest op een echte iPad.
+
+## 23 oktober 2026: Hoofdstuk 6, De Onderwaterwereld (wens van Dex)
+- Gemaakt met een AI-helper op de tak `onderwater` (bovenop de tak `vulkaan`). **Dex of papa beslist of het erin komt.**
+- Na Vuurdraak Vonk verschijnt bij de oase in de woestijn een blauwe poort naar **De Onderwaterwereld** (wereld 4 van de schatkaart, moeilijkheid 5).
+- Je **zwemt**: omhoog en omlaag met de knoppen **⬆️ Omhoog** / **⬇️ Omlaag** (zoals bij de Wolkenflitser) of met **R** / **F** op de laptop.
+- Een **luchtmeter** die leegloopt, **luchtbellen** en **bellenbronnen** om weer lucht te krijgen, een **koraalrif** (zwem eroverheen), **stroming** die je meesleurt, **zee-egels**, **haaien** (rood ! en dan een sprint), **kwallen** en een **gezonken schip** met een schatkist op de bodem.
+- In de diepe trog: **Reuzeninktvis Inka** (120 levens): tentakelklap met rode banen (zwem omhoog!), inktwolk, draaikolk, en ze roept kwallen. Ze geeft **stukje 4 van 10** (en dus 14 clones).
+- De Wolkenflitser mag niet onder water. De onderwaterwereld heeft een eigen liedje.
+- Save naar versie 10 (inktvis verslagen en open kistjes). Oude saves blijven werken (getest met versie 7, 8 en 9 en rare saves).
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt gevecht tegen de inktvis met touch. Nog niet getest op een echte iPad of iPhone.
