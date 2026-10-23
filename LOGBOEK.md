@@ -144,10 +144,30 @@
 - Bomen, cactussen, duinen, zuilen en piramides hebben nu een hoogte, zodat je over kleine dingen heen vliegt maar niet over de rotswand of de piramides.
 - De save is niet veranderd (nog steeds versie 8).
 
+## 23 oktober 2026: Hoofdstuk 5, De Vulkaan (wens van Dex)
+- Gemaakt met een AI-helper op de tak `vulkaan`. **Dex of papa beslist of het erin komt.**
+- Na Bladkoning Bram verschijnt links van de Grote Piramide een rode poort naar **De Vulkaan** (wereld 3 van de schatkaart, moeilijkheid 4).
+- Een lavarivier met **springende stenen** (ze zakken om de beurt in de lava), een lavaveld waar **de lava stijgt** (ga op een eiland staan), een vuurpad met **vuurballen**, **lavamonsters** en 3 schatkisten.
+- In de krater: **Vuurdraak Vonk** (100 levens): vuuradem (rode punt op de grond), vliegen en landen met een klap, vuurregen, en hij roept lavamonsters. Hij geeft **stukje 3 van 10** (en dus 13 clones).
+- De Wolkenflitser mag niet in de vulkaan. De vulkaan heeft een eigen liedje.
+- Save naar versie 9 (draak verslagen en open kistjes). Oude saves blijven werken (getest met versie 7 en 8 en rare saves).
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt gevecht tegen de draak op het iPad-formaat. Nog niet getest op een echte iPad.
+
+## 23 oktober 2026: Hoofdstuk 6, De Onderwaterwereld (wens van Dex)
+- Gemaakt met een AI-helper op de tak `onderwater` (bovenop de tak `vulkaan`). **Dex of papa beslist of het erin komt.**
+- Na Vuurdraak Vonk verschijnt bij de oase in de woestijn een blauwe poort naar **De Onderwaterwereld** (wereld 4 van de schatkaart, moeilijkheid 5).
+- Je **zwemt**: omhoog en omlaag met de knoppen **⬆️ Omhoog** / **⬇️ Omlaag** (zoals bij de Wolkenflitser) of met **R** / **F** op de laptop.
+- Een **luchtmeter** die leegloopt, **luchtbellen** en **bellenbronnen** om weer lucht te krijgen, een **koraalrif** (zwem eroverheen), **stroming** die je meesleurt, **zee-egels**, **haaien** (rood ! en dan een sprint), **kwallen** en een **gezonken schip** met een schatkist op de bodem.
+- In de diepe trog: **Reuzeninktvis Inka** (120 levens): tentakelklap met rode banen (zwem omhoog!), inktwolk, draaikolk, en ze roept kwallen. Ze geeft **stukje 4 van 10** (en dus 14 clones).
+- De Wolkenflitser mag niet onder water. De onderwaterwereld heeft een eigen liedje.
+- Save naar versie 10 (inktvis verslagen en open kistjes). Oude saves blijven werken (getest met versie 7, 8 en 9 en rare saves).
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt gevecht tegen de inktvis met touch. Nog niet getest op een echte iPad of iPhone.
+
 ## 23 oktober 2026: Als app op de iPhone (wens van de oom van Dex)
 - Gemaakt met een AI-helper op de tak `app-op-iphone`. **Dex of papa beslist of het erin komt.**
 - Via Safari > **Deel-knop** > **Zet op beginscherm** wordt C.L.O.N.E.S een app: beeldvullend, liggend, met een nieuw low-poly icoontje (3 clones en een kristal, zelf getekend met code: `icons/maak_iconen.py`).
 - Knoppen en tekst blijven buiten de camera-hoek en het streepje onderin (ook rechtop: de draai-hint zegt nu "Draai je scherm!").
 - Nieuw: een service worker (`sw.js`). Die haalt altijd eerst de nieuwste versie van internet; alleen zonder internet pakt hij de bewaarde kopie. Zo werkt het spel ook offline.
-- De app op het beginscherm heeft een eigen save (los van Safari). De save is niet veranderd (nog steeds versie 8).
+- De app op het beginscherm heeft een eigen save (los van Safari). De save zelf is niet veranderd door de app.
 - Getest op de computer in iPhone-formaat (liggend en rechtop), iPad-formaat en MacBook-formaat, ook zonder internet. Nog niet getest op een echte iPhone.
+- Later bijgewerkt met de Vulkaan en de Onderwaterwereld: de app krijgt die nieuwe werelden ook (nieuwe cache-versie in `sw.js`, zodat iPhones de nieuwe versie ophalen).

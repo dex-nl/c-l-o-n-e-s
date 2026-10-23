@@ -7,7 +7,7 @@ import { SHIRTS, TOYS, CANDIES, BOOKS, MAX_CANDY } from './cityshop.js';
 import { CARS } from './autowinkel.js';
 
 export const SAVE_KEY = 'clones-save';
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 10;
 // geheime codes (zie GAME.md, niet verder vertellen!) en hoeveel kristallen ze geven (elke code 1 keer per save)
 export const CODE_REWARDS = { KRISTAL100: 100, KRISTAL100K: 100000 };
 export const SECRET_CODES = Object.keys(CODE_REWARDS);
@@ -16,11 +16,15 @@ export const LEVER_IDS = ['kris', 'tal', '100k']; // de 3 geheime steentjes (zie
 const MAZE_DOORS = ['rood', 'blauw', 'geel'];
 export const defaultMaze = () => ({ seen: '', doors: [], chests: [], levers: [], secret: false, bram: false });
 export const MAX_HEARTS = 8;
+export const defaultVolcano = () => ({ dragon: false, chests: [] });
+const VOLCANO_CHESTS = ['vkist1', 'vkist2', 'vkist3'];
+export const defaultSea = () => ({ squid: false, chests: [] });
+const SEA_CHESTS = ['zkist1', 'zkist2', 'zkist3'];
 
 export function defaultSave() {
   return {
     version: SAVE_VERSION,
-    zone: 'dorp',       // 'dorp' | 'bos' | 'grot' | 'stad' | 'woestijn' | 'piramide' | 'doolhof'
+    zone: 'dorp',       // 'dorp' | 'bos' | 'grot' | 'stad' | 'woestijn' | 'piramide' | 'doolhof' | 'vulkaan' | 'onderwater'
     player: { x: 0, z: 5, rot: Math.PI },
     quest: { state: 'nieuw', gears: [] }, // zie quest.js voor alle stappen
     clones: 0,          // hoeveel clones je hebt gemaakt
@@ -49,6 +53,10 @@ export function defaultSave() {
     jobs: { done: [], active: null, step: 0 },
     // Versie 8: Het Doolhof (welke vakjes je al gezien hebt, open deuren, open kistjes, geheime steentjes, Bram verslagen?)
     maze: defaultMaze(),
+    // Versie 9: De Vulkaan (Vuurdraak Vonk verslagen? welke kistjes zijn open?)
+    volcano: defaultVolcano(),
+    // Versie 10: De Onderwaterwereld (Reuzeninktvis Inka verslagen? welke kistjes zijn open?)
+    sea: defaultSea(),
   };
 }
 
@@ -104,8 +112,18 @@ export function migrate(data) {
     data = { ...data, maze: defaultMaze(), version: 8 };
     v = 8;
   }
+  if (v === 8) {
+    // Versie 9: De Vulkaan. Alles blijft hetzelfde; er komt alleen een leeg vulkaan-vakje bij.
+    data = { ...data, volcano: defaultVolcano(), version: 9 };
+    v = 9;
+  }
+  if (v === 9) {
+    // Versie 10: De Onderwaterwereld. Alles blijft hetzelfde; er komt alleen een leeg onderwater-vakje bij.
+    data = { ...data, sea: defaultSea(), version: 10 };
+    v = 10;
+  }
   // Voorbeeld voor later:
-  // if (v === 8) { data.huisdier = null; data.version = 9; v = 9; }
+  // if (v === 10) { data.huisdier = null; data.version = 11; v = 11; }
 
   // Vul ontbrekende velden aan en controleer of alles klopt.
   delete data._desertForced; // alleen voor testen, niet bewaren
@@ -126,6 +144,8 @@ export function migrate(data) {
   let mapPieces = Array.isArray(data.mapPieces) ? [...new Set(data.mapPieces.filter((id) => MAP_PIECES.includes(id)))] : [];
   if (reached(quest, 'kaart') && !mapPieces.includes('woestijn')) mapPieces.push('woestijn');
   if (reached(quest, 'kaart2') && !mapPieces.includes('doolhof')) mapPieces.push('doolhof');
+  if (reached(quest, 'kaart3') && !mapPieces.includes('vulkaan')) mapPieces.push('vulkaan');
+  if (reached(quest, 'kaart4') && !mapPieces.includes('onderwater')) mapPieces.push('onderwater');
   if (!reached(quest, 'kaart')) mapPieces = mapPieces.filter((id) => id !== 'doolhof');
   // stukje 2 gevonden voordat Bolt stukje 1 zag? Dan gaat het verhaal gewoon verder
   if (mapPieces.includes('doolhof') && quest.state === 'schat') quest.state = 'kaart2';
@@ -140,6 +160,22 @@ export function migrate(data) {
     secret: false, bram: rm.bram === true || mapPieces.includes('doolhof'),
   };
   maze.secret = rm.secret === true || maze.levers.length === LEVER_IDS.length;
+  // de vulkaan (pas na Bram)
+  if (!maze.bram) mapPieces = mapPieces.filter((id) => id !== 'vulkaan');
+  if (mapPieces.includes('vulkaan') && quest.state === 'schat2') quest.state = 'kaart3';
+  const rv = data.volcano && typeof data.volcano === 'object' ? data.volcano : {};
+  const volcano = {
+    dragon: maze.bram && (rv.dragon === true || mapPieces.includes('vulkaan')),
+    chests: maze.bram ? strs(rv.chests, (id) => VOLCANO_CHESTS.includes(id)) : [],
+  };
+  // de onderwaterwereld (pas na de draak)
+  if (!volcano.dragon) mapPieces = mapPieces.filter((id) => id !== 'onderwater');
+  if (mapPieces.includes('onderwater') && quest.state === 'schat3') quest.state = 'kaart4';
+  const rs = data.sea && typeof data.sea === 'object' ? data.sea : {};
+  const sea = {
+    squid: volcano.dragon && (rs.squid === true || mapPieces.includes('onderwater')),
+    chests: volcano.dragon ? strs(rs.chests, (id) => SEA_CHESTS.includes(id)) : [],
+  };
   const codes = Array.isArray(data.codes) ? [...new Set(data.codes.filter((c) => SECRET_CODES.includes(c)))] : [];
   // klusjes: altijd op volgorde, en pas na het welkomstcadeautje van Bert
   const rawJobs = data.jobs && typeof data.jobs === 'object' ? data.jobs : {};
@@ -154,10 +190,12 @@ export function migrate(data) {
   if (data.cityGift !== true) { jobs.done = []; jobs.active = null; jobs.step = 0; }
   const int = (n, lo, hi, d) => (Number.isInteger(n) ? Math.min(Math.max(n, lo), hi) : d);
   const clones = reached(quest, 'aan') ? int(data.clones, 0, maxClones({ quest, mapPieces }), 0) : 0;
-  let zone = ['dorp', 'bos', 'grot', 'stad', 'woestijn', 'piramide', 'doolhof'].includes(data.zone) ? data.zone : 'dorp';
+  let zone = ['dorp', 'bos', 'grot', 'stad', 'woestijn', 'piramide', 'doolhof', 'vulkaan', 'onderwater'].includes(data.zone) ? data.zone : 'dorp';
   if ((zone === 'bos' && !reached(quest, 'zwaard')) || (zone === 'grot' && !reached(quest, 'grot'))) zone = 'dorp';
   if ((zone === 'woestijn' && !reached(quest, 'woestijn')) || (zone === 'piramide' && !reached(quest, 'piramide'))) zone = 'dorp';
   if (zone === 'doolhof' && !reached(quest, 'kaart')) zone = 'dorp';
+  if (zone === 'vulkaan' && !maze.bram) zone = 'dorp';
+  if (zone === 'onderwater' && !volcano.dragon) zone = 'dorp';
   let sword = int(data.sword, 0, 2, 0);
   if (reached(quest, 'zwaard')) sword = Math.max(sword, 1);
   const hats = Array.isArray(data.hats) ? data.hats.filter((h) => h in HAT_NAMES) : [];
@@ -172,7 +210,7 @@ export function migrate(data) {
   return {
     ...data, version: Math.max(v, SAVE_VERSION), zone, player, quest, clones, sword, hats, hat,
     shirts, shirt, toys, books, candy, cityGift: data.cityGift === true, cars, car,
-    mapPieces, codes, clonesHidden: data.clonesHidden === true, jobs, maze,
+    mapPieces, codes, clonesHidden: data.clonesHidden === true, jobs, maze, volcano, sea,
     sound: data.sound !== false, music: data.music !== false,
     crystals: int(data.crystals, 0, MAX_CRYSTALS, 0), maxHearts: int(data.maxHearts, 5, MAX_HEARTS, 5),
   };

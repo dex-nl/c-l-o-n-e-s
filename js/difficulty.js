@@ -6,7 +6,9 @@ export const WORLD_LEVEL = {
   dorp: 1, bos: 1, grot: 1, stad: 1,
   woestijn: 2, piramide: 2.2,
   doolhof: 3,
-  // volgende werelden: 4, 5, ...
+  vulkaan: 4, // De Vulkaan (hoofdstuk 5): nog moeilijker dan het doolhof
+  onderwater: 5, // De Onderwaterwereld (hoofdstuk 6): nog moeilijker dan de vulkaan
+  // volgende werelden: 5, 6, ...
 };
 
 export const levelOf = (zoneId) => WORLD_LEVEL[zoneId] ?? 1;
@@ -16,10 +18,10 @@ export function difficulty(zoneId) {
   const L = levelOf(zoneId), up = L - 1;
   return {
     level: L,
-    hp: 1 + up * 0.45,          // leven van slijmpjes (woestijn x1,45 / doolhof x1,9)
+    hp: 1 + up * 0.45,          // leven van slijmpjes (woestijn x1,45 / doolhof x1,9 / vulkaan x2,35 / onderwater x2,8)
     speed: 1 + up * 0.08,       // snelheid van slijmpjes
     aggro: 1 + up * 0.12,       // van hoe ver ze je zien
-    bossHp: 1 + up * 0.5,       // leven van bazen (Sjors x1,6 in de piramide / doolhof x2)
+    bossHp: 1 + up * 0.5,       // leven van bazen (Sjors x1,6 in de piramide / doolhof x2 / vulkaan x2,5 / onderwater x3)
     bossDamage: L >= 2 ? 2 : 1, // zware klappen van bazen (hartjes)
     heartDrop: 0.3 / L,         // kans op een hartje van een verslagen slijmpje
   };

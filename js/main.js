@@ -9,6 +9,11 @@ import { createPyramid } from './pyramid.js';
 import { Scorpion } from './scorpion.js';
 import { createMaze } from './maze.js';
 import { Bram } from './bram.js';
+import { createVolcano } from './volcano.js';
+import { Dragon } from './dragon.js';
+import { createSea, AIR_MAX, BUBBLE_AIR, SURFACE } from './sea.js';
+import { Shark, Jelly } from './seacreatures.js';
+import { Squid } from './squid.js';
 import { buildTreasureMap } from './treasure.js';
 import { createJobs } from './jobs.js';
 import { secretCode, PRIVATE_REWARD } from './secret.js';
@@ -117,6 +122,8 @@ const cityJobs = createJobs(city); // de klusjes van Burgemeester Bert (idee van
 const desert = addZone(createDesert); // De Grote Woestijn (hoofdstuk 3, idee van Dex)
 const pyramid = addZone(createPyramid); // binnen in de Grote Piramide
 const maze = addZone(createMaze); // Het Doolhof (hoofdstuk 4, idee van Dex)
+const volcano = addZone(createVolcano); // De Vulkaan (hoofdstuk 5, idee van Dex). Geen auto's hier!
+const sea = addZone(createSea); // De Onderwaterwereld (hoofdstuk 6, idee van Dex). Zwemmen! Geen auto's hier.
 
 // Dorpelingen
 const bolt = makeBolt(world.group, world.npcSpot);
@@ -162,6 +169,14 @@ desert.exits = [
 const mazeVisible = () => state.mapPieces.includes('woestijn') || reached(state.quest, 'kaart');
 desert.exits.push({ x: desert.mazePortal.x, z: desert.mazePortal.z, r: 1.4, to: 'doolhof', spawn: () => maze.spawns.fromWoestijn, active: mazeVisible, open: () => true });
 maze.exits = [{ x: maze.exit.x, z: maze.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromDoolhof, open: () => true }];
+// De rode poort naar De Vulkaan (verschijnt als Bladkoning Bram verslagen is)
+const volcanoVisible = () => state.maze.bram || state.mapPieces.includes('doolhof');
+desert.exits.push({ x: desert.volcanoPortal.x, z: desert.volcanoPortal.z, r: 1.4, to: 'vulkaan', spawn: () => volcano.spawns.fromWoestijn, active: volcanoVisible, open: () => true });
+volcano.exits = [{ x: volcano.exit.x, z: volcano.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromVulkaan, open: () => true }];
+// De blauwe poort naar De Onderwaterwereld, bij de oase (verschijnt als Vuurdraak Vonk verslagen is)
+const seaVisible = () => state.volcano.dragon || state.mapPieces.includes('vulkaan');
+desert.exits.push({ x: desert.seaPortal.x, z: desert.seaPortal.z, r: 1.4, to: 'onderwater', spawn: () => sea.spawns.fromWoestijn, active: seaVisible, open: () => true });
+sea.exits = [{ x: sea.exit.x, z: sea.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromZee, open: () => true }];
 pyramid.exits = [{ x: pyramid.exit.x, z: pyramid.exit.z, r: 1.0, to: 'woestijn', spawn: () => desert.spawns.fromPiramide, open: () => true }];
 city.exits = [{ x: city.exit.x, z: city.exit.z, r: 1.4, to: 'dorp', spawn: () => world.spots.uitStad, open: () => true }];
 forest.exits = [
@@ -218,6 +233,9 @@ let enemies = [];
 let king = null;
 let sjors = null; // Schorpioen Sjors, de baas van de piramide
 let bram = null;  // Bladkoning Bram, de baas van het doolhof
+let dragon = null; // Vuurdraak Vonk, de baas van de vulkaan
+let squid = null; // Reuzeninktvis Inka, de baas van de onderwaterwereld
+let air = 32, airHurt = 0, inkTime = 0, airWarned = false, seaToastCd = 0, urchinToastCd = 0; // onder water: lucht (seconden), inkt
 let shake = 0, hitStop = 0, fainting = false, transition = false;
 let lastHitSound = 0;
 
@@ -248,6 +266,8 @@ const game = {
     // hulpjes van een baas geven altijd een hartje (zo blijft het eerlijk)
     if (hearts < state.maxHearts && (s.helper || Math.random() < difficulty(game.zone.id).heartDrop)) pickups.spawn('hart', s.pos.x, s.pos.z); // minder hartjes in moeilijke werelden
     if (s.bram) { game.onBramDefeated(s); return; }
+    if (s.dragon) { game.onDragonDefeated(s); return; }
+    if (s.squid) { game.onSquidDefeated(s); return; }
     if (s.king) {
       state.quest.kingBeaten = true; // onthouden, ook als de iPad de pagina opnieuw laadt
       game.showLanding(0, 0, 0);
@@ -299,6 +319,43 @@ const game = {
     for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
     save();
   },
+  // Vuurdraak Vonk is verslagen: hij geeft je stukje 3 van de schatkaart
+  onDragonDefeated(s) {
+    state.volcano.dragon = true;
+    game.showLanding(0, 0, 0);
+    hitStop = 0.35;
+    shake = 1;
+    fx.confetti(s.pos, 100);
+    sfx.fanfare();
+    ui.toast('🐉 Vuurdraak Vonk: "Pfoeh, wat ben jij dapper! Hier, dit lag in mijn nest..."', 4200);
+    pickups.spawn('kaartstuk', s.pos.x, s.pos.z);
+    for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
+    save();
+  },
+  // Reuzeninktvis Inka is verslagen: zij geeft je stukje 4 van de schatkaart
+  onSquidDefeated(s) {
+    state.sea.squid = true;
+    hitStop = 0.35;
+    shake = 1;
+    ui.setInk(false);
+    fx.confetti(s.pos, 100);
+    sfx.fanfare();
+    ui.toast('🦑 Reuzeninktvis Inka: "Blub! Jij zwemt beter dan een vis! Dit lag op de bodem..."', 4200);
+    pickups.spawn('kaartstuk', s.pos.x, s.pos.z);
+    for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
+    save();
+  },
+  // onder water: een haai, kwal... erbij
+  addEnemy(e) { enemies.push(e); return e; },
+  // de draaikolk trekt je mee
+  pullPlayer(vx, vz, dt) {
+    if (fainting || transition) return;
+    player.pos.x += vx * dt; player.pos.z += vz * dt;
+    player.resolveCollisions(game.zone);
+  },
+  // inkt! (alles even donker)
+  onInk() { inkTime = 2.2; sfx.whoosh(); },
+  shake(v) { shake = Math.max(shake, v); },
   showLanding(x, z, r) {
     landing.visible = r > 0;
     landing.position.x = x; landing.position.z = z;
@@ -323,6 +380,20 @@ function spawnEnemies(zone) {
   if (zone.id === 'doolhof') {
     if (!state.maze.bram) { bram = new Bram(zone.group, zone.roomC.x, zone.roomC.z); enemies.push(bram); }
     else if (!state.mapPieces.includes('doolhof')) pickups.spawn('kaartstuk', zone.roomC.x, zone.roomC.z);
+  }
+  dragon = null;
+  if (zone.id === 'vulkaan') {
+    if (!state.volcano.dragon) { dragon = new Dragon(zone.group, zone.boss.x, zone.boss.z); enemies.push(dragon); }
+    else if (!state.mapPieces.includes('vulkaan')) pickups.spawn('kaartstuk', zone.crater.x, zone.crater.z);
+    for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z); // een paar hartjes onderweg
+  }
+  squid = null;
+  if (zone.id === 'onderwater') {
+    for (const sp of zone.sharkSpots) enemies.push(new Shark(zone.group, sp));
+    for (const sp of zone.jellySpots) enemies.push(new Jelly(zone.group, sp.x, sp.z));
+    if (!state.sea.squid) { squid = new Squid(zone.group, zone.boss.x, zone.boss.z, zone.trench); enemies.push(squid); }
+    else if (!state.mapPieces.includes('onderwater')) pickups.spawn('kaartstuk', zone.trench.x, zone.trench.z);
+    for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z);
   }
 }
 
@@ -396,6 +467,10 @@ function setZone(id, spawn) {
   const zone = zones[id];
   game.zone = zone;
   if (id === 'doolhof') { maze.applyState(state.maze); maze.hideTrail(); trailTime = 0; }
+  if (id === 'vulkaan') { volcano.applyState(state.volcano); volcano.reset(); volcanoLast = null; }
+  if (id === 'onderwater') { sea.applyState(state.sea); sea.reset(); air = AIR_MAX; airHurt = 0; inkTime = 0; airWarned = false; player.pos.y = 0.6; }
+  if (id !== 'vulkaan' && id !== 'onderwater') player.pos.y = 0;
+  setSwimming(id === 'onderwater');
   if (id === 'woestijn') { desert.storm.k = 0; desert.stopStorm(20 + Math.random() * 10); stormWas = false; } // eerst even rustig
   state.zone = id;
   zone.group.visible = true;
@@ -467,6 +542,8 @@ function refresh() {
   world.gate.setOpen(reached(q, 'zwaard'));
   updateDesertGate();
   updateMazePortal();
+  updateVolcanoPortal();
+  updateSeaPortal();
   desert.setPebbleOn(state.maze.levers.includes('kris'));
   world.desertGate.setOpen(reached(q, 'woestijn'));
   desert.setDoorOpen(reached(q, 'piramide'));
@@ -534,6 +611,44 @@ function mazeAppear() {
   fx.confetti({ x: at.x, z: at.z }, 50);
   sfx.powerUp();
   ui.toast('✨ Er is een nieuwe poort verschenen! Naast de Grote Piramide: naar HET DOOLHOF!', 4500);
+}
+
+// ---------- De vulkaanpoort verschijnt in de woestijn (als Bram verslagen is) ----------
+let volcanoPortalShown = false, volcanoAppearPending = false;
+function updateVolcanoPortal() {
+  const vis = volcanoVisible();
+  if (vis === volcanoPortalShown) return;
+  volcanoPortalShown = vis;
+  desert.setVolcanoPortal(vis);
+  if (vis && started) volcanoAppearPending = true; // de glitters zie je als je weer in de woestijn bent
+}
+function volcanoAppear() {
+  volcanoAppearPending = false;
+  const at = { x: desert.volcanoPortal.x, y: 2, z: desert.volcanoPortal.z };
+  fx.sparkle(at, [0xe63946, 0xffffff, 0xff8c42], 50, 6);
+  setTimeout(() => fx.sparkle(at, [0xffd23f, 0xe63946, 0xffffff], 40, 5), 500);
+  fx.confetti({ x: at.x, z: at.z }, 50);
+  sfx.powerUp();
+  ui.toast('✨ Er is een nieuwe poort verschenen! Links van de Grote Piramide: naar DE VULKAAN!', 4500);
+}
+
+// ---------- De onderwaterpoort verschijnt bij de oase (als Vuurdraak Vonk verslagen is) ----------
+let seaPortalShown = false, seaAppearPending = false;
+function updateSeaPortal() {
+  const vis = seaVisible();
+  if (vis === seaPortalShown) return;
+  seaPortalShown = vis;
+  desert.setSeaPortal(vis);
+  if (vis && started) seaAppearPending = true;
+}
+function seaAppear() {
+  seaAppearPending = false;
+  const at = { x: desert.seaPortal.x, y: 2, z: desert.seaPortal.z };
+  fx.sparkle(at, [0x1c7ed6, 0xffffff, 0x99e9f2], 50, 6);
+  setTimeout(() => fx.sparkle(at, [0x74c0fc, 0x1c7ed6, 0xffffff], 40, 5), 500);
+  fx.confetti({ x: at.x, z: at.z }, 50);
+  sfx.powerUp();
+  ui.toast('✨ Er is een nieuwe poort verschenen! Bij de oase: naar DE ONDERWATERWERELD!', 4500);
 }
 
 let dirty = false;
@@ -718,7 +833,19 @@ function afterBolt(before, wasAllFound) {
     q.state = 'schat2';
     fx.confetti(bolt.pos, 140);
     sfx.fanfare();
-    ui.toast(`🏆 Hoofdstuk 4 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Wordt vervolgd!`, 4500);
+    ui.toast(`🏆 Hoofdstuk 4 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Op naar De Vulkaan!`, 4500);
+    if (state.mapPieces.includes('vulkaan')) q.state = 'kaart3'; // stukje 3 had je al!
+  } else if (before === 'kaart3') {
+    q.state = 'schat3';
+    fx.confetti(bolt.pos, 160);
+    sfx.fanfare();
+    ui.toast(`🏆 Hoofdstuk 5 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Op naar De Onderwaterwereld!`, 4500);
+    if (state.mapPieces.includes('onderwater')) q.state = 'kaart4'; // stukje 4 had je al!
+  } else if (before === 'kaart4') {
+    q.state = 'schat4';
+    fx.confetti(bolt.pos, 180);
+    sfx.fanfare();
+    ui.toast(`🏆 Hoofdstuk 6 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Wordt vervolgd!`, 4500);
   }
 }
 
@@ -790,6 +917,7 @@ function swordHits(pos, rot, damage, fromClone) {
     if (e.dead) continue;
     const dx = e.pos.x - pos.x, dz = e.pos.z - pos.z, d = Math.hypot(dx, dz);
     if (d - e.r > SWORD_REACH) continue;
+    if (game.zone === sea && Math.abs((e.pos.y || 0) - (pos.y || 0)) > e.r + 1.7) continue; // onder water: ongeveer even hoog zwemmen
     let diff = Math.atan2(dx, dz) - rot;
     while (diff > Math.PI) diff -= Math.PI * 2;
     while (diff < -Math.PI) diff += Math.PI * 2;
@@ -1133,7 +1261,23 @@ function questTarget() {
     // naar Het Doolhof (in het doolhof zelf: geen ster, zoek de weg maar!)
     return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.mazePortal : z === 'piramide' ? pyramid.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
-  if (q.state === 'kaart' || q.state === 'kaart2' || (q.state === 'held' && isCityDone(state))) {
+  if (z === 'vulkaan') {
+    // in de vulkaan: naar de draak (of het kaartstuk), en daarna terug naar de uitgang
+    if (state.mapPieces.includes('vulkaan')) return (['kaart', 'kaart2', 'kaart3'].includes(q.state) ? volcano.exit : null);
+    return volcano.boss;
+  }
+  if (z === 'onderwater') {
+    // onder water: naar de inktvis (of het kaartstuk), en daarna terug naar de uitgang
+    if (state.mapPieces.includes('onderwater')) return (['kaart', 'kaart2', 'kaart3', 'kaart4'].includes(q.state) ? sea.exit : null);
+    return sea.boss;
+  }
+  if (q.state === 'schat3' && !state.mapPieces.includes('onderwater')) {
+    return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.seaPortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'vulkaan' ? volcano.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
+  }
+  if (q.state === 'schat2' && !state.mapPieces.includes('vulkaan')) {
+    return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.volcanoPortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
+  }
+  if (q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || (q.state === 'held' && isCityDone(state))) {
     if (z === 'doolhof') return maze.exit;
     return z === 'dorp' ? bolt.pos : z === 'woestijn' ? desert.exit : z === 'piramide' ? pyramid.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
@@ -1568,6 +1712,154 @@ function updateMaze(dt, paused) {
   }
 }
 
+// ---------- De Onderwaterwereld: zwemmen, lucht, stroming en kistjes ----------
+function setSwimming(on) {
+  controls.swimMode = on;
+  if (!on) { controls.flyBtn.up = controls.flyBtn.down = false; player.mesh.rotation.x = 0; }
+  const fb = document.getElementById('fly-btns');
+  fb.classList.toggle('swim', on);
+  if (on) fb.classList.remove('hidden');
+  else if (!driving || !myCar.canFly) fb.classList.add('hidden');
+  ui.setInk(false);
+}
+function updateSea(dt, paused) {
+  const p = player.pos;
+  seaToastCd -= dt; urchinToastCd -= dt;
+  // ink van de inktvis
+  inkTime = Math.max(0, inkTime - dt);
+  ui.setInk(inkTime > 0);
+  if (paused || transition || fainting) return;
+  // omhoog en omlaag zwemmen (en heel langzaam een beetje zakken als je niks doet)
+  const lift = controls.lift;
+  p.y = Math.max(0, Math.min(SURFACE, p.y + (lift ? lift * 4.2 : -0.35) * dt));
+  sea.setDepth(p.y);
+  // je zwemt: een beetje schuin naar voren, met trappelende benen
+  player.mesh.rotation.x = player.walkAmount > 0.3 ? 0.35 : lift > 0 ? -0.15 : 0;
+  // clones zwemmen op dezelfde hoogte mee
+  for (const c of squad.list) c.pos.y += (p.y - c.pos.y) * Math.min(1, dt * 4);
+  // de stroming sleurt je mee
+  const cur = sea.currentAt(p);
+  if (cur) {
+    p.x += cur.x * dt; p.z += cur.z * dt;
+    player.resolveCollisions(sea);
+    if (!cur.weak && seaToastCd <= 0 && !sea.__currentSeen) { sea.__currentSeen = true; ui.toast('🌊 De stroming sleurt je mee! Vlak bij de bodem (bij het zeewier) is hij zwak.', 3600); seaToastCd = 4; }
+  }
+  // zee-egels op de bodem (aan de randen van de stroming)
+  if (sea.onUrchins(p) && player.invuln <= 0) {
+    game.hurtPlayer(1, p.x > 0 ? p.x + 1 : p.x - 1, p.z, 10);
+    if (urchinToastCd <= 0) { ui.toast('🦔 Au, zee-egels! Zwem hoger of blijf van de rand weg.', 2800); urchinToastCd = 5; }
+  }
+  // lucht: in de lagune adem je, verder loopt je luchtmeter leeg
+  if (sea.inLagoon(p)) air = Math.min(AIR_MAX, air + dt * 12);
+  else air = Math.max(0, air - dt);
+  const v = sea.inVent(p);
+  if (v) {
+    air = Math.min(AIR_MAX, air + dt * 14);
+    if (Math.random() < dt * 8) fx.sparkle({ x: p.x, y: p.y + 1.2, z: p.z }, [0xd0f4ff, 0xffffff], 2, 1.5);
+  }
+  const b = sea.takeBubble(p);
+  if (b) {
+    air = Math.min(AIR_MAX, air + BUBBLE_AIR);
+    sfx.bubble();
+    fx.sparkle({ x: b.x, y: b.y, z: b.z }, [0xd0f4ff, 0xffffff, 0x99e9f2], 16, 3);
+  }
+  if (air > AIR_MAX * 0.4) airWarned = false;
+  if (air < AIR_MAX * 0.28 && !airWarned) { airWarned = true; ui.toast('🫧 Bijna geen lucht meer! Pak een luchtbel of zwem door een bellenbron!', 3200); sfx.nope(); }
+  if (air <= 0) {
+    airHurt -= dt;
+    if (airHurt <= 0) {
+      airHurt = 2.2;
+      player.invuln = 0;
+      game.hurtPlayer(1, p.x, p.z + 0.01, 2);
+      ui.toast('😮‍💨 Geen lucht! Snel naar een luchtbel!', 2000);
+    }
+  } else airHurt = 1.0;
+  // kistjes (sommige liggen op de bodem: duik naar beneden!)
+  const st = state.sea;
+  for (const c of sea.chests) {
+    if (c.opened || Math.hypot(p.x - c.x, p.z - c.z) > (c.ship ? 1.7 : 1.3)) continue;
+    if (p.y > 1.3) {
+      if (seaToastCd <= 0) { ui.toast('🧰 Een schatkist! Duik naar de bodem om hem open te maken (⬇️).', 2600); seaToastCd = 3.5; }
+      continue;
+    }
+    c.opened = true;
+    if (!st.chests.includes(c.id)) st.chests.push(c.id);
+    state.crystals = Math.min(MAX_CRYSTALS, state.crystals + c.n);
+    sfx.tada();
+    fx.sparkle({ x: c.x, y: 1, z: c.z }, [0x7af7ff, 0xffffff, 0xffd23f], c.ship ? 60 : 30, 4);
+    ui.toast(c.ship ? `🏴‍☠️ De schatkist van het schip! +${fmt(c.n)} kristallen 💎` : `🧰 Een schatkist! +${fmt(c.n)} kristallen 💎`, 3000);
+    refresh();
+    save();
+  }
+}
+
+// ---------- De Vulkaan: springende stenen, stijgende lava, vuurballen en kistjes ----------
+let volcanoLast = null, rainCd = 2, lavaToastCd = 0, floodWas = 'calm';
+volcano.onImpact = (x, z, r) => {
+  fx.ring({ x, z }, r, 0xff9f1c, 0.45);
+  fx.sparkle({ x, y: 0.6, z }, [0xff9f1c, 0xffd23f, 0xe63946], 14, 2.2);
+  if (game.zone === volcano) {
+    if (Math.hypot(player.pos.x - x, player.pos.z - z) < 12) sfx.slam();
+    if (Math.hypot(player.pos.x - x, player.pos.z - z) < r + 0.3) { game.hurtPlayer(1, x, z, 12); shake = Math.max(shake, 0.4); }
+  }
+};
+function updateVolcano(dt, paused) {
+  const p = player.pos;
+  // hoe hoog sta je (op een steen of een eiland)?
+  const gy = volcano.groundY(p);
+  p.y += (gy - p.y) * Math.min(1, dt * 14);
+  if (paused || transition || fainting) return;
+  lavaToastCd -= dt;
+  const vs = state.volcano;
+  // de lavarivier: alleen over de springende stenen!
+  if (volcano.inRiver(p)) {
+    if (!volcano.onStone(p)) {
+      const back = volcanoLast || { x: 0, z: 20 };
+      const cz = (back.z > 14 ? 1 : -1);
+      game.hurtPlayer(1, p.x, back.z - cz * 3, 4);
+      player.pos.set(back.x, 0, back.z + cz * 0.4);
+      player.kx = player.kz = 0;
+      player.resolveCollisions(volcano);
+      squad.regroup(player);
+      fx.poof(player.pos, 0xff7b00, 1.2);
+      if (lavaToastCd <= 0) { ui.toast('🔥 Au, heet! Loop alleen over de stenen. Wiebelt een steen? Wacht even!', 3200); lavaToastCd = 5; }
+    }
+  } else volcanoLast = { x: p.x, z: p.z };
+  // het lavaveld: als de lava stijgt moet je op een eiland staan
+  const fl = volcano.flooding;
+  if (fl.phase !== floodWas) {
+    if (fl.phase === 'warn' && volcano.inField(p)) { ui.toast('🌋 De lava stijgt! Snel naar een stenen eiland!', 2800); sfx.rumble(); shake = Math.max(shake, 0.4); }
+    floodWas = fl.phase;
+  }
+  if (volcano.lavaHigh && volcano.inField(p) && !volcano.onIsland(p) && player.invuln <= 0) {
+    game.hurtPlayer(1, p.x, p.z + 0.01, 3);
+    fx.poof(p, 0xff7b00, 1);
+    if (lavaToastCd <= 0) { ui.toast('🔥 Au, heet! Ga op een stenen eiland staan!', 2600); lavaToastCd = 4; }
+  }
+  // vuurballen uit de vulkaan (op het lavaveld en het vuurpad; in de krater gooit de draak ze zelf)
+  rainCd -= dt;
+  if (rainCd <= 0) {
+    const pass = volcano.inPass(p), field = volcano.inField(p);
+    if (pass || field) {
+      const a = Math.random() * Math.PI * 2, r = Math.random() * 2.6;
+      volcano.fireball(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r);
+      rainCd = pass ? 1.5 : 3.0;
+    } else rainCd = 0.5;
+  }
+  // kistjes: loop ertegenaan, dan gaan ze open
+  for (const c of volcano.chests) {
+    if (c.opened || Math.hypot(p.x - c.x, p.z - c.z) > 1.3) continue;
+    c.opened = true;
+    if (!vs.chests.includes(c.id)) vs.chests.push(c.id);
+    state.crystals = Math.min(MAX_CRYSTALS, state.crystals + c.n);
+    sfx.tada();
+    fx.sparkle({ x: c.x, y: 1, z: c.z }, [0x7af7ff, 0xffffff, 0xffd23f], 30, 4);
+    ui.toast(`🧰 Een schatkist! +${fmt(c.n)} kristallen 💎`, 2500);
+    refresh();
+    save();
+  }
+}
+
 // ---------- Spel-lus ----------
 const clock = new THREE.Clock();
 let t = 0, saveTimer = 0, lastStep = 0, started = false;
@@ -1597,6 +1889,7 @@ function frame() {
     if (boost === 0) ui.toast('Het Raketsnoep is op. Weer gewoon lopen!');
   }
   player.speed = boost > 0 ? 9.5 : 6;
+  if (zone === sea) player.speed *= 0.8; // zwemmen gaat iets langzamer dan lopen
   const before = player.pos.clone();
   if (driving && carHere()) {
     const people = zone.npcs.map((n) => n.pos);
@@ -1659,14 +1952,16 @@ function frame() {
       save();
     }
     if (type === 'kaartstuk') {
-      const id = zone === maze ? 'doolhof' : 'woestijn';
+      const id = zone === maze ? 'doolhof' : zone === volcano ? 'vulkaan' : zone === sea ? 'onderwater' : 'woestijn';
       const had = state.mapPieces.length;
       if (!state.mapPieces.includes(id)) state.mapPieces.push(id);
       if (id === 'woestijn') { state.quest.state = 'kaart'; delete state.quest.bossBeaten; }
-      else if (reached(state.quest, 'schat')) state.quest.state = 'kaart2';
+      else if (id === 'doolhof' && reached(state.quest, 'schat')) state.quest.state = 'kaart2';
+      else if (id === 'vulkaan' && reached(state.quest, 'schat2')) state.quest.state = 'kaart3';
+      else if (id === 'onderwater' && reached(state.quest, 'schat3')) state.quest.state = 'kaart4';
       sfx.fanfare();
       fx.confetti(player.pos, 100);
-      ui.toast(`📜 Stukje ${id === 'doolhof' ? 2 : 1} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
+      ui.toast(`📜 Stukje ${{ woestijn: 1, doolhof: 2, vulkaan: 3, onderwater: 4 }[id]} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
       // elk stukje maakt de clonemachine sterker
       if (state.mapPieces.length > had && reached(state.quest, 'held')) {
         setTimeout(() => { ui.toast('🧬 Je kunt nu 1 clone meer maken!', 3500); sfx.powerUp(); }, 2600);
@@ -1703,6 +1998,8 @@ function frame() {
   }
   if (zone === forest && started) updatePlates(realDt);
   if (zone === maze && started) updateMaze(realDt, paused);
+  if (zone === volcano && started) updateVolcano(realDt, paused);
+  if (zone === sea && started) updateSea(realDt, paused);
 
   // Uitgangen naar andere zones
   exitCooldown -= realDt;
@@ -1744,7 +2041,18 @@ function frame() {
     const fight = bram && !bram.dead && maze.inBossRoom(player.pos);
     ui.setBoss('🍃 Bladkoning Bram', fight ? bram.hp / bram.maxHp : null);
     playMusic(fight ? 'baas' : 'bos');
+  } else if (zone === volcano) {
+    const fight = dragon && !dragon.dead && volcano.inCrater(player.pos);
+    ui.setBoss('🐉 Vuurdraak Vonk', fight ? dragon.hp / dragon.maxHp : null);
+    playMusic(fight ? 'baas' : 'vulkaan');
+  } else if (zone === sea) {
+    const fight = squid && !squid.dead && sea.inTrench(player.pos);
+    ui.setBoss('🦑 Reuzeninktvis Inka', fight ? squid.hp / squid.maxHp : null);
+    playMusic(fight ? 'baas' : 'onderwater');
   } else ui.setBoss('', null);
+  ui.setAir(zone === sea ? air / AIR_MAX : null);
+  if (zone === desert && seaAppearPending && !transition) seaAppear();
+  if (zone === desert && volcanoAppearPending && !transition) volcanoAppear();
   if (zone === desert && mazeAppearPending && !transition) mazeAppear();
   if (zone === world && desertAppearPending && !transition) desertAppear();
   if (zone === desert) updateStorm(realDt, paused);
@@ -1837,7 +2145,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.clones = {
   net, openCoop,
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
-  forest, cave, city, desert, pyramid, maze, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
+  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
   get boost() { return boost; }, collideTest: collide, kickflip, boostCar, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,

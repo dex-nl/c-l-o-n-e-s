@@ -56,6 +56,16 @@ export const ui = {
     }
   },
 
+  // luchtmeter onder water (frac = 0..1, of null = weg)
+  setAir(frac) {
+    const el = $('air');
+    el.classList.toggle('hidden', frac === null);
+    if (frac === null) return;
+    $('air-fill').style.width = `${Math.max(0, Math.min(1, frac)) * 100}%`;
+    el.classList.toggle('low', frac < 0.3);
+  },
+  setInk(on) { $('ink').classList.toggle('hidden', !on); },
+
   setBoss(name, frac) {
     $('boss').classList.toggle('hidden', frac === null);
     if (frac === null) return;
