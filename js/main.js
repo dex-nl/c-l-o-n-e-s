@@ -235,7 +235,7 @@ let sjors = null; // Schorpioen Sjors, de baas van de piramide
 let bram = null;  // Bladkoning Bram, de baas van het doolhof
 let dragon = null; // Vuurdraak Vonk, de baas van de vulkaan
 let squid = null; // Reuzeninktvis Inka, de baas van de onderwaterwereld
-let air = 32, airHurt = 0, inkTime = 0, airWarned = false, seaToastCd = 0; // onder water: lucht (seconden), inkt
+let air = 32, airHurt = 0, inkTime = 0, airWarned = false, seaToastCd = 0, urchinToastCd = 0; // onder water: lucht (seconden), inkt
 let shake = 0, hitStop = 0, fainting = false, transition = false;
 let lastHitSound = 0;
 
@@ -1724,7 +1724,7 @@ function setSwimming(on) {
 }
 function updateSea(dt, paused) {
   const p = player.pos;
-  seaToastCd -= dt;
+  seaToastCd -= dt; urchinToastCd -= dt;
   // ink van de inktvis
   inkTime = Math.max(0, inkTime - dt);
   ui.setInk(inkTime > 0);
@@ -1747,7 +1747,7 @@ function updateSea(dt, paused) {
   // zee-egels op de bodem (aan de randen van de stroming)
   if (sea.onUrchins(p) && player.invuln <= 0) {
     game.hurtPlayer(1, p.x > 0 ? p.x + 1 : p.x - 1, p.z, 10);
-    if (seaToastCd <= 0) { ui.toast('🦔 Au, zee-egels! Zwem hoger of blijf van de rand weg.', 2800); seaToastCd = 4; }
+    if (urchinToastCd <= 0) { ui.toast('🦔 Au, zee-egels! Zwem hoger of blijf van de rand weg.', 2800); urchinToastCd = 5; }
   }
   // lucht: in de lagune adem je, verder loopt je luchtmeter leeg
   if (sea.inLagoon(p)) air = Math.min(AIR_MAX, air + dt * 12);
