@@ -56,6 +56,17 @@ Het spel van Dex (11 jaar).
 ### Moeilijkheid
 - Elke nieuwe wereld is een beetje moeilijker. Dat staat op één plek: `js/difficulty.js` (bos 1, woestijn 2, piramide 2,2, doolhof 3). Slijmpjes krijgen meer leven en zijn iets sneller, bazen slaan harder en er vallen minder hartjes. Met je clones blijft het altijd te halen.
 
+### Samen spelen 🤝 (idee van Dex!)
+- Rechtsboven zit de knop **🤝 Samen spelen** (op een iPhone alleen 🤝). Daar kies je:
+  - **✨ Code maken**: je krijgt een korte code, zoals **BOS-4821**. Zeg hem tegen je vriend of laat hem zien.
+  - **⌨️ Code invoeren**: typ de code van je vriend en druk op **Meedoen** (hoofdletters, spaties en het streepje maken niet uit).
+- Je kunt met **maximaal 4 spelers** samen spelen. Komt er nog iemand bij? Die hoort *"Dit spel is vol"*.
+- Je ziet elkaar als poppetje met een **eigen kleur** en een **naamkaartje** (*Speler 1*, *Speler 2*, ...). Rijdt of vliegt je vriend? Dan zie je zijn auto.
+- Je ziet alleen de spelers die in **dezelfde wereld** zijn als jij. Ga samen naar het bos, de stad of de woestijn!
+- Linksboven staat bijvoorbeeld *"🤝 Verbonden met 1 vriend"*. Met **🔌 Stoppen met samen spelen** ben je weer alleen.
+- Foute code? *"Code niet gevonden"*. Valt de verbinding weg? Dan krijg je een melding en speel je gewoon alleen verder.
+- Iedereen houdt zijn **eigen** save: kristallen, spullen, codes en voortgang worden niet gedeeld. Er is geen chat.
+
 ### Clones even weg 👻
 - Vind je je clones soms in de weg lopen? Tik op de knop **👻 Clones weg** rechtsboven (naast de kaart; op een iPhone alleen 👻), of druk op **H** (de C is al voor clonen). Je clones zijn even weg: onzichtbaar, ze volgen niet, botsen niet en vechten niet. Nog een keer (**🧬 Clones terug**) en ze staan meteen weer achter je. Maak je een nieuwe clone, dan komen ze ook terug. Het spel onthoudt het. Werkt overal, ook in je auto.
 
@@ -144,6 +155,7 @@ Het spel van Dex (11 jaar).
 
 ## Besturing
 - **iPad:** sleep met je vinger op de linkerkant van het scherm om te lopen. De grote knop rechts is **Praat** (bij iemand), **Lees** (bij een bord) of **⚔️** (zwaard). Bij de machine: druk op **Clone!**
+- **Samen spelen:** tik op **🤝** rechtsboven.
 - **Laptop:** lopen met **W A S D** of de **pijltjes**. **E** of **spatie** = praten of zwaaien. **C** = clonen. **M** = kaart. **B** = rugzak. **H** = clones weg/terug.
 - **Autorijden:** sta bij je auto en druk op **Instappen** (of **E**, of tik op de auto). Stuur met de joystick of **W A S D**/pijltjes: de auto rijdt de kant op waar je naartoe duwt. **Uitstappen** (of **E**) om uit te stappen.
 - **Vliegen (Wolkenflitser):** **⬆️ Omhoog** / **⬇️ Omlaag** ingedrukt houden, of **spatie** / **Shift** op de laptop. **🔄 Kickflip** = **F**, **🚀 Boost** = **R**. **E** of **Enter** = landen en uitstappen.
@@ -161,6 +173,7 @@ Het spel van Dex (11 jaar).
 - [x] Hoofdstuk 3: De Grote Woestijn met piramides, cactussen, een zandstorm, Schorpioen Sjors en het 1e stukje van de schatkaart (idee van Dex)
 - [x] Een geheime code voor 100 kristallen (idee van Dex)
 - [x] Clones even wegsturen met de 👻-knop (idee van Dex)
+- [x] Samen spelen met een code (eerste stap: elkaar zien) (idee van Dex)
 - [x] Hoofdstuk 4: Het Doolhof met deuren, knoppen, vallen, schatkisten, Bladkoning Bram en stukje 2 van de schatkaart (idee van Dex)
 - [x] Een supergeheime code voor 100.000 kristallen
 - [x] Meer clones per stukje schatkaart

@@ -34,6 +34,7 @@ import { Pickups } from './pickups.js';
 import { buildShop } from './shop.js';
 import { buildBackpack } from './backpack.js';
 import { buildMap } from './map.js';
+import { createNet, playerName, PLAYER_COLORS } from './net.js';
 import { sfx, setSoundOn, setMusicOn, playMusic } from './sound.js';
 
 const TALK_DISTANCE = 3.2;
@@ -1295,6 +1296,96 @@ const controls = new Controls({
   },
 });
 
+// ---------- Samen spelen (met een code) ----------
+// Alleen waar je bent wordt gedeeld (wereld, plek, kant, auto). Je save, kristallen en codes blijven van jou.
+const net = createNet({
+  scene,
+  zones: Object.keys(zones),
+  getLocal: () => (driving && myCar.model
+    ? { w: game.zone.id, x: myCar.pos.x, z: myCar.pos.z, r: myCar.rot, y: myCar.alt, c: myCar.id }
+    : { w: game.zone.id, x: player.pos.x, z: player.pos.z, r: player.rot, y: 0, c: '' }),
+  onChange: () => { updateCoopStatus(); if (ui.panelOpen && coopOpen) ui.refreshPanel(buildCoop); },
+  onToast: (t) => ui.toast(t, 2600),
+});
+let coopOpen = false, coopJoinMode = false;
+function coopText() {
+  const n = net.friends;
+  if (net.status === 'verbonden') return n ? `🤝 Verbonden met ${n} ${n === 1 ? 'vriend' : 'vrienden'}` : '🤝 Verbonden';
+  if (net.status === 'wachten') return `🤝 Code ${net.code}: wachten op vrienden...`;
+  if (net.status === 'laden' || net.status === 'verbinden') return '🤝 Verbinden...';
+  return '';
+}
+function updateCoopStatus() {
+  const el = document.getElementById('coop-status');
+  const t = coopText();
+  el.textContent = t;
+  el.classList.toggle('hidden', !t);
+  document.getElementById('coop-btn').classList.toggle('on', net.status === 'verbonden');
+}
+function coopButton(text, cls, fn) {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'coop-choice ' + (cls || ''); b.textContent = text;
+  b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); fn(); });
+  return b;
+}
+function buildCoop(body) {
+  const note = (t, cls = 'panel-note') => { const p = document.createElement('p'); p.className = cls; p.textContent = t; body.append(p); return p; };
+  const active = net.status === 'wachten' || net.status === 'verbonden' || net.status === 'laden' || net.status === 'verbinden';
+  if (active) {
+    if (net.mode === 'host' && net.code) {
+      note('Geef deze code aan je vriend (zeg hem of laat hem zien):');
+      const c = document.createElement('div'); c.id = 'coop-code'; c.className = 'coop-code'; c.textContent = net.code; body.append(c);
+    } else if (net.code) note(`Code: ${net.code}`);
+    note(coopText() || '🤝 Verbinden...', 'panel-note coop-now');
+    if (net.status === 'verbonden') {
+      const list = document.createElement('div'); list.className = 'coop-list';
+      const me = net.slot;
+      const slots = [me, ...[...net.remotes.values()].filter((r) => r.target).map((r) => r.slot)].sort();
+      for (const s of slots) {
+        const chip = document.createElement('span'); chip.className = 'coop-player';
+        chip.style.borderColor = '#' + PLAYER_COLORS[s].toString(16).padStart(6, '0');
+        chip.textContent = playerName(s) + (s === me ? ' (jij)' : '');
+        list.append(chip);
+      }
+      body.append(list);
+      note('Iedereen houdt zijn eigen kristallen, spullen en voortgang. Ga naar dezelfde wereld, dan zie je elkaar!', 'panel-note small');
+    }
+    body.append(coopButton('🔌 Stoppen met samen spelen', 'stop', () => { net.stop(); coopJoinMode = false; ui.refreshPanel(buildCoop); }));
+    return;
+  }
+  if (net.status === 'fout' && net.error) { const m = note('😕 ' + net.error, 'panel-note coop-err'); m.id = 'coop-error'; }
+  if (!coopJoinMode) {
+    note(`Speel samen met je vrienden (met z'n vieren kan ook)! Eén maakt een code, de anderen typen hem in.`);
+    const row = document.createElement('div'); row.className = 'coop-row';
+    row.append(
+      coopButton('✨ Code maken', 'make', () => { net.host(); }),
+      coopButton('⌨️ Code invoeren', 'enter', () => { coopJoinMode = true; ui.refreshPanel(buildCoop); }),
+    );
+    body.append(row);
+    return;
+  }
+  note('Typ de code van je vriend:');
+  const row = document.createElement('div'); row.className = 'code-row';
+  const input = document.createElement('input');
+  Object.assign(input, { id: 'coop-input', type: 'text', maxLength: 10, autocomplete: 'off', spellcheck: false, placeholder: 'BOS-4821' });
+  input.setAttribute('autocapitalize', 'characters');
+  const ok = document.createElement('button'); ok.id = 'coop-join'; ok.type = 'button'; ok.textContent = 'Meedoen';
+  const go = () => net.join(input.value);
+  ok.addEventListener('pointerdown', (e) => { e.preventDefault(); go(); });
+  input.addEventListener('keydown', (e) => { e.stopPropagation(); if (e.key === 'Enter') { e.preventDefault(); go(); } });
+  row.append(input, ok);
+  body.append(row);
+  body.append(coopButton('← Terug', 'back', () => { coopJoinMode = false; ui.refreshPanel(buildCoop); }));
+  setTimeout(() => input.focus(), 50);
+}
+function openCoop() {
+  if (ui.dialogOpen || !started) return;
+  if (ui.panelOpen) ui.closePanel();
+  coopOpen = true;
+  if (net.status === 'fout') { net.status = 'uit'; }
+  ui.openPanel('🤝 Samen spelen', buildCoop, () => { coopOpen = false; coopJoinMode = false; if (net.status === 'fout') net.status = 'uit'; });
+}
+
 const tapBtn = (id, fn) => document.getElementById(id).addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); fn(); });
 tapBtn('sound-btn', toggleSound);
 tapBtn('music-btn', toggleMusic);
@@ -1302,6 +1393,7 @@ controls.holdButton(document.getElementById('fly-up'), 'up');
 controls.holdButton(document.getElementById('fly-down'), 'down');
 tapBtn('bag-btn', openBackpack);
 tapBtn('map-btn', openMap);
+tapBtn('coop-btn', openCoop);
 tapBtn('ghost-btn', toggleClones);
 tapBtn('flip-btn', kickflip);
 tapBtn('boost-btn', boostCar);
@@ -1669,6 +1761,7 @@ function frame() {
   saveTimer += realDt;
   if (dirty && saveTimer > 1.5 && !transition) { saveTimer = 0; save(); }
 
+  net.update(realDt, game.zone.id); // samen spelen: de anderen bewegen (en jij stuurt waar je bent)
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
@@ -1695,6 +1788,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 
 // Handig om te testen (in de console): window.clones
 window.clones = {
+  net, openCoop,
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
   forest, cave, city, desert, pyramid, maze, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)

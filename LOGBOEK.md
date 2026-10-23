@@ -127,3 +127,12 @@
 - De camera kijkt door de heggen heen, zodat je jezelf altijd ziet. Snel genoeg: de heggen worden in één keer getekend.
 - Save naar versie 8 (wat je in het doolhof hebt gedaan). Oude saves blijven werken (getest met versie 6, 7 en rare saves).
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat). Nog niet getest op een echte iPad.
+
+## 23 oktober 2026: Samen spelen met een code (wens van Dex, papa vond het goed)
+- Gemaakt met een AI-helper op de tak `samen-spelen`. **Dex of papa beslist of het erin komt.**
+- Eerste kleine stap: met de knop **🤝 Samen spelen** maakt één speler een code (zoals BOS-4821) en typen tot 3 vrienden die code in.
+- Je ziet elkaar lopen (eigen kleur en naamkaartje, ook in je auto) als je in dezelfde wereld bent. Zo'n 10 keer per seconde wordt doorgegeven waar je bent, en het poppetje glijdt er rustig naartoe.
+- Veilig: het gaat rechtstreeks van computer naar computer (PeerJS, WebRTC). Alleen wie de code heeft kan meedoen. Er is geen chat, je typt geen naam en er gaat niks persoonlijks over het netwerk: alleen de wereld, de plek, de kant waar je naar kijkt en de auto.
+- Iedereen houdt zijn eigen save. De save is niet veranderd (nog steeds versie 8).
+- Nog niet: samen vechten, slijmpjes en kisten delen, of elkaars hoedjes en clones zien.
+- Getest met 2 tot 5 browsers tegelijk op de computer. De testcomputer kan zelf geen echte WebRTC-verbinding maken, dus daar gingen de berichten via een nep-netwerk. De echte PeerJS-server is wel getest: codes maken en een foute code. Nog niet getest op twee echte iPads.
