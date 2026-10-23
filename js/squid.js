@@ -226,7 +226,7 @@ export class Squid {
           game.shake?.(0.6);
           for (const a of this.lanes) for (let r = 2; r < SLAM_LEN; r += 2.2) game.fx.poof({ x: this.pos.x + Math.sin(a) * r, y: 0.3, z: this.pos.z + Math.cos(a) * r }, 0xc5f6fa, 0.6);
         }
-        if (this.slammed && this.t < AIM + HIT + 0.35 && this.inLane(pp)) game.hurtPlayer(this.slamDamage, this.pos.x, this.pos.z, 12);
+        if (this.slammed && this.t < AIM + HIT + 0.2 && this.inLane(pp)) game.hurtPlayer(this.slamDamage, this.pos.x, this.pos.z, 12);
         if (!show) {
           for (const L of this.laneMeshes) L.m.visible = L.armM.visible = false;
           this.lanes = [];
