@@ -136,3 +136,12 @@
 - Iedereen houdt zijn eigen save. De save is niet veranderd (nog steeds versie 8).
 - Nog niet: samen vechten, slijmpjes en kisten delen, of elkaars hoedjes en clones zien.
 - Getest met 2 tot 5 browsers tegelijk op de computer. De testcomputer kan zelf geen echte WebRTC-verbinding maken, dus daar gingen de berichten via een nep-netwerk. De echte PeerJS-server is wel getest: codes maken en een foute code. Nog niet getest op twee echte iPads.
+
+## 23 oktober 2026: Hoofdstuk 5, De Vulkaan (wens van Dex)
+- Gemaakt met een AI-helper op de tak `vulkaan`. **Dex of papa beslist of het erin komt.**
+- Na Bladkoning Bram verschijnt links van de Grote Piramide een rode poort naar **De Vulkaan** (wereld 3 van de schatkaart, moeilijkheid 4).
+- Een lavarivier met **springende stenen** (ze zakken om de beurt in de lava), een lavaveld waar **de lava stijgt** (ga op een eiland staan), een vuurpad met **vuurballen**, **lavamonsters** en 3 schatkisten.
+- In de krater: **Vuurdraak Vonk** (100 levens): vuuradem (rode punt op de grond), vliegen en landen met een klap, vuurregen, en hij roept lavamonsters. Hij geeft **stukje 3 van 10** (en dus 13 clones).
+- De Wolkenflitser mag niet in de vulkaan. De vulkaan heeft een eigen liedje.
+- Save naar versie 9 (draak verslagen en open kistjes). Oude saves blijven werken (getest met versie 7 en 8 en rare saves).
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt gevecht tegen de draak op het iPad-formaat. Nog niet getest op een echte iPad.

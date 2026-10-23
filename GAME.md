@@ -46,15 +46,33 @@ Het spel van Dex (11 jaar).
 - **8 schatkisten** in doodlopende gangetjes (kristallen) en **3 kristalbloemen**: raak er een aan en 30 seconden lang wijzen glinsters de weg naar je volgende doel.
 - Veel **heggenslijmpjes** (sterker dan de mummies).
 - In het midden woont **Bladkoning Bram** 🍃: een heel groot, vriendelijk bladerslijm met een kroon en een snor. Hij is taai (**72 levens**). Hij springt en landt met een klap (1 hartje, als hij boos is 2; kijk naar de schaduw), maakt een **doornenkrans** (rode ring: ga eruit, heel dichtbij of ver weg) en roept heggenslijmpjes (die geven altijd een hartje). Bij de helft wordt hij boos. Samen met je clones kun je hem verslaan!
-- Dan krijg je **stukje 2 van 10** van de schatkaart. Breng het naar Professor Bolt: *"Hoofdstuk 4 uitgespeeld!"* Wordt vervolgd...
+- Dan krijg je **stukje 2 van 10** van de schatkaart. Breng het naar Professor Bolt: *"Hoofdstuk 4 uitgespeeld!"*
+
+### Hoofdstuk 5: De Vulkaan (idee van Dex!)
+- Heb je **Bladkoning Bram** verslagen? Dan verschijnt in de woestijn, **links van de Grote Piramide**, een rode poort (met glitters en *"Er is een nieuwe poort verschenen!"*). Op de kaart staat **De Vulkaan**.
+- **De Vulkaan** is donker, rood en heet. Je loopt van de ingang (onder) naar de krater (boven):
+  1. **De lavarivier**: je kunt alleen over de **springende stenen**. Ze zakken om de beurt even in de lava en springen dan weer omhoog. **Wiebelt een steen** (met een geel randje)? Dan zakt hij zo! Wacht tot de volgende steen weer boven is. Loop je in de lava? *"Au, heet!"*: 1 hartje en je staat weer aan de kant.
+  2. **Het lavaveld**: af en toe **stijgt de lava**. Eerst rommelt het en gaan de randjes van de **stenen eilanden** geel knipperen: *"De lava stijgt! Snel naar een stenen eiland!"* Op een eiland ben je veilig, ernaast kost het hartjes.
+  3. **Het vuurpad**: een smal pad omhoog waar **vuurballen** uit de vulkaan vallen. Een **rood rondje** op de grond = daar valt er zo een. Wegwezen! (1 hartje.) In twee hoekjes staat een **schatkist**, en bij de ingang nog een (15, 15 en 20 kristallen).
+  4. **De krater**: hier woont **Vuurdraak Vonk** 🐉, een grote rode draak met grote ogen en kleine hoorntjes (**100 levens**).
+- Overal springen **lavamonsters** rond: gloeiende slijmpjes met stukjes steen erop (nog taaier dan de heggenslijmpjes).
+- **Vuurdraak Vonk**:
+  - **Vuuradem**: hij kijkt je aan en er komt een **rode punt** op de grond. Ga opzij! Dan blaast hij vuur.
+  - **Vliegen**: hij vliegt omhoog (dan kun je hem niet raken), zijn schaduw volgt je... en dan landt hij met een **KLAP**. Loop weg van de schaduw!
+  - **Vuurregen**: hij brult en er vallen vuurballen om je heen (rode rondjes).
+  - Bij 2/3 en 1/3 van zijn leven roept hij 2 lavamonsters (die geven altijd een hartje).
+  - Bij de helft wordt hij **boos**: sneller, vaker vuur, en zijn klappen kosten 2 hartjes.
+- Onderweg liggen een paar hartjes (na de rivier en voor de krater). Er vallen minder hartjes dan in het doolhof: het is moeilijker!
+- Versla hem samen met je clones: dan krijg je **stukje 3 van 10** van de schatkaart (en 1 clone meer). Breng het naar Professor Bolt: *"Hoofdstuk 5 uitgespeeld!"* Wordt vervolgd...
+- De **Wolkenflitser mag niet in de vulkaan** (anders vlieg je zo over de lava, te makkelijk!). Met de geheime auto-code wacht hij gewoon in De Stad.
 
 ### Meer clones 🧬
 - Linksboven zie je hoeveel clones je hebt: **🧬 Clones 3/10**.
 - Elk stukje schatkaart geeft **1 clone meer**: *"🧬 Je kunt nu 1 clone meer maken!"*
-- De getallen: aan het begin 5, met de Superbatterij 10, met stukje 1 = 11, stukje 2 = 12, ... alle 10 stukjes = 20.
+- De getallen: aan het begin 5, met de Superbatterij 10, met stukje 1 = 11, stukje 2 = 12, stukje 3 = 13, ... alle 10 stukjes = 20.
 
 ### Moeilijkheid
-- Elke nieuwe wereld is een beetje moeilijker. Dat staat op één plek: `js/difficulty.js` (bos 1, woestijn 2, piramide 2,2, doolhof 3). Slijmpjes krijgen meer leven en zijn iets sneller, bazen slaan harder en er vallen minder hartjes. Met je clones blijft het altijd te halen.
+- Elke nieuwe wereld is een beetje moeilijker. Dat staat op één plek: `js/difficulty.js` (bos 1, woestijn 2, piramide 2,2, doolhof 3, vulkaan 4). Slijmpjes krijgen meer leven en zijn iets sneller, bazen slaan harder en er vallen minder hartjes. Met je clones blijft het altijd te halen.
 
 ### Samen spelen 🤝 (idee van Dex!)
 - Rechtsboven zit de knop **🤝 Samen spelen** (op een iPhone alleen 🤝). Daar kies je:
@@ -177,16 +195,17 @@ Het spel van Dex (11 jaar).
 - [x] Hoofdstuk 4: Het Doolhof met deuren, knoppen, vallen, schatkisten, Bladkoning Bram en stukje 2 van de schatkaart (idee van Dex)
 - [x] Een supergeheime code voor 100.000 kristallen
 - [x] Meer clones per stukje schatkaart
-- [ ] De andere 8 stukjes van de schatkaart (zie hieronder, Dex kiest!)
+- [x] Hoofdstuk 5: De Vulkaan met springende stenen, stijgende lava, vuurballen, lavamonsters, Vuurdraak Vonk en stukje 3 van de schatkaart (idee van Dex)
+- [ ] De andere 7 stukjes van de schatkaart (zie hieronder, Dex kiest!)
 
 ## De schatkaart: 10 stukjes 🗺️
-Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. Stukje 1 en 2 zijn klaar, de rest zijn ideeën (Dex mag ze veranderen!):
+Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. Stukje 1, 2 en 3 zijn klaar, de rest zijn ideeën (Dex mag ze veranderen!):
 1. ✅ De Grote Woestijn: Schorpioen Sjors
 2. ✅ Het Doolhof: Bladkoning Bram
-3. De IJsberg: glijden over ijs, een sneeuwpopslijm als baas
-4. De Vulkaan: lava-stenen springen, een vuurdraak
-5. Het Spookkasteel: lichtjes aandoen, een spook dat verstoppertje speelt
-6. Onder water: met een duikboot, een grote octopus
+3. ✅ De Vulkaan: springende stenen, stijgende lava en Vuurdraak Vonk
+4. Onder water: een luchtmeter met belletjes, haaien, kwallen, een gezonken schip en een reuzeninktvis (de poort komt na de draak)
+5. De IJsberg: glijden over ijs, een sneeuwpopslijm als baas
+6. Het Spookkasteel: lichtjes aandoen, een spook dat verstoppertje speelt
 7. De Wolkenstad: vliegen met de Wolkenflitser van wolk naar wolk
 8. De Jungle: lianen en een gorilla-koning
 9. Het Piratenschip: de schatkaart van de piraat zelf, kanonnen
@@ -201,4 +220,4 @@ Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. St
 - Dag en nacht, met lantaarns in het dorp.
 - Een boot op de vijver, of een eiland.
 - Een racebaan of een garage om je auto te verven.
-- De verborgen schat zoeken met een kaart in 10 stukjes: waar liggen stukje 3 tot en met 10? (zie de lijst hierboven)
+- De verborgen schat zoeken met een kaart in 10 stukjes: waar liggen stukje 4 tot en met 10? (zie de lijst hierboven)

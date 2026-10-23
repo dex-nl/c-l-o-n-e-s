@@ -144,8 +144,8 @@ export function createVolcano(group) {
   const rockM = mat(0x4f4340, { roughness: 1, flatShading: true });
   const rockGeo = new THREE.DodecahedronGeometry(1, 0);
   const rocks = [];
-  const addRock = (x, z, s, solid = true) => {
-    rocks.push({ x, y: s * 0.55, z, s, ry: rand() * 6, rx: rand() });
+  const addRock = (x, z, s, solid = true, flat = 1) => {
+    rocks.push({ x, y: s * 0.55 * flat, z, sx: s, sy: s * flat, sz: s, ry: rand() * 6, rx: rand() * 0.3 });
     if (solid) colliders.push({ x, z, r: s * 0.85, h: s * 1.2 });
   };
   // vuurpad: muren links en rechts (met een hoekje voor een schatkist)
@@ -164,7 +164,7 @@ export function createVolcano(group) {
   for (let a = 0; a < Math.PI * 2; a += 0.17) {
     const x = CRATER.x + Math.sin(a) * (CRATER.r + 1.5), z = CRATER.z + Math.cos(a) * (CRATER.r + 1.5);
     if (Math.abs(x) < 3.6 && z > CRATER.z) continue;
-    addRock(x, z, 1.7 + rand() * 0.7);
+    addRock(x, z, 1.7 + rand() * 0.7, true, z > CRATER.z ? 0.5 : 0.9); // aan de voorkant lager, zodat je alles goed ziet
   }
   // losse rotsen bij de ingang
   for (const [x, z, s] of [[-9, 30, 1.2], [10, 33, 1.4], [-15, 21, 1], [16, 26, 1.3], [-21, 33, 1.5], [21, 21, 1.1], [6, 22, 0.8]]) addRock(x, z, s);
@@ -270,7 +270,7 @@ export function createVolcano(group) {
   const portal = makePortal(group, 0, B.maxZ - 2.2, 0, 'WOESTIJN', '#d4a017');
   updaters.push(portal.update);
   talkables.push(makeSignpost(group, {
-    id: 'bord-vulkaan', x: 3.6, z: B.maxZ - 6, title: 'DE VULKAAN', color: '#c1121f',
+    id: 'bord-vulkaan', x: 5.2, z: B.maxZ - 7.5, title: 'DE VULKAAN', color: '#c1121f',
     lines: [
       'DE VULKAAN',
       'Bovenin de krater woont Vuurdraak Vonk. Hij bewaakt stukje 3 van de schatkaart!',
@@ -290,7 +290,7 @@ export function createVolcano(group) {
     env: { sky: [0x2b0a0a, 0xff7b39], fog: [0x5a1e10, 28, 78], hemi: [0xffd0b0, 0x401810, 1.0], sun: [0xffb070, 1.7], cam: [0, 11, 10] },
     spawns: { fromWoestijn: { x: 0, z: B.maxZ - 5.5, rot: Math.PI } },
     exit: { x: 0, z: B.maxZ - 2.0 },
-    stones, islands, chests, fireball, flooding, crater: CRATER, nest,
+    stones, islands, chests, fireball, fireballs, flooding, crater: CRATER, nest,
     boss: { x: CRATER.x, z: CRATER.z - 3 },
     heartSpots: [{ x: -2, z: 7.6 }, { x: -1.5, z: -25.5 }, { x: 1.5, z: -25.5 }],
     slimeSpots: [[-6, 27], [7, 25], [-9, -2], [9, -4.5], [0, -8.5], [-15, -6], [-2, -17], [2.5, -23]].map(([x, z]) => ({ x, z, kind: 'lava' })),

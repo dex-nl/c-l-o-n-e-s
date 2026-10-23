@@ -46,6 +46,8 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - `js/treasure.js` – de schatkaart in 10 stukjes (getekend op een canvas; `MAP_PIECES` en `MAP_PIECES_TOTAL` in `quest.js`)
 - `js/maze.js` – Het Doolhof (hoofdstuk 4): wordt **gemaakt met een vast getal** (`buildMazeLayout`, seed 2029; verandert het, dan klopt de route in GAME.md niet meer!). Heggen als InstancedMesh met een doorzicht-shader (`uCut`), 3 deuren met knoppen, kisten, kristalbloemen (`route`/`showTrail`), rotsen, doornen, het geheime kamertje (`setSecretOpen`) en de ontdekte vakjes voor de kaart (`seenHex`/`explore`)
 - `js/bram.js` – Bladkoning Bram, de baas van het doolhof (sprong, doornenkrans, hulpjes roepen, boos bij de helft)
+- `js/volcano.js` – De Vulkaan (hoofdstuk 5): lavarivier met springende stenen (`stones`, `onStone`), lavaveld dat stijgt (`flooding`, `onIsland`, `lavaHigh`), vuurballen (`fireball`, `onImpact`), kisten en de krater. Pijn en hoogte regelt `updateVolcano` in `main.js`. Geen auto's in de vulkaan.
+- `js/dragon.js` – Vuurdraak Vonk, de baas van de vulkaan (vuuradem met rode punt, vliegen en landen, vuurregen, lavamonsters roepen, boos bij de helft)
 - `js/difficulty.js` – **alle moeilijkheid op één plek**: `WORLD_LEVEL` per wereld en `difficulty(zone)` (leven, snelheid, baasklap, hartjes). Nieuwe wereld? Geef hem hier een hoger level.
 - `js/cave.js` – de Slijmgrot. **De kerker is getekend met letters** (`MAP`): `#` muur, `.` vloer, `K` Koning Slijm, `s`/`b` slijmpjes, `v` vuurschaal, `E` ingang
 - `js/props.js` – borden, paddenstoelen, vuurvliegjes
@@ -67,7 +69,7 @@ Iedere AI die helpt, werkt volgens deze regels. Praat met Dex in simpel Nederlan
 - Kickflip en Boost van de Wolkenflitser: `myCar.kickflip()` / `myCar.boost()` in `drive.js` (tijden: `KICKFLIP_*`, `BOOST_*`); knoppen `#flip-btn` / `#boost-btn` in `#fly-btns`, toetsen F en R (alleen in de Wolkenflitser)
 - `js/net.js` – Samen spelen: PeerJS (van een CDN, pas geladen als je op 🤝 drukt), peer-id `clones-dex-` + code, de host stuurt alles door (`MAX_PLAYERS` 4, `SEND_HZ` 10). Over het netwerk gaat **alleen** `{ t, slot, w, x, z, r, y, c }` (wereld, plek, kant, hoogte, auto); `cleanState` controleert alles wat binnenkomt. **Stuur nooit save-gegevens, kristallen, codes of hashes over het netwerk** en voeg geen vrije tekst/chat toe. `window.__clonesTestPeer` is alleen voor de tests (nep-netwerk)
 - `js/format.js` – `fmt(n)`: grote getallen met een punt (10.000)
-- `js/save.js` – opslaan en oude saves omzetten (nu versie 8: `maze` = `{ seen, doors, chests, levers, secret, bram }`, codes in `CODE_REWARDS`, max `MAX_CRYSTALS`; versie 7: `jobs` = `{ done, active, step }`, `desertEarly`; versie 6: `mapPieces`, `codes`, `clonesHidden`; `quest.stones` en `quest.bossBeaten` tijdens hoofdstuk 3)
+- `js/save.js` – opslaan en oude saves omzetten (nu versie 9: `volcano` = `{ dragon, chests }`; versie 8: `maze` = `{ seen, doors, chests, levers, secret, bram }`, codes in `CODE_REWARDS`, max `MAX_CRYSTALS`; versie 7: `jobs` = `{ done, active, step }`, `desertEarly`; versie 6: `mapPieces`, `codes`, `clonesHidden`; `quest.stones` en `quest.bossBeaten` tijdens hoofdstuk 3)
 - `.github/workflows/pages.yml` – zet het spel op GitHub Pages
 
 ## Testen

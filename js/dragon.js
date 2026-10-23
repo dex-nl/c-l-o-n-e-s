@@ -162,7 +162,7 @@ export class Dragon {
   inBreath(p) {
     const dx = p.x - this.pos.x, dz = p.z - this.pos.z, d = Math.hypot(dx, dz);
     if (d > BREATH_RANGE + 0.3) return false;
-    if (d < this.r + 0.6) return true;
+    if (d < this.r + 0.2) return true;
     let diff = Math.atan2(dx, dz) - this.rot;
     while (diff > Math.PI) diff -= Math.PI * 2;
     while (diff < -Math.PI) diff += Math.PI * 2;
@@ -230,7 +230,7 @@ export class Dragon {
       case 'breath': {
         // eerst richten (rode punt op de grond), dan VUUR
         const AIM = this.angry ? 0.85 : 1.1, FIRE = 1.1;
-        if (this.t < AIM * 0.7) this.face(p.x, p.z, dt, 4);
+        if (this.t < AIM * 0.5) this.face(p.x, p.z, dt, 4); // daarna draait hij niet meer: tijd om opzij te gaan
         this.cone.visible = true;
         this.cone.position.set(this.pos.x, 0.07, this.pos.z);
         this.cone.rotation.y = this.rot;
