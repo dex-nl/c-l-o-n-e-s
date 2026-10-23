@@ -8,12 +8,14 @@
 //   Hoofdstuk 4: Het Doolhof (de poort verschijnt in de woestijn als Sjors verslagen is)
 //                -> 'kaart2' (stukje 2 gevonden: breng het naar Bolt) -> 'schat2' (op naar De Vulkaan!)
 //   Hoofdstuk 5: De Vulkaan (de rode poort verschijnt in de woestijn als Bram verslagen is)
-//                -> 'kaart3' (stukje 3 gevonden: breng het naar Bolt) -> 'schat3' (wordt vervolgd!)
+//                -> 'kaart3' (stukje 3 gevonden: breng het naar Bolt) -> 'schat3' (op naar De Onderwaterwereld!)
+//   Hoofdstuk 6: De Onderwaterwereld (de blauwe poort verschijnt bij de oase als de draak verslagen is)
+//                -> 'kaart4' (stukje 4 gevonden: breng het naar Bolt) -> 'schat4' (wordt vervolgd!)
 export const NPC_NAME = 'Professor Bolt';
 export const GEARS_NEEDED = 3;
 export const TEAM_SIZE = 3; // zoveel clones heb je nodig voordat Bolt over het Slijmbos vertelt
-export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat', 'kaart2', 'schat2', 'kaart3', 'schat3'];
-export const MAP_PIECES = ['woestijn', 'doolhof', 'vulkaan']; // de stukjes van de schatkaart die er al zijn (er komen er 10, zie GAME.md)
+export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat', 'kaart2', 'schat2', 'kaart3', 'schat3', 'kaart4', 'schat4'];
+export const MAP_PIECES = ['woestijn', 'doolhof', 'vulkaan', 'onderwater']; // de stukjes van de schatkaart die er al zijn (er komen er 10, zie GAME.md)
 export const MAP_PIECES_TOTAL = 10;
 export const SUN_STONE_IDS = ['west', 'oost', 'tempel']; // de zonnestenen in de woestijn (zie desert.js)
 
@@ -74,6 +76,7 @@ export function questText(state, zoneId) {
     return '🛍️ Shoppen in <b>De Stad</b>! Nieuw: de <b>Autowinkel</b> (rechts)';
   }
   if (zoneId === 'vulkaan') return volcanoText(state);
+  if (zoneId === 'onderwater') return seaText(state);
   switch (q.state) {
     case 'nieuw': return '💡 Tip: loop naar de uitvinder bij de <b>clonemachine</b>';
     case 'bezig': {
@@ -119,7 +122,12 @@ export function questText(state, zoneId) {
       if (zoneId === 'doolhof' || zoneId === 'piramide') return '🌋 Ga terug naar de woestijn: daar is de rode poort naar <b>De Vulkaan</b>';
       return '🌋 Zoek stukje 3: ga naar <b>De Vulkaan</b> (de rode poort in de woestijn)';
     case 'kaart3': return '📜 Breng stukje 3 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
-    case 'schat3': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
+    case 'schat3':
+      if (zoneId === 'woestijn') return '🌊 Ga door de blauwe poort bij de <b>oase</b> naar <b>De Onderwaterwereld</b>';
+      if (zoneId === 'vulkaan' || zoneId === 'doolhof' || zoneId === 'piramide') return '🌊 Ga terug naar de woestijn: bij de oase is een blauwe poort!';
+      return '🌊 Zoek stukje 4: ga naar <b>De Onderwaterwereld</b> (de blauwe poort bij de oase in de woestijn)';
+    case 'kaart4': return '📜 Breng stukje 4 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
+    case 'schat4': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
     default: return `⭐ Held van het dorp! Clones: <b>${n}/${max}</b>. Wat wordt je volgende avontuur?`;
   }
 }
@@ -141,10 +149,18 @@ function volcanoText(state) {
   return '🌋 Klim naar de <b>krater</b> en versla <b>Vuurdraak Vonk</b>!';
 }
 
+// Onder water: wat moet je doen?
+function seaText(state) {
+  const v = state.sea || {};
+  if ((state.mapPieces || []).includes('onderwater')) return '📜 Breng stukje 4 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
+  if (v.squid) return '📜 Pak het stukje <b>schatkaart</b> in de diepe trog!';
+  return '🦑 Zwem naar de <b>diepe trog</b> en versla <b>Reuzeninktvis Inka</b>!';
+}
+
 // Heeft Professor Bolt iets nieuws te vertellen? (dan staat er een ! boven zijn hoofd)
 export function boltHasNews(state) {
   const q = state.quest;
-  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3'
+  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4'
     || (q.state === 'bezig' && q.gears.length >= GEARS_NEEDED)
     || (q.state === 'aan' && state.clones >= TEAM_SIZE);
 }
@@ -413,9 +429,25 @@ function boltLines(q, clones, state) {
         'Stukje 3! Uit de krater van De Vulkaan! Je bent zo dapper!',
         'Kijk: een vulkaan met een draakje erop. En de stippellijn loopt weer verder...',
         'Nu heb je 3 van de 10 stukjes. En de machine kan weer 1 clone meer maken!',
-        'Waar zou stukje 4 liggen? Ik hoor iets over water... Wordt vervolgd!',
+        'En kijk: de stippellijn loopt de ZEE in! Stukje 4 ligt onder water.',
+        'Bij de oase in de woestijn is een blauwe poort verschenen. Spring erin!',
+        'Onder water kun je zwemmen: omhoog en omlaag. Maar let op je LUCHT. Pak de luchtbellen!',
       ];
     case 'schat3':
+      return [
+        'Onder water loopt je luchtmeter leeg. Pak de grote luchtbellen of zwem door een bellenbron op de bodem!',
+        'Kwallen drijven op en neer: wacht tot ze weg zijn. Schudt een haai met een rood uitroepteken? Dan gaat hij sprinten: opzij!',
+        'In de stroming sleurt het water je mee. Vlak bij de bodem, tussen het zeewier, is de stroming zwak.',
+        'Helemaal achterin woont Reuzeninktvis Inka. Rode banen op de bodem? Daar slaan haar tentakels: zwem OMHOOG!',
+      ];
+    case 'kaart4':
+      return [
+        'Stukje 4! Uit de diepe zee! Hoe heb je dat gedaan zonder lucht?!',
+        'Kijk: golven, een schip en een inktvis. En de stippellijn loopt weer verder...',
+        'Nu heb je 4 van de 10 stukjes. En de machine kan weer 1 clone meer maken!',
+        'Waar zou stukje 5 liggen? Wordt vervolgd!',
+      ];
+    case 'schat4':
       return [
         `Hoe gaat het met de schatkaart? Nog ${MAP_PIECES_TOTAL - (state.mapPieces || []).length} stukjes te gaan!`,
         'Ik ben benieuwd waar het volgende stukje ligt... Misschien heeft Dex een idee?',

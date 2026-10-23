@@ -114,7 +114,9 @@ export const sfx = {
   whoosh() { noise(0, 0.4, 0.15, 300, 2500); },
   bump() { tone(110, 0, 0.12, 'sine', 0.25, 70); noise(0, 0.08, 0.08, 400, 200); }, // zachte bots
   toet() { tone(523, 0, 0.12, 'square', 0.07); tone(523, 0.18, 0.16, 'square', 0.07); }, // vriendelijk toeteren
-  slurp() { tone(600, 0, 0.18, 'sine', 0.15, 1200); tone(900, 0.2, 0.15, 'sine', 0.12, 1500); },
+  bubble() { tone(500, 0, 0.1, 'sine', 0.12, 1100); tone(700, 0.08, 0.12, 'sine', 0.1, 1500); }, // luchtbel
+  growl() { tone(120, 0, 0.35, 'sawtooth', 0.06, 90); }, // haai gaat zo sprinten
+    slurp() { tone(600, 0, 0.18, 'sine', 0.15, 1200); tone(900, 0.2, 0.15, 'sine', 0.12, 1500); },
 };
 
 // ---------- Muziek ----------
@@ -177,6 +179,15 @@ const SONGS = {
     melody: [
       'D5 - D5 F5 A5 ~ G5 F5', 'Eb5 ~ G5 ~ Bb5 ~ G5 ~', 'D5 - F5 - A5 - D6 ~', 'C6 ~ A5 ~ G5 ~ E5 ~',
       'F5 - F5 A5 D6 ~ C6 A5', 'Bb5 ~ G5 ~ Eb5 ~ G5 ~', 'A5 ~ F5 ~ C5 ~ F5 ~', 'E5 ~ C#5 ~ A4 ~ - -',
+    ],
+  },
+  // De Onderwaterwereld: zacht en golvend (driekwartsgevoel), een beetje geheimzinnig
+  onderwater: {
+    bpm: 92, lead: 'triangle', drums: false,
+    chords: ['Am', 'F', 'C', 'G', 'Am', 'F', 'Dm', 'E'],
+    melody: [
+      'A4 ~ C5 ~ E5 ~ ~ ~', 'F5 ~ E5 ~ C5 ~ ~ ~', 'E5 ~ G5 ~ C6 ~ B5 ~', 'D5 ~ ~ ~ B4 ~ ~ ~',
+      'A5 ~ ~ G5 E5 ~ ~ ~', 'F5 ~ A5 ~ C6 ~ A5 ~', 'D5 ~ F5 ~ A5 ~ F5 ~', 'G#5 ~ ~ ~ E5 ~ ~ ~',
     ],
   },
   baas: {

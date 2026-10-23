@@ -32,6 +32,8 @@ const OASIS = { x: -17, z: -9, r: 5 };
 export const MAZE_PORTAL = { x: 21, z: -62 };
 // De rode poort naar De Vulkaan (verschijnt als Bladkoning Bram verslagen is)
 export const VOLCANO_PORTAL = { x: -21, z: -62 };
+// De blauwe poort naar De Onderwaterwereld, bij de oase (verschijnt als Vuurdraak Vonk verslagen is)
+export const SEA_PORTAL = { x: -17, z: 0.4 };
 // (geheim: zie GAME.md)
 const PEBBLE = { x: 29.8, z: -18.6 };
 
@@ -445,6 +447,10 @@ export function createDesert(group) {
   volcanoPortal.group.userData.keep = true;
   volcanoPortal.group.visible = false;
   updaters.push(volcanoPortal.update);
+  const seaPortal = makePortal(group, SEA_PORTAL.x, SEA_PORTAL.z, 0, 'ONDER WATER', '#1c7ed6');
+  seaPortal.group.userData.keep = true;
+  seaPortal.group.visible = false;
+  updaters.push(seaPortal.update);
 
   // ---------- Terug naar het dorp: een regenboogpoort ----------
   const portal = makePortal(group, 0, 29.4, 0, 'HET DORP', '#2d6a4f');
@@ -475,8 +481,8 @@ export function createDesert(group) {
     music: 'woestijn',
     env: { sky: [0x5aa9e6, 0xfbe3b0], fog: [0xf6ddb0, 40, 110], hemi: [0xfff4dc, 0xd9a35a, 1.25], sun: [0xfff0c8, 2.6], cam: [0, 9, 11] },
     stormFog: [0xe2b874, 6, 26],
-    spawns: { fromDorp: { x: 0, z: 22, rot: Math.PI }, fromPiramide: { x: 0, z: DOOR_Z + 3.6, rot: 0 }, fromDoolhof: { x: MAZE_PORTAL.x, z: MAZE_PORTAL.z + 3.4, rot: 0 }, fromVulkaan: { x: VOLCANO_PORTAL.x, z: VOLCANO_PORTAL.z + 3.4, rot: 0 } },
-    mazePortal: { ...MAZE_PORTAL, visible: false }, volcanoPortal: { ...VOLCANO_PORTAL, visible: false }, pebble,
+    spawns: { fromDorp: { x: 0, z: 22, rot: Math.PI }, fromPiramide: { x: 0, z: DOOR_Z + 3.6, rot: 0 }, fromDoolhof: { x: MAZE_PORTAL.x, z: MAZE_PORTAL.z + 3.4, rot: 0 }, fromVulkaan: { x: VOLCANO_PORTAL.x, z: VOLCANO_PORTAL.z + 3.4, rot: 0 }, fromZee: { x: SEA_PORTAL.x, z: SEA_PORTAL.z + 3.4, rot: 0 } },
+    mazePortal: { ...MAZE_PORTAL, visible: false }, volcanoPortal: { ...VOLCANO_PORTAL, visible: false }, seaPortal: { ...SEA_PORTAL, visible: false }, pebble,
     exit: { x: 0, z: 29.2 },
     door: { x: 0, z: DOOR_Z + 0.9 },
     doorOpen: false,
@@ -519,6 +525,14 @@ export function createDesert(group) {
     const has = zone.labels.some((l) => l.volcano);
     if (yes && !has) zone.labels.push({ x: VOLCANO_PORTAL.x, z: VOLCANO_PORTAL.z + 3, text: 'De Vulkaan', volcano: true });
     if (!yes && has) zone.labels = zone.labels.filter((l) => !l.volcano);
+  };
+  // de onderwaterpoort laten zien (of niet)
+  zone.setSeaPortal = (yes) => {
+    zone.seaPortal.visible = yes;
+    seaPortal.group.visible = yes;
+    const has = zone.labels.some((l) => l.sea);
+    if (yes && !has) zone.labels.push({ x: SEA_PORTAL.x, z: SEA_PORTAL.z + 3, text: 'Onder water', sea: true });
+    if (!yes && has) zone.labels = zone.labels.filter((l) => !l.sea);
   };
   zone.setPebbleOn = (on) => { pebM.color.set(on ? 0xc7f9cc : 0x9b8f72); pebM.emissive.set(on ? 0x2d6a4f : 0x000000); };
   // een zonnesteen laten schijnen
@@ -575,7 +589,7 @@ export function createDesert(group) {
   zone.merged = mergeStatic(group, {
     probe: (t) => updaters.forEach((f) => f(t, 0.016)),
     reset: () => updaters.forEach((f) => f(0, 0)),
-    skip: [camel.mesh, door, sand, ...stoneLive, portal.group, mazePortal.group, volcanoPortal.group, peb],
+    skip: [camel.mesh, door, sand, ...stoneLive, portal.group, mazePortal.group, volcanoPortal.group, seaPortal.group, peb],
   });
   zone.collidePoint = (p, r) => collide(p, r, zone);
   return zone;

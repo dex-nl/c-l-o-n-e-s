@@ -3,8 +3,8 @@
 // De kaart is 5 stukjes breed en 2 hoog (stukje 1 linksboven, stukje 10 rechtsonder).
 import { MAP_PIECES, MAP_PIECES_TOTAL } from './quest.js';
 
-const NAMES = { woestijn: 'De Grote Woestijn', doolhof: 'Het Doolhof', vulkaan: 'De Vulkaan' };
-// Wat staat er op elk stukje? (de stukjes 4 t/m 10 komen nog, zie GAME.md)
+const NAMES = { woestijn: 'De Grote Woestijn', doolhof: 'Het Doolhof', vulkaan: 'De Vulkaan', onderwater: 'De Onderwaterwereld' };
+// Wat staat er op elk stukje? (de stukjes 5 t/m 10 komen nog, zie GAME.md)
 const PIECES = Array.from({ length: MAP_PIECES_TOTAL }, (_, i) => ({ id: MAP_PIECES[i] || null, name: NAMES[MAP_PIECES[i]] }));
 const COLS = 5;
 
@@ -51,6 +51,34 @@ function drawVolcano(g, x, y, w, h) {
   g.beginPath(); g.moveTo(cx - 6, cy - 6); g.lineTo(cx + 6, cy + 6); g.moveTo(cx + 6, cy - 6); g.lineTo(cx - 6, cy + 6); g.stroke();
 }
 
+function drawSea(g, x, y, w, h) {
+  // blauwe zee met golfjes, een gezonken schip en een inktvis
+  g.fillStyle = '#74c0fc'; g.fillRect(x + 8, y + 8, w - 16, h - 16);
+  g.strokeStyle = '#e7f5ff'; g.lineWidth = 2;
+  for (let k = 0; k < 3; k++) {
+    g.beginPath();
+    for (let i = 0; i <= 8; i++) { const px = x + 12 + i * (w - 24) / 8, py = y + 18 + k * 12 + Math.sin(i * 1.6) * 3; i ? g.lineTo(px, py) : g.moveTo(px, py); }
+    g.stroke();
+  }
+  // schip
+  g.fillStyle = '#8b5a2b';
+  g.beginPath(); g.moveTo(x + w * 0.12, y + h * 0.7); g.lineTo(x + w * 0.46, y + h * 0.7); g.lineTo(x + w * 0.4, y + h * 0.82); g.lineTo(x + w * 0.17, y + h * 0.82); g.closePath(); g.fill();
+  g.fillRect(x + w * 0.27, y + h * 0.48, 3, h * 0.22);
+  g.fillStyle = '#1d1d1d'; g.fillRect(x + w * 0.27 + 3, y + h * 0.48, 14, 9);
+  // inktvis
+  g.fillStyle = '#9775fa';
+  g.beginPath(); g.ellipse(x + w * 0.74, y + h * 0.5, 11, 14, 0, 0, 7); g.fill();
+  g.strokeStyle = '#9775fa'; g.lineWidth = 3;
+  for (let i = -2; i <= 2; i++) { g.beginPath(); g.moveTo(x + w * 0.74 + i * 4, y + h * 0.6); g.quadraticCurveTo(x + w * 0.74 + i * 7, y + h * 0.75, x + w * 0.74 + i * 9, y + h * 0.7); g.stroke(); }
+  g.fillStyle = '#fff'; for (const s of [-4, 4]) { g.beginPath(); g.arc(x + w * 0.74 + s, y + h * 0.48, 3, 0, 7); g.fill(); }
+  // stippellijn en kruisje bij het schip
+  g.strokeStyle = '#c1121f'; g.lineWidth = 3; g.setLineDash([6, 6]);
+  g.beginPath(); g.moveTo(x + 8, y + h * 0.88); g.quadraticCurveTo(x + w * 0.5, y + h * 0.95, x + w - 8, y + h * 0.84); g.stroke();
+  g.setLineDash([]);
+  const cx = x + w * 0.3, cy = y + h * 0.6;
+  g.beginPath(); g.moveTo(cx - 6, cy - 6); g.lineTo(cx + 6, cy + 6); g.moveTo(cx + 6, cy - 6); g.lineTo(cx - 6, cy + 6); g.stroke();
+}
+
 function drawDesert(g, x, y, w, h) {
   // zand
   g.fillStyle = '#f2d38f'; g.fillRect(x + 8, y + 8, w - 16, h - 16);
@@ -87,6 +115,7 @@ export function drawTreasureMap(canvas, pieces) {
     if (have && p.id === 'woestijn') drawDesert(g, x, y, pw, ph);
     if (have && p.id === 'doolhof') drawMaze(g, x, y, pw, ph);
     if (have && p.id === 'vulkaan') drawVolcano(g, x, y, pw, ph);
+    if (have && p.id === 'onderwater') drawSea(g, x, y, pw, ph);
     g.textAlign = 'center'; g.textBaseline = 'middle';
     if (!have) {
       g.fillStyle = 'rgba(90,80,60,0.6)'; g.font = `bold ${Math.round(ph * 0.4)}px sans-serif`;

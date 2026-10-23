@@ -267,6 +267,23 @@ body.title #hud, body.title #top-btns, body.title #joy-base, body.title #talk-bt
 #fly-btns button.down { transform: translateY(4px); box-shadow: 0 2px 0 #5a2a9c; background: #b388f0; }
 body.title #fly-btns { visibility: hidden; }
 
+/* Onder water: alleen omhoog en omlaag (geen kickflip of boost) */
+#fly-btns.swim #flip-btn, #fly-btns.swim #boost-btn { display: none; }
+#fly-btns.swim button { background: #1c7ed6; box-shadow: 0 6px 0 #0b4f8a; }
+#fly-btns.swim button.down { background: #4dabf7; box-shadow: 0 2px 0 #0b4f8a; }
+/* Luchtmeter onder water */
+#air { display: flex; align-items: center; gap: 8px; padding: 5px 12px; width: fit-content; }
+#air.hidden { display: none; }
+#air .ico { font-size: 20px; }
+#air-bar { width: 150px; height: 16px; border-radius: 8px; background: rgba(0,0,0,0.25); border: 2px solid #fff; overflow: hidden; }
+#air-fill { height: 100%; width: 100%; background: linear-gradient(#a5f3fc, #22b8cf); transition: width .15s; }
+#air.low #air-fill { background: linear-gradient(#ffa8a8, #fa5252); }
+#air.low { animation: airblink .6s infinite alternate; }
+@keyframes airblink { from { transform: scale(1); } to { transform: scale(1.06); } }
+/* Inktwolk */
+#ink { position: fixed; inset: 0; pointer-events: none; z-index: 3; background: radial-gradient(circle at 50% 55%, rgba(20,10,30,0.55) 0, rgba(10,5,20,0.92) 60%); transition: opacity .5s; opacity: 1; }
+#ink.hidden { opacity: 0; }
+
 /* ---------- Kleine schermen (iPhone liggend) ---------- */
 @media (max-height: 500px) {
   #hud { max-width: 52vw; gap: 6px; }
@@ -295,6 +312,8 @@ body.title #fly-btns { visibility: hidden; }
   #fly-btns { right: calc(138px + env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); gap: 8px; }
   #fly-btns button { width: 70px; height: 62px; font-size: 22px; border-radius: 18px; }
   #fly-btns button span { font-size: 12px; }
+  #air-bar { width: 100px; height: 12px; }
+  #air { padding: 3px 9px; }
   #start-btn { font-size: 26px; padding: 12px 34px; margin-top: 8px; }
 }
 
