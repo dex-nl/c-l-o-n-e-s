@@ -3,8 +3,8 @@
 // De kaart is 5 stukjes breed en 2 hoog (stukje 1 linksboven, stukje 10 rechtsonder).
 import { MAP_PIECES, MAP_PIECES_TOTAL } from './quest.js';
 
-const NAMES = { woestijn: 'De Grote Woestijn', doolhof: 'Het Doolhof' };
-// Wat staat er op elk stukje? (de stukjes 3 t/m 10 komen nog, zie GAME.md)
+const NAMES = { woestijn: 'De Grote Woestijn', doolhof: 'Het Doolhof', vulkaan: 'De Vulkaan' };
+// Wat staat er op elk stukje? (de stukjes 4 t/m 10 komen nog, zie GAME.md)
 const PIECES = Array.from({ length: MAP_PIECES_TOTAL }, (_, i) => ({ id: MAP_PIECES[i] || null, name: NAMES[MAP_PIECES[i]] }));
 const COLS = 5;
 
@@ -23,6 +23,31 @@ function drawMaze(g, x, y, w, h) {
   g.setLineDash([]);
   // een kruisje in het midden
   g.strokeStyle = '#c1121f'; g.lineWidth = 3;
+  g.beginPath(); g.moveTo(cx - 6, cy - 6); g.lineTo(cx + 6, cy + 6); g.moveTo(cx + 6, cy - 6); g.lineTo(cx - 6, cy + 6); g.stroke();
+}
+
+function drawVolcano(g, x, y, w, h) {
+  // donkere grond met een vulkaan, een lavastroom en een klein draakje
+  g.fillStyle = '#e8c9a0'; g.fillRect(x + 8, y + 8, w - 16, h - 16);
+  g.fillStyle = '#6b4f4f';
+  g.beginPath(); g.moveTo(x + w * 0.18, y + h * 0.78); g.lineTo(x + w * 0.42, y + h * 0.26); g.lineTo(x + w * 0.58, y + h * 0.26); g.lineTo(x + w * 0.82, y + h * 0.78); g.closePath(); g.fill();
+  g.fillStyle = '#ff7b00';
+  g.beginPath(); g.moveTo(x + w * 0.44, y + h * 0.27); g.lineTo(x + w * 0.56, y + h * 0.27); g.lineTo(x + w * 0.6, y + h * 0.5); g.lineTo(x + w * 0.5, y + h * 0.45); g.closePath(); g.fill();
+  // rook
+  g.fillStyle = 'rgba(90,80,80,0.6)';
+  for (const [dx, dy, r] of [[0.5, 0.18, 7], [0.56, 0.11, 9], [0.47, 0.06, 6]]) { g.beginPath(); g.arc(x + w * dx, y + h * dy, r, 0, 7); g.fill(); }
+  // klein rood draakje
+  g.fillStyle = '#e63946';
+  g.beginPath(); g.ellipse(x + w * 0.78, y + h * 0.36, 10, 7, 0, 0, 7); g.fill();
+  g.beginPath(); g.arc(x + w * 0.78 + 10, y + h * 0.36 - 5, 5, 0, 7); g.fill();
+  g.fillStyle = '#ff8c42';
+  g.beginPath(); g.moveTo(x + w * 0.78 - 2, y + h * 0.36 - 4); g.lineTo(x + w * 0.78 - 12, y + h * 0.36 - 16); g.lineTo(x + w * 0.78 + 4, y + h * 0.36 - 6); g.closePath(); g.fill();
+  // stippellijn naar de rand
+  g.strokeStyle = '#c1121f'; g.lineWidth = 3; g.setLineDash([6, 6]);
+  g.beginPath(); g.moveTo(x + w * 0.5, y + h * 0.8); g.quadraticCurveTo(x + w * 0.3, y + h * 0.95, x + 8, y + h * 0.86); g.stroke();
+  g.setLineDash([]);
+  g.strokeStyle = '#c1121f'; g.lineWidth = 3;
+  const cx = x + w * 0.5, cy = y + h * 0.62;
   g.beginPath(); g.moveTo(cx - 6, cy - 6); g.lineTo(cx + 6, cy + 6); g.moveTo(cx + 6, cy - 6); g.lineTo(cx - 6, cy + 6); g.stroke();
 }
 
@@ -61,6 +86,7 @@ export function drawTreasureMap(canvas, pieces) {
     g.setLineDash(have ? [] : [8, 6]); g.stroke(); g.setLineDash([]);
     if (have && p.id === 'woestijn') drawDesert(g, x, y, pw, ph);
     if (have && p.id === 'doolhof') drawMaze(g, x, y, pw, ph);
+    if (have && p.id === 'vulkaan') drawVolcano(g, x, y, pw, ph);
     g.textAlign = 'center'; g.textBaseline = 'middle';
     if (!have) {
       g.fillStyle = 'rgba(90,80,60,0.6)'; g.font = `bold ${Math.round(ph * 0.4)}px sans-serif`;

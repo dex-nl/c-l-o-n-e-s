@@ -9,6 +9,8 @@ import { createPyramid } from './pyramid.js';
 import { Scorpion } from './scorpion.js';
 import { createMaze } from './maze.js';
 import { Bram } from './bram.js';
+import { createVolcano } from './volcano.js';
+import { Dragon } from './dragon.js';
 import { buildTreasureMap } from './treasure.js';
 import { createJobs } from './jobs.js';
 import { secretCode, PRIVATE_REWARD } from './secret.js';
@@ -117,6 +119,7 @@ const cityJobs = createJobs(city); // de klusjes van Burgemeester Bert (idee van
 const desert = addZone(createDesert); // De Grote Woestijn (hoofdstuk 3, idee van Dex)
 const pyramid = addZone(createPyramid); // binnen in de Grote Piramide
 const maze = addZone(createMaze); // Het Doolhof (hoofdstuk 4, idee van Dex)
+const volcano = addZone(createVolcano); // De Vulkaan (hoofdstuk 5, idee van Dex). Geen auto's hier!
 
 // Dorpelingen
 const bolt = makeBolt(world.group, world.npcSpot);
@@ -162,6 +165,10 @@ desert.exits = [
 const mazeVisible = () => state.mapPieces.includes('woestijn') || reached(state.quest, 'kaart');
 desert.exits.push({ x: desert.mazePortal.x, z: desert.mazePortal.z, r: 1.4, to: 'doolhof', spawn: () => maze.spawns.fromWoestijn, active: mazeVisible, open: () => true });
 maze.exits = [{ x: maze.exit.x, z: maze.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromDoolhof, open: () => true }];
+// De rode poort naar De Vulkaan (verschijnt als Bladkoning Bram verslagen is)
+const volcanoVisible = () => state.maze.bram || state.mapPieces.includes('doolhof');
+desert.exits.push({ x: desert.volcanoPortal.x, z: desert.volcanoPortal.z, r: 1.4, to: 'vulkaan', spawn: () => volcano.spawns.fromWoestijn, active: volcanoVisible, open: () => true });
+volcano.exits = [{ x: volcano.exit.x, z: volcano.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromVulkaan, open: () => true }];
 pyramid.exits = [{ x: pyramid.exit.x, z: pyramid.exit.z, r: 1.0, to: 'woestijn', spawn: () => desert.spawns.fromPiramide, open: () => true }];
 city.exits = [{ x: city.exit.x, z: city.exit.z, r: 1.4, to: 'dorp', spawn: () => world.spots.uitStad, open: () => true }];
 forest.exits = [
@@ -218,6 +225,7 @@ let enemies = [];
 let king = null;
 let sjors = null; // Schorpioen Sjors, de baas van de piramide
 let bram = null;  // Bladkoning Bram, de baas van het doolhof
+let dragon = null; // Vuurdraak Vonk, de baas van de vulkaan
 let shake = 0, hitStop = 0, fainting = false, transition = false;
 let lastHitSound = 0;
 
@@ -248,6 +256,7 @@ const game = {
     // hulpjes van een baas geven altijd een hartje (zo blijft het eerlijk)
     if (hearts < state.maxHearts && (s.helper || Math.random() < difficulty(game.zone.id).heartDrop)) pickups.spawn('hart', s.pos.x, s.pos.z); // minder hartjes in moeilijke werelden
     if (s.bram) { game.onBramDefeated(s); return; }
+    if (s.dragon) { game.onDragonDefeated(s); return; }
     if (s.king) {
       state.quest.kingBeaten = true; // onthouden, ook als de iPad de pagina opnieuw laadt
       game.showLanding(0, 0, 0);
@@ -299,6 +308,19 @@ const game = {
     for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
     save();
   },
+  // Vuurdraak Vonk is verslagen: hij geeft je stukje 3 van de schatkaart
+  onDragonDefeated(s) {
+    state.volcano.dragon = true;
+    game.showLanding(0, 0, 0);
+    hitStop = 0.35;
+    shake = 1;
+    fx.confetti(s.pos, 100);
+    sfx.fanfare();
+    ui.toast('🐉 Vuurdraak Vonk: "Pfoeh, wat ben jij dapper! Hier, dit lag in mijn nest..."', 4200);
+    pickups.spawn('kaartstuk', s.pos.x, s.pos.z);
+    for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
+    save();
+  },
   showLanding(x, z, r) {
     landing.visible = r > 0;
     landing.position.x = x; landing.position.z = z;
@@ -323,6 +345,12 @@ function spawnEnemies(zone) {
   if (zone.id === 'doolhof') {
     if (!state.maze.bram) { bram = new Bram(zone.group, zone.roomC.x, zone.roomC.z); enemies.push(bram); }
     else if (!state.mapPieces.includes('doolhof')) pickups.spawn('kaartstuk', zone.roomC.x, zone.roomC.z);
+  }
+  dragon = null;
+  if (zone.id === 'vulkaan') {
+    if (!state.volcano.dragon) { dragon = new Dragon(zone.group, zone.boss.x, zone.boss.z); enemies.push(dragon); }
+    else if (!state.mapPieces.includes('vulkaan')) pickups.spawn('kaartstuk', zone.crater.x, zone.crater.z);
+    for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z); // een paar hartjes onderweg
   }
 }
 
@@ -396,6 +424,8 @@ function setZone(id, spawn) {
   const zone = zones[id];
   game.zone = zone;
   if (id === 'doolhof') { maze.applyState(state.maze); maze.hideTrail(); trailTime = 0; }
+  if (id === 'vulkaan') { volcano.applyState(state.volcano); volcano.reset(); volcanoLast = null; }
+  if (id !== 'vulkaan') player.pos.y = 0;
   if (id === 'woestijn') { desert.storm.k = 0; desert.stopStorm(20 + Math.random() * 10); stormWas = false; } // eerst even rustig
   state.zone = id;
   zone.group.visible = true;
@@ -467,6 +497,7 @@ function refresh() {
   world.gate.setOpen(reached(q, 'zwaard'));
   updateDesertGate();
   updateMazePortal();
+  updateVolcanoPortal();
   desert.setPebbleOn(state.maze.levers.includes('kris'));
   world.desertGate.setOpen(reached(q, 'woestijn'));
   desert.setDoorOpen(reached(q, 'piramide'));
@@ -534,6 +565,25 @@ function mazeAppear() {
   fx.confetti({ x: at.x, z: at.z }, 50);
   sfx.powerUp();
   ui.toast('✨ Er is een nieuwe poort verschenen! Naast de Grote Piramide: naar HET DOOLHOF!', 4500);
+}
+
+// ---------- De vulkaanpoort verschijnt in de woestijn (als Bram verslagen is) ----------
+let volcanoPortalShown = false, volcanoAppearPending = false;
+function updateVolcanoPortal() {
+  const vis = volcanoVisible();
+  if (vis === volcanoPortalShown) return;
+  volcanoPortalShown = vis;
+  desert.setVolcanoPortal(vis);
+  if (vis && started) volcanoAppearPending = true; // de glitters zie je als je weer in de woestijn bent
+}
+function volcanoAppear() {
+  volcanoAppearPending = false;
+  const at = { x: desert.volcanoPortal.x, y: 2, z: desert.volcanoPortal.z };
+  fx.sparkle(at, [0xe63946, 0xffffff, 0xff8c42], 50, 6);
+  setTimeout(() => fx.sparkle(at, [0xffd23f, 0xe63946, 0xffffff], 40, 5), 500);
+  fx.confetti({ x: at.x, z: at.z }, 50);
+  sfx.powerUp();
+  ui.toast('✨ Er is een nieuwe poort verschenen! Links van de Grote Piramide: naar DE VULKAAN!', 4500);
 }
 
 let dirty = false;
@@ -718,7 +768,13 @@ function afterBolt(before, wasAllFound) {
     q.state = 'schat2';
     fx.confetti(bolt.pos, 140);
     sfx.fanfare();
-    ui.toast(`🏆 Hoofdstuk 4 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Wordt vervolgd!`, 4500);
+    ui.toast(`🏆 Hoofdstuk 4 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Op naar De Vulkaan!`, 4500);
+    if (state.mapPieces.includes('vulkaan')) q.state = 'kaart3'; // stukje 3 had je al!
+  } else if (before === 'kaart3') {
+    q.state = 'schat3';
+    fx.confetti(bolt.pos, 160);
+    sfx.fanfare();
+    ui.toast(`🏆 Hoofdstuk 5 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Wordt vervolgd!`, 4500);
   }
 }
 
@@ -1133,7 +1189,15 @@ function questTarget() {
     // naar Het Doolhof (in het doolhof zelf: geen ster, zoek de weg maar!)
     return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.mazePortal : z === 'piramide' ? pyramid.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
-  if (q.state === 'kaart' || q.state === 'kaart2' || (q.state === 'held' && isCityDone(state))) {
+  if (z === 'vulkaan') {
+    // in de vulkaan: naar de draak (of het kaartstuk), en daarna terug naar de uitgang
+    if (state.mapPieces.includes('vulkaan')) return (['kaart', 'kaart2', 'kaart3'].includes(q.state) ? volcano.exit : null);
+    return volcano.boss;
+  }
+  if (q.state === 'schat2' && !state.mapPieces.includes('vulkaan')) {
+    return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.volcanoPortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
+  }
+  if (q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || (q.state === 'held' && isCityDone(state))) {
     if (z === 'doolhof') return maze.exit;
     return z === 'dorp' ? bolt.pos : z === 'woestijn' ? desert.exit : z === 'piramide' ? pyramid.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
@@ -1568,6 +1632,73 @@ function updateMaze(dt, paused) {
   }
 }
 
+// ---------- De Vulkaan: springende stenen, stijgende lava, vuurballen en kistjes ----------
+let volcanoLast = null, rainCd = 2, lavaToastCd = 0, floodWas = 'calm';
+volcano.onImpact = (x, z, r) => {
+  fx.ring({ x, z }, r, 0xff9f1c, 0.45);
+  fx.sparkle({ x, y: 0.6, z }, [0xff9f1c, 0xffd23f, 0xe63946], 14, 2.2);
+  if (game.zone === volcano) {
+    if (Math.hypot(player.pos.x - x, player.pos.z - z) < 12) sfx.slam();
+    if (Math.hypot(player.pos.x - x, player.pos.z - z) < r + 0.3) { game.hurtPlayer(1, x, z, 12); shake = Math.max(shake, 0.4); }
+  }
+};
+function updateVolcano(dt, paused) {
+  const p = player.pos;
+  // hoe hoog sta je (op een steen of een eiland)?
+  const gy = volcano.groundY(p);
+  p.y += (gy - p.y) * Math.min(1, dt * 14);
+  if (paused || transition || fainting) return;
+  lavaToastCd -= dt;
+  const vs = state.volcano;
+  // de lavarivier: alleen over de springende stenen!
+  if (volcano.inRiver(p)) {
+    if (!volcano.onStone(p)) {
+      const back = volcanoLast || { x: 0, z: 20 };
+      const cz = (back.z > 14 ? 1 : -1);
+      game.hurtPlayer(1, p.x, back.z - cz * 3, 4);
+      player.pos.set(back.x, 0, back.z + cz * 0.4);
+      player.kx = player.kz = 0;
+      player.resolveCollisions(volcano);
+      squad.regroup(player);
+      fx.poof(player.pos, 0xff7b00, 1.2);
+      if (lavaToastCd <= 0) { ui.toast('🔥 Au, heet! Loop alleen over de stenen. Wiebelt een steen? Wacht even!', 3200); lavaToastCd = 5; }
+    }
+  } else volcanoLast = { x: p.x, z: p.z };
+  // het lavaveld: als de lava stijgt moet je op een eiland staan
+  const fl = volcano.flooding;
+  if (fl.phase !== floodWas) {
+    if (fl.phase === 'warn' && volcano.inField(p)) { ui.toast('🌋 De lava stijgt! Snel naar een stenen eiland!', 2800); sfx.rumble(); shake = Math.max(shake, 0.4); }
+    floodWas = fl.phase;
+  }
+  if (volcano.lavaHigh && volcano.inField(p) && !volcano.onIsland(p) && player.invuln <= 0) {
+    game.hurtPlayer(1, p.x, p.z + 0.01, 3);
+    fx.poof(p, 0xff7b00, 1);
+    if (lavaToastCd <= 0) { ui.toast('🔥 Au, heet! Ga op een stenen eiland staan!', 2600); lavaToastCd = 4; }
+  }
+  // vuurballen uit de vulkaan (op het lavaveld en het vuurpad; in de krater gooit de draak ze zelf)
+  rainCd -= dt;
+  if (rainCd <= 0) {
+    const pass = volcano.inPass(p), field = volcano.inField(p);
+    if (pass || field) {
+      const a = Math.random() * Math.PI * 2, r = Math.random() * 2.6;
+      volcano.fireball(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r);
+      rainCd = pass ? 1.5 : 3.0;
+    } else rainCd = 0.5;
+  }
+  // kistjes: loop ertegenaan, dan gaan ze open
+  for (const c of volcano.chests) {
+    if (c.opened || Math.hypot(p.x - c.x, p.z - c.z) > 1.3) continue;
+    c.opened = true;
+    if (!vs.chests.includes(c.id)) vs.chests.push(c.id);
+    state.crystals = Math.min(MAX_CRYSTALS, state.crystals + c.n);
+    sfx.tada();
+    fx.sparkle({ x: c.x, y: 1, z: c.z }, [0x7af7ff, 0xffffff, 0xffd23f], 30, 4);
+    ui.toast(`🧰 Een schatkist! +${fmt(c.n)} kristallen 💎`, 2500);
+    refresh();
+    save();
+  }
+}
+
 // ---------- Spel-lus ----------
 const clock = new THREE.Clock();
 let t = 0, saveTimer = 0, lastStep = 0, started = false;
@@ -1659,14 +1790,15 @@ function frame() {
       save();
     }
     if (type === 'kaartstuk') {
-      const id = zone === maze ? 'doolhof' : 'woestijn';
+      const id = zone === maze ? 'doolhof' : zone === volcano ? 'vulkaan' : 'woestijn';
       const had = state.mapPieces.length;
       if (!state.mapPieces.includes(id)) state.mapPieces.push(id);
       if (id === 'woestijn') { state.quest.state = 'kaart'; delete state.quest.bossBeaten; }
-      else if (reached(state.quest, 'schat')) state.quest.state = 'kaart2';
+      else if (id === 'doolhof' && reached(state.quest, 'schat')) state.quest.state = 'kaart2';
+      else if (id === 'vulkaan' && reached(state.quest, 'schat2')) state.quest.state = 'kaart3';
       sfx.fanfare();
       fx.confetti(player.pos, 100);
-      ui.toast(`📜 Stukje ${id === 'doolhof' ? 2 : 1} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
+      ui.toast(`📜 Stukje ${{ woestijn: 1, doolhof: 2, vulkaan: 3 }[id]} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
       // elk stukje maakt de clonemachine sterker
       if (state.mapPieces.length > had && reached(state.quest, 'held')) {
         setTimeout(() => { ui.toast('🧬 Je kunt nu 1 clone meer maken!', 3500); sfx.powerUp(); }, 2600);
@@ -1703,6 +1835,7 @@ function frame() {
   }
   if (zone === forest && started) updatePlates(realDt);
   if (zone === maze && started) updateMaze(realDt, paused);
+  if (zone === volcano && started) updateVolcano(realDt, paused);
 
   // Uitgangen naar andere zones
   exitCooldown -= realDt;
@@ -1744,7 +1877,12 @@ function frame() {
     const fight = bram && !bram.dead && maze.inBossRoom(player.pos);
     ui.setBoss('🍃 Bladkoning Bram', fight ? bram.hp / bram.maxHp : null);
     playMusic(fight ? 'baas' : 'bos');
+  } else if (zone === volcano) {
+    const fight = dragon && !dragon.dead && volcano.inCrater(player.pos);
+    ui.setBoss('🐉 Vuurdraak Vonk', fight ? dragon.hp / dragon.maxHp : null);
+    playMusic(fight ? 'baas' : 'vulkaan');
   } else ui.setBoss('', null);
+  if (zone === desert && volcanoAppearPending && !transition) volcanoAppear();
   if (zone === desert && mazeAppearPending && !transition) mazeAppear();
   if (zone === world && desertAppearPending && !transition) desertAppear();
   if (zone === desert) updateStorm(realDt, paused);
@@ -1837,7 +1975,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.clones = {
   net, openCoop,
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
-  forest, cave, city, desert, pyramid, maze, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
+  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
   get boost() { return boost; }, collideTest: collide, kickflip, boostCar, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,

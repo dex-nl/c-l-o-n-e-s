@@ -6,12 +6,14 @@
 //   Hoofdstuk 3: 'woestijn' (laat de 3 zonnestenen schijnen) -> 'piramide' (versla Schorpioen Sjors)
 //                -> 'kaart' (breng het stukje schatkaart naar Bolt) -> 'schat' (op naar Het Doolhof!)
 //   Hoofdstuk 4: Het Doolhof (de poort verschijnt in de woestijn als Sjors verslagen is)
-//                -> 'kaart2' (stukje 2 gevonden: breng het naar Bolt) -> 'schat2' (wordt vervolgd!)
+//                -> 'kaart2' (stukje 2 gevonden: breng het naar Bolt) -> 'schat2' (op naar De Vulkaan!)
+//   Hoofdstuk 5: De Vulkaan (de rode poort verschijnt in de woestijn als Bram verslagen is)
+//                -> 'kaart3' (stukje 3 gevonden: breng het naar Bolt) -> 'schat3' (wordt vervolgd!)
 export const NPC_NAME = 'Professor Bolt';
 export const GEARS_NEEDED = 3;
 export const TEAM_SIZE = 3; // zoveel clones heb je nodig voordat Bolt over het Slijmbos vertelt
-export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat', 'kaart2', 'schat2'];
-export const MAP_PIECES = ['woestijn', 'doolhof']; // de stukjes van de schatkaart die er al zijn (er komen er 10, zie GAME.md)
+export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat', 'kaart2', 'schat2', 'kaart3', 'schat3'];
+export const MAP_PIECES = ['woestijn', 'doolhof', 'vulkaan']; // de stukjes van de schatkaart die er al zijn (er komen er 10, zie GAME.md)
 export const MAP_PIECES_TOTAL = 10;
 export const SUN_STONE_IDS = ['west', 'oost', 'tempel']; // de zonnestenen in de woestijn (zie desert.js)
 
@@ -71,6 +73,7 @@ export function questText(state, zoneId) {
     if (state.cars && state.cars.length) return '🚗 Stap in je auto en rij een rondje door <b>De Stad</b>!';
     return '🛍️ Shoppen in <b>De Stad</b>! Nieuw: de <b>Autowinkel</b> (rechts)';
   }
+  if (zoneId === 'vulkaan') return volcanoText(state);
   switch (q.state) {
     case 'nieuw': return '💡 Tip: loop naar de uitvinder bij de <b>clonemachine</b>';
     case 'bezig': {
@@ -111,7 +114,12 @@ export function questText(state, zoneId) {
       if (zoneId === 'piramide') return '🌀 Ga terug naar buiten: daar is een <b>nieuwe poort</b>!';
       return '🌀 Zoek stukje 2: ga naar <b>Het Doolhof</b> (de nieuwe poort in de woestijn)';
     case 'kaart2': return '📜 Breng stukje 2 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
-    case 'schat2': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
+    case 'schat2':
+      if (zoneId === 'woestijn') return '🌋 Ga door de rode poort naar <b>De Vulkaan</b> (links van de piramide)';
+      if (zoneId === 'doolhof' || zoneId === 'piramide') return '🌋 Ga terug naar de woestijn: daar is de rode poort naar <b>De Vulkaan</b>';
+      return '🌋 Zoek stukje 3: ga naar <b>De Vulkaan</b> (de rode poort in de woestijn)';
+    case 'kaart3': return '📜 Breng stukje 3 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
+    case 'schat3': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
     default: return `⭐ Held van het dorp! Clones: <b>${n}/${max}</b>. Wat wordt je volgende avontuur?`;
   }
 }
@@ -125,10 +133,18 @@ function mazeText(state) {
   return `🍃 Vind de weg naar het midden. Deuren open: <b>${open}/3</b>`;
 }
 
+// In de vulkaan: wat moet je doen?
+function volcanoText(state) {
+  const v = state.volcano || {};
+  if ((state.mapPieces || []).includes('vulkaan')) return '📜 Breng stukje 3 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
+  if (v.dragon) return '📜 Pak het stukje <b>schatkaart</b> in de krater!';
+  return '🌋 Klim naar de <b>krater</b> en versla <b>Vuurdraak Vonk</b>!';
+}
+
 // Heeft Professor Bolt iets nieuws te vertellen? (dan staat er een ! boven zijn hoofd)
 export function boltHasNews(state) {
   const q = state.quest;
-  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart' || q.state === 'kaart2'
+  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3'
     || (q.state === 'bezig' && q.gears.length >= GEARS_NEEDED)
     || (q.state === 'aan' && state.clones >= TEAM_SIZE);
 }
@@ -381,9 +397,25 @@ function boltLines(q, clones, state) {
         'Stukje 2! Uit het midden van Het Doolhof! Wat ben je knap!',
         'Kijk: een doolhof met een kruisje in het midden. De stippellijn loopt alweer verder...',
         'Nu heb je 2 van de 10 stukjes. En de machine kan weer 1 clone meer maken!',
-        'Waar zou stukje 3 liggen? Wordt vervolgd... Jij bent een echte schattenjager!',
+        'En kijk: de stippellijn loopt naar een berg die rookt... een VULKAAN!',
+        'In de woestijn, links van de Grote Piramide, is een rode poort verschenen. Daar ligt stukje 3!',
+        'Maar pas op: het is daar HEET. Lava, vuurballen en lavamonsters. Neem al je clones mee!',
       ];
     case 'schat2':
+      return [
+        'De Vulkaan is gevaarlijk. Steek de lavarivier over op de springende stenen: wiebelt een steen, dan zakt hij zo!',
+        'Stijgt de lava op het lavaveld? Snel op een stenen eiland staan!',
+        'Zie je een rood rondje op de grond? Daar valt een vuurbal. Wegwezen!',
+        'Bovenin woont Vuurdraak Vonk. Kijkt hij je aan en komt er een rode punt op de grond? Ga opzij: dan blaast hij vuur!',
+      ];
+    case 'kaart3':
+      return [
+        'Stukje 3! Uit de krater van De Vulkaan! Je bent zo dapper!',
+        'Kijk: een vulkaan met een draakje erop. En de stippellijn loopt weer verder...',
+        'Nu heb je 3 van de 10 stukjes. En de machine kan weer 1 clone meer maken!',
+        'Waar zou stukje 4 liggen? Ik hoor iets over water... Wordt vervolgd!',
+      ];
+    case 'schat3':
       return [
         `Hoe gaat het met de schatkaart? Nog ${MAP_PIECES_TOTAL - (state.mapPieces || []).length} stukjes te gaan!`,
         'Ik ben benieuwd waar het volgende stukje ligt... Misschien heeft Dex een idee?',

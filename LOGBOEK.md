@@ -143,3 +143,12 @@
 - Niet in het doolhof en niet in de Grote Piramide: dat blijft lopen (anders is het te makkelijk). De woestijn blijft moeilijk: de zonnestenen en Sjors doe je nog steeds te voet, en de zandstorm blaast je auto opzij.
 - Bomen, cactussen, duinen, zuilen en piramides hebben nu een hoogte, zodat je over kleine dingen heen vliegt maar niet over de rotswand of de piramides.
 - De save is niet veranderd (nog steeds versie 8).
+
+## 23 oktober 2026: Hoofdstuk 5, De Vulkaan (wens van Dex)
+- Gemaakt met een AI-helper op de tak `vulkaan`. **Dex of papa beslist of het erin komt.**
+- Na Bladkoning Bram verschijnt links van de Grote Piramide een rode poort naar **De Vulkaan** (wereld 3 van de schatkaart, moeilijkheid 4).
+- Een lavarivier met **springende stenen** (ze zakken om de beurt in de lava), een lavaveld waar **de lava stijgt** (ga op een eiland staan), een vuurpad met **vuurballen**, **lavamonsters** en 3 schatkisten.
+- In de krater: **Vuurdraak Vonk** (100 levens): vuuradem (rode punt op de grond), vliegen en landen met een klap, vuurregen, en hij roept lavamonsters. Hij geeft **stukje 3 van 10** (en dus 13 clones).
+- De Wolkenflitser mag niet in de vulkaan. De vulkaan heeft een eigen liedje.
+- Save naar versie 9 (draak verslagen en open kistjes). Oude saves blijven werken (getest met versie 7 en 8 en rare saves).
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt gevecht tegen de draak op het iPad-formaat. Nog niet getest op een echte iPad.
