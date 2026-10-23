@@ -162,3 +162,12 @@
 - De Wolkenflitser mag niet onder water. De onderwaterwereld heeft een eigen liedje.
 - Save naar versie 10 (inktvis verslagen en open kistjes). Oude saves blijven werken (getest met versie 7, 8 en 9 en rare saves).
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat), ook een echt gevecht tegen de inktvis met touch. Nog niet getest op een echte iPad of iPhone.
+
+## 23 oktober 2026: Als app op de iPhone (wens van de oom van Dex)
+- Gemaakt met een AI-helper op de tak `app-op-iphone`. **Dex of papa beslist of het erin komt.**
+- Via Safari > **Deel-knop** > **Zet op beginscherm** wordt C.L.O.N.E.S een app: beeldvullend, liggend, met een nieuw low-poly icoontje (3 clones en een kristal, zelf getekend met code: `icons/maak_iconen.py`).
+- Knoppen en tekst blijven buiten de camera-hoek en het streepje onderin (ook rechtop: de draai-hint zegt nu "Draai je scherm!").
+- Nieuw: een service worker (`sw.js`). Die haalt altijd eerst de nieuwste versie van internet; alleen zonder internet pakt hij de bewaarde kopie. Zo werkt het spel ook offline.
+- De app op het beginscherm heeft een eigen save (los van Safari). De save zelf is niet veranderd door de app.
+- Getest op de computer in iPhone-formaat (liggend en rechtop), iPad-formaat en MacBook-formaat, ook zonder internet. Nog niet getest op een echte iPhone.
+- Later bijgewerkt met de Vulkaan en de Onderwaterwereld: de app krijgt die nieuwe werelden ook (nieuwe cache-versie in `sw.js`, zodat iPhones de nieuwe versie ophalen).
