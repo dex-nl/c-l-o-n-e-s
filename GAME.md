@@ -201,7 +201,17 @@ Het spel van Dex (11 jaar).
 - Open [de speel-link](https://dex-nl.github.io/c-l-o-n-e-s/) in **Safari**, tik op de **Deel-knop** (vierkantje met pijltje omhoog) en kies **Zet op beginscherm**. Dan staat C.L.O.N.E.S als app tussen je andere apps, met een eigen icoontje (3 clones en een kristal).
 - Tik je op het icoontje, dan opent het spel over het hele scherm, zonder adresbalk. Knoppen blijven weg van de camera-hoek en het streepje onderin.
 - Updates komen er vanzelf in: de app kijkt elke keer of er een nieuwe versie is. Geen internet? Dan start het spel toch (samen spelen werkt dan niet).
-- **Let op:** de app op het beginscherm heeft een **eigen save**, los van Safari. Je begint daar dus opnieuw (je voortgang in Safari blijft gewoon bewaard).
+- **Let op:** de app op het beginscherm heeft een **eigen save**, los van Safari. Je begint daar dus opnieuw, maar je kunt je voortgang meenemen (zie hieronder).
+
+### Voortgang meenemen 📲 (wens van Dex)
+- Speel je in Safari en wil je verder in de app op je beginscherm (of andersom)? Dan neem je je voortgang mee met een **code**:
+  1. Open in **Safari** de 🎒 **Rugzak** en tik op **📤 Voortgang kopiëren**, en dan op **📋 Kopieer de code**.
+  2. Open **de app** op je beginscherm.
+  3. Ga naar 🎒 → **📥 Voortgang plakken**, plak de code in het vak (vinger in het vak houden, **Plak**) en tik op **✅ Zet in dit spel**.
+- Het spel vraagt eerst: *"Dit vervangt je huidige voortgang. Zeker weten?"* Bij **Ja** start het spel opnieuw met je voortgang. Bij **Nee** verandert er niets.
+- Een kapotte of verkeerde code? Dan krijg je een melding en verandert er niets.
+- Oude codes blijven werken, ook als het spel later een nieuwe save-versie krijgt.
+- De code is **jouw spel**: geef hem niet aan anderen. Hij gaat nooit over internet (ook niet bij Samen spelen).
 
 ## Besturing
 - **iPad:** sleep met je vinger op de linkerkant van het scherm om te lopen. De grote knop rechts is **Praat** (bij iemand), **Lees** (bij een bord) of **⚔️** (zwaard). Bij de machine: druk op **Clone!**

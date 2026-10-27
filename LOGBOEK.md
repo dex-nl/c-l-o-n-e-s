@@ -171,3 +171,11 @@
 - De app op het beginscherm heeft een eigen save (los van Safari). De save zelf is niet veranderd door de app.
 - Getest op de computer in iPhone-formaat (liggend en rechtop), iPad-formaat en MacBook-formaat, ook zonder internet. Nog niet getest op een echte iPhone.
 - Later bijgewerkt met de Vulkaan en de Onderwaterwereld: de app krijgt die nieuwe werelden ook (nieuwe cache-versie in `sw.js`, zodat iPhones de nieuwe versie ophalen).
+
+## 27 oktober 2026: Voortgang meenemen (wens van Dex)
+- Gemaakt met een AI-helper op de tak `voortgang-meenemen`. **Dex of papa beslist of het erin komt.**
+- Probleem: de app op het beginscherm heeft een eigen save, dus je begon daar opnieuw.
+- Nieuw in de 🎒 Rugzak: **📤 Voortgang kopiëren** (maakt een code van je save en kopieert hem) en **📥 Voortgang plakken** (code plakken, "Zeker weten?", en dan start het spel opnieuw met je voortgang).
+- De code heeft een controlegetal: een kapotte of verkeerde code doet niets. De code gaat door dezelfde `migrate()` als een gewone save, dus oude save-versies werken ook. De save zelf is niet veranderd.
+- Nieuwe cache-versie in `sw.js`, zodat iPhones de nieuwe versie ophalen.
+- Getest op de computer in iPhone-, iPad- en MacBook-formaat (kopiëren in het ene spel, plakken in een leeg spel, foute codes, Nee zeggen, een oude save van versie 7, rare waarden). Nog niet getest op een echte iPhone.
