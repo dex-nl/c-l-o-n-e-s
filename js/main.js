@@ -10,7 +10,9 @@ import { Scorpion } from './scorpion.js';
 import { createMaze } from './maze.js';
 import { Bram } from './bram.js';
 import { createVolcano } from './volcano.js';
-import { Dragon } from './dragon.js';
+import { Dragon, ICE_DRAGON } from './dragon.js';
+import { createIce, ICE_GRIP, WARM_MAX } from './ice.js';
+import { Snowman } from './snowman.js';
 import { createSea, AIR_MAX, BUBBLE_AIR, SURFACE } from './sea.js';
 import { Shark, Jelly } from './seacreatures.js';
 import { Squid } from './squid.js';
@@ -124,6 +126,7 @@ const pyramid = addZone(createPyramid); // binnen in de Grote Piramide
 const maze = addZone(createMaze); // Het Doolhof (hoofdstuk 4, idee van Dex)
 const volcano = addZone(createVolcano); // De Vulkaan (hoofdstuk 5, idee van Dex). Geen auto's hier!
 const sea = addZone(createSea); // De Onderwaterwereld (hoofdstuk 6, idee van Dex). Zwemmen! Geen auto's hier.
+const ice = addZone(createIce); // De IJswereld (hoofdstuk 7, idee van Dex). Glad ijs en sneeuwstormen! Geen auto's hier.
 
 // Dorpelingen
 const bolt = makeBolt(world.group, world.npcSpot);
@@ -177,6 +180,10 @@ volcano.exits = [{ x: volcano.exit.x, z: volcano.exit.z, r: 1.4, to: 'woestijn',
 const seaVisible = () => state.volcano.dragon || state.mapPieces.includes('vulkaan');
 desert.exits.push({ x: desert.seaPortal.x, z: desert.seaPortal.z, r: 1.4, to: 'onderwater', spawn: () => sea.spawns.fromWoestijn, active: seaVisible, open: () => true });
 sea.exits = [{ x: sea.exit.x, z: sea.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromZee, open: () => true }];
+// De witte poort naar De IJswereld, tegenover de oase (verschijnt als Reuzeninktvis Inka verslagen is)
+const iceVisible = () => state.sea.squid || state.mapPieces.includes('onderwater');
+desert.exits.push({ x: desert.icePortal.x, z: desert.icePortal.z, r: 1.4, to: 'ijs', spawn: () => ice.spawns.fromWoestijn, active: iceVisible, open: () => true });
+ice.exits = [{ x: ice.exit.x, z: ice.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromIjs, open: () => true }];
 pyramid.exits = [{ x: pyramid.exit.x, z: pyramid.exit.z, r: 1.0, to: 'woestijn', spawn: () => desert.spawns.fromPiramide, open: () => true }];
 city.exits = [{ x: city.exit.x, z: city.exit.z, r: 1.4, to: 'dorp', spawn: () => world.spots.uitStad, open: () => true }];
 forest.exits = [
@@ -235,6 +242,8 @@ let sjors = null; // Schorpioen Sjors, de baas van de piramide
 let bram = null;  // Bladkoning Bram, de baas van het doolhof
 let dragon = null; // Vuurdraak Vonk, de baas van de vulkaan
 let squid = null; // Reuzeninktvis Inka, de baas van de onderwaterwereld
+let iceDragon = null; // IJsdraak IJzel, de baas van de ijswereld
+let warmth = WARM_MAX, coldHurt = 0, frozen = 0, iceLast = null, iceToastCd = 0, slipToastCd = 0, stormWasIce = 'calm', pegCd = 2; // in de ijswereld
 let air = 32, airHurt = 0, inkTime = 0, airWarned = false, seaToastCd = 0, urchinToastCd = 0; // onder water: lucht (seconden), inkt
 let shake = 0, hitStop = 0, fainting = false, transition = false;
 let lastHitSound = 0;
@@ -268,6 +277,7 @@ const game = {
     if (s.bram) { game.onBramDefeated(s); return; }
     if (s.dragon) { game.onDragonDefeated(s); return; }
     if (s.squid) { game.onSquidDefeated(s); return; }
+    if (s.iceDragon) { game.onIceDragonDefeated(s); return; }
     if (s.king) {
       state.quest.kingBeaten = true; // onthouden, ook als de iPad de pagina opnieuw laadt
       game.showLanding(0, 0, 0);
@@ -345,6 +355,24 @@ const game = {
     for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
     save();
   },
+  // IJsdraak IJzel is verslagen: hij geeft je stukje 5 van de schatkaart
+  onIceDragonDefeated(s) {
+    state.ice.dragon = true;
+    game.showLanding(0, 0, 0);
+    hitStop = 0.35;
+    shake = 1;
+    frozen = 0;
+    fx.confetti(s.pos, 110);
+    sfx.fanfare();
+    ui.toast('🐲 IJsdraak IJzel: "Brrr... jij bent nog cooler dan ik! Dit lag in mijn ijskast..."', 4200);
+    pickups.spawn('kaartstuk', s.pos.x, s.pos.z);
+    for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
+    save();
+  },
+  // de ijsadem van IJzel: even bevroren (dan loop je langzaam)
+  freezePlayer(secs) { if (!fainting && !transition) frozen = Math.max(frozen, secs); },
+  // sta je in een iglo of de ijsgrot? (dan gooien sneeuwpoppen niet)
+  sheltered() { return game.zone === ice && ice.inShelter(player.pos); },
   // onder water: een haai, kwal... erbij
   addEnemy(e) { enemies.push(e); return e; },
   // de draaikolk trekt je mee
@@ -393,6 +421,13 @@ function spawnEnemies(zone) {
     for (const sp of zone.jellySpots) enemies.push(new Jelly(zone.group, sp.x, sp.z));
     if (!state.sea.squid) { squid = new Squid(zone.group, zone.boss.x, zone.boss.z, zone.trench); enemies.push(squid); }
     else if (!state.mapPieces.includes('onderwater')) pickups.spawn('kaartstuk', zone.trench.x, zone.trench.z);
+    for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z);
+  }
+  iceDragon = null;
+  if (zone.id === 'ijs') {
+    zone.snowmanSpots.forEach((sp, i) => enemies.push(new Snowman(zone.group, sp.x, sp.z, i)));
+    if (!state.ice.dragon) { iceDragon = new Dragon(zone.group, zone.boss.x, zone.boss.z, ICE_DRAGON); enemies.push(iceDragon); }
+    else if (!state.mapPieces.includes('ijs')) pickups.spawn('kaartstuk', zone.arena.x, zone.arena.z);
     for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z);
   }
 }
@@ -469,7 +504,9 @@ function setZone(id, spawn) {
   if (id === 'doolhof') { maze.applyState(state.maze); maze.hideTrail(); trailTime = 0; }
   if (id === 'vulkaan') { volcano.applyState(state.volcano); volcano.reset(); volcanoLast = null; }
   if (id === 'onderwater') { sea.applyState(state.sea); sea.reset(); air = AIR_MAX; airHurt = 0; inkTime = 0; airWarned = false; player.pos.y = 0.6; }
+  if (id === 'ijs') { ice.applyState(state.ice); ice.reset(); warmth = WARM_MAX; coldHurt = 0; frozen = 0; iceLast = null; stormWasIce = 'calm'; }
   if (id !== 'vulkaan' && id !== 'onderwater') player.pos.y = 0;
+  player.vx = player.vz = 0; player.slip = 0;
   setSwimming(id === 'onderwater');
   if (id === 'woestijn') { desert.storm.k = 0; desert.stopStorm(20 + Math.random() * 10); stormWas = false; } // eerst even rustig
   state.zone = id;
@@ -544,6 +581,7 @@ function refresh() {
   updateMazePortal();
   updateVolcanoPortal();
   updateSeaPortal();
+  updateIcePortal();
   desert.setPebbleOn(state.maze.levers.includes('kris'));
   world.desertGate.setOpen(reached(q, 'woestijn'));
   desert.setDoorOpen(reached(q, 'piramide'));
@@ -649,6 +687,25 @@ function seaAppear() {
   fx.confetti({ x: at.x, z: at.z }, 50);
   sfx.powerUp();
   ui.toast('✨ Er is een nieuwe poort verschenen! Bij de oase: naar DE ONDERWATERWERELD!', 4500);
+}
+
+// ---------- De ijspoort verschijnt tegenover de oase (als Reuzeninktvis Inka verslagen is) ----------
+let icePortalShown = false, iceAppearPending = false;
+function updateIcePortal() {
+  const vis = iceVisible();
+  if (vis === icePortalShown) return;
+  icePortalShown = vis;
+  desert.setIcePortal(vis);
+  if (vis && started) iceAppearPending = true;
+}
+function iceAppear() {
+  iceAppearPending = false;
+  const at = { x: desert.icePortal.x, y: 2, z: desert.icePortal.z };
+  fx.sparkle(at, [0xffffff, 0x74c0fc, 0xd0ebff], 50, 6);
+  setTimeout(() => fx.sparkle(at, [0xa5d8ff, 0xffffff, 0x4dabf7], 40, 5), 500);
+  fx.confetti({ x: at.x, z: at.z }, 50);
+  sfx.powerUp();
+  ui.toast('✨ Er is een nieuwe poort verschenen! Tegenover de oase: naar DE IJSWERELD!', 4500);
 }
 
 let dirty = false;
@@ -845,7 +902,13 @@ function afterBolt(before, wasAllFound) {
     q.state = 'schat4';
     fx.confetti(bolt.pos, 180);
     sfx.fanfare();
-    ui.toast(`🏆 Hoofdstuk 6 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Wordt vervolgd!`, 4500);
+    ui.toast(`🏆 Hoofdstuk 6 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Op naar De IJswereld!`, 4500);
+    if (state.mapPieces.includes('ijs')) q.state = 'kaart5'; // stukje 5 had je al!
+  } else if (before === 'kaart5') {
+    q.state = 'schat5';
+    fx.confetti(bolt.pos, 200);
+    sfx.fanfare();
+    ui.toast(`🏆 Hoofdstuk 7 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. De helft! Wordt vervolgd!`, 4500);
   }
 }
 
@@ -1268,8 +1331,16 @@ function questTarget() {
   }
   if (z === 'onderwater') {
     // onder water: naar de inktvis (of het kaartstuk), en daarna terug naar de uitgang
-    if (state.mapPieces.includes('onderwater')) return (['kaart', 'kaart2', 'kaart3', 'kaart4'].includes(q.state) ? sea.exit : null);
+    if (state.mapPieces.includes('onderwater')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5'].includes(q.state) ? sea.exit : null);
     return sea.boss;
+  }
+  if (z === 'ijs') {
+    // in de ijswereld: naar de draak (of het kaartstuk), en daarna terug naar de uitgang
+    if (state.mapPieces.includes('ijs')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5'].includes(q.state) ? ice.exit : null);
+    return ice.boss;
+  }
+  if (q.state === 'schat4' && !state.mapPieces.includes('ijs')) {
+    return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.icePortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'vulkaan' ? volcano.exit : z === 'onderwater' ? sea.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
   if (q.state === 'schat3' && !state.mapPieces.includes('onderwater')) {
     return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.seaPortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'vulkaan' ? volcano.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
@@ -1277,7 +1348,7 @@ function questTarget() {
   if (q.state === 'schat2' && !state.mapPieces.includes('vulkaan')) {
     return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.volcanoPortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
-  if (q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || (q.state === 'held' && isCityDone(state))) {
+  if (q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || (q.state === 'held' && isCityDone(state))) {
     if (z === 'doolhof') return maze.exit;
     return z === 'dorp' ? bolt.pos : z === 'woestijn' ? desert.exit : z === 'piramide' ? pyramid.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
@@ -1860,6 +1931,94 @@ function updateVolcano(dt, paused) {
   }
 }
 
+// ---------- De IJswereld: glad ijs, wakken, sneeuwstorm, kou, ijspegels en kistjes ----------
+ice.focus = player.pos; // de sneeuwvlokjes vallen rond de speler
+ice.onImpact = (x, z, r) => {
+  fx.ring({ x, z }, r, 0x74c0fc, 0.45);
+  fx.sparkle({ x, y: 0.6, z }, [0xffffff, 0xd0ebff, 0x74c0fc], 14, 2.2);
+  if (game.zone === ice) {
+    if (Math.hypot(player.pos.x - x, player.pos.z - z) < 12) sfx.slam();
+    if (Math.hypot(player.pos.x - x, player.pos.z - z) < r + 0.3) { game.hurtPlayer(1, x, z, 12); shake = Math.max(shake, 0.4); }
+  }
+};
+function updateIce(dt, paused) {
+  const p = player.pos, st = ice.storm, k = st.k, env = ice.env, sf = ice.stormFog;
+  // de sneeuwstorm: mist (je ziet bijna niks) en een grijze lucht
+  stormColor.set(sf[0]);
+  scene.fog.color.set(env.fog[0]).lerp(stormColor, k);
+  scene.fog.near = env.fog[1] + (sf[1] - env.fog[1]) * k;
+  scene.fog.far = env.fog[2] + (sf[2] - env.fog[2]) * k;
+  sky.material.uniforms.top.value.set(env.sky[0]).lerp(stormColor, k * 0.9);
+  sky.material.uniforms.bottom.value.set(env.sky[1]).lerp(stormColor, k);
+  sun.intensity = env.sun[1] * (1 - 0.5 * k);
+  ui.setFrost(frozen > 0);
+  if (paused || transition || fainting) return;
+  iceToastCd -= dt; slipToastCd -= dt;
+  frozen = Math.max(0, frozen - dt);
+  const sheltered = ice.inShelter(p), arena = ice.inArena(p);
+  if (st.phase !== stormWasIce) {
+    if (st.phase === 'warn') { ui.toast('❄️ Er komt een SNEEUWSTORM aan! Snel naar een iglo of de ijsgrot!', 3600); sfx.rumble(); }
+    else if (st.phase === 'storm') ui.toast(sheltered || arena ? '🌨️ SNEEUWSTORM! Gelukkig zit je hier lekker beschut.' : '🌨️ SNEEUWSTORM! Je wordt koud... Schuil in een iglo!', 3200);
+    else if (stormWasIce === 'storm') ui.toast('☀️ De sneeuwstorm is voorbij.', 2600);
+    stormWasIce = st.phase;
+  }
+  // de wind duwt je terug (op het ijs glij je nog verder weg!)
+  if (k > 0.3 && !sheltered && !arena && p.z < ice.exit.z - 8) { // (vlak bij de poort waait het niet: je waait niet per ongeluk de wereld uit)
+    if (player.slip) { player.vx += st.wind.x * 4.2 * k * dt; player.vz += st.wind.z * 4.2 * k * dt; }
+    else { p.x += st.wind.x * 2.6 * k * dt; p.z += st.wind.z * 2.6 * k * dt; player.resolveCollisions(ice); }
+  }
+  // warm blijven: in de storm word je koud (behalve in een iglo of de ijsgrot)
+  const cold = st.phase === 'storm' && k > 0.5 && !sheltered && !arena;
+  if (cold) warmth = Math.max(0, warmth - dt);
+  else warmth = Math.min(WARM_MAX, warmth + dt * (sheltered ? 4 : 1.5));
+  if (warmth <= 0) {
+    coldHurt -= dt;
+    if (coldHurt <= 0) {
+      coldHurt = 2.5;
+      player.invuln = 0;
+      game.hurtPlayer(1, p.x, p.z + 0.01, 2);
+      ui.toast('🥶 Brrr! Veel te koud! Snel naar een iglo!', 2200);
+    }
+  } else coldHurt = 0.8;
+  // een wak in het ijs: plons!
+  const h = ice.inHole(p);
+  if (h) {
+    const back = iceLast || ice.spawns.fromWoestijn;
+    game.hurtPlayer(1, h.x, h.z, 2);
+    player.setPosition(back.x, back.z, player.rot);
+    player.kx = player.kz = 0;
+    player.resolveCollisions(ice);
+    squad.regroup(player);
+    fx.poof(player.pos, 0x74c0fc, 1.2);
+    fx.sparkle({ x: h.x, y: 0.5, z: h.z }, [0xffffff, 0x4dabf7], 18, 3);
+    sfx.bubble();
+    if (iceToastCd <= 0) { ui.toast('💦 Plons! Brrr, ijskoud water! Pas op voor de wakken: op het ijs glij je door.', 3200); iceToastCd = 5; }
+  } else if (!ice.nearHole(p, 1.4)) iceLast = { x: p.x, z: p.z };
+  if (player.slip && !ice.__slipSeen) { ice.__slipSeen = true; ui.toast('⛸️ Glad ijs! Je glijdt door. Laat op tijd los om te stoppen!', 3600); }
+  // ijspegels vallen in de Gletsjer
+  pegCd -= dt;
+  if (pegCd <= 0) {
+    if (ice.inGlacier(p)) {
+      const a = Math.random() * Math.PI * 2, r = Math.random() * 2.4;
+      ice.icicle(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r);
+      pegCd = 1.2;
+    } else pegCd = 0.5;
+  }
+  // kistjes: loop ertegenaan, dan gaan ze open
+  const st2 = state.ice;
+  for (const c of ice.chests) {
+    if (c.opened || Math.hypot(p.x - c.x, p.z - c.z) > 1.4) continue;
+    c.opened = true;
+    if (!st2.chests.includes(c.id)) st2.chests.push(c.id);
+    state.crystals = Math.min(MAX_CRYSTALS, state.crystals + c.n);
+    sfx.tada();
+    fx.sparkle({ x: c.x, y: 1, z: c.z }, [0x7af7ff, 0xffffff, 0xffd23f], c.cave ? 60 : 30, 4);
+    ui.toast(c.cave ? `🧊 De schatkist van de ijsgrot! +${fmt(c.n)} kristallen 💎` : `🧰 Een schatkist! +${fmt(c.n)} kristallen 💎`, 3000);
+    refresh();
+    save();
+  }
+}
+
 // ---------- Spel-lus ----------
 const clock = new THREE.Clock();
 let t = 0, saveTimer = 0, lastStep = 0, started = false;
@@ -1890,6 +2049,8 @@ function frame() {
   }
   player.speed = boost > 0 ? 9.5 : 6;
   if (zone === sea) player.speed *= 0.8; // zwemmen gaat iets langzamer dan lopen
+  if (zone === ice && frozen > 0) player.speed *= 0.5; // bevroren door de ijsadem: langzaam
+  player.slip = zone === ice && !driving && ice.slipAt(player.pos) ? ICE_GRIP : 0; // glad ijs: je glijdt door
   const before = player.pos.clone();
   if (driving && carHere()) {
     const people = zone.npcs.map((n) => n.pos);
@@ -1952,16 +2113,17 @@ function frame() {
       save();
     }
     if (type === 'kaartstuk') {
-      const id = zone === maze ? 'doolhof' : zone === volcano ? 'vulkaan' : zone === sea ? 'onderwater' : 'woestijn';
+      const id = zone === maze ? 'doolhof' : zone === volcano ? 'vulkaan' : zone === sea ? 'onderwater' : zone === ice ? 'ijs' : 'woestijn';
       const had = state.mapPieces.length;
       if (!state.mapPieces.includes(id)) state.mapPieces.push(id);
       if (id === 'woestijn') { state.quest.state = 'kaart'; delete state.quest.bossBeaten; }
       else if (id === 'doolhof' && reached(state.quest, 'schat')) state.quest.state = 'kaart2';
       else if (id === 'vulkaan' && reached(state.quest, 'schat2')) state.quest.state = 'kaart3';
       else if (id === 'onderwater' && reached(state.quest, 'schat3')) state.quest.state = 'kaart4';
+      else if (id === 'ijs' && reached(state.quest, 'schat4')) state.quest.state = 'kaart5';
       sfx.fanfare();
       fx.confetti(player.pos, 100);
-      ui.toast(`📜 Stukje ${{ woestijn: 1, doolhof: 2, vulkaan: 3, onderwater: 4 }[id]} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
+      ui.toast(`📜 Stukje ${{ woestijn: 1, doolhof: 2, vulkaan: 3, onderwater: 4, ijs: 5 }[id]} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
       // elk stukje maakt de clonemachine sterker
       if (state.mapPieces.length > had && reached(state.quest, 'held')) {
         setTimeout(() => { ui.toast('🧬 Je kunt nu 1 clone meer maken!', 3500); sfx.powerUp(); }, 2600);
@@ -2000,6 +2162,7 @@ function frame() {
   if (zone === maze && started) updateMaze(realDt, paused);
   if (zone === volcano && started) updateVolcano(realDt, paused);
   if (zone === sea && started) updateSea(realDt, paused);
+  if (zone === ice && started) updateIce(realDt, paused);
 
   // Uitgangen naar andere zones
   exitCooldown -= realDt;
@@ -2049,8 +2212,15 @@ function frame() {
     const fight = squid && !squid.dead && sea.inTrench(player.pos);
     ui.setBoss('🦑 Reuzeninktvis Inka', fight ? squid.hp / squid.maxHp : null);
     playMusic(fight ? 'baas' : 'onderwater');
+  } else if (zone === ice) {
+    const fight = iceDragon && !iceDragon.dead && ice.inArena(player.pos);
+    ui.setBoss('🐲 IJsdraak IJzel', fight ? iceDragon.hp / iceDragon.maxHp : null);
+    playMusic(fight ? 'baas' : 'ijs');
   } else ui.setBoss('', null);
   ui.setAir(zone === sea ? air / AIR_MAX : null);
+  ui.setWarm(zone === ice ? warmth / WARM_MAX : null);
+  if (zone !== ice && frozen) { frozen = 0; ui.setFrost(false); }
+  if (zone === desert && iceAppearPending && !transition) iceAppear();
   if (zone === desert && seaAppearPending && !transition) seaAppear();
   if (zone === desert && volcanoAppearPending && !transition) volcanoAppear();
   if (zone === desert && mazeAppearPending && !transition) mazeAppear();
@@ -2145,7 +2315,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.clones = {
   net, openCoop,
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
-  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
+  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, ice, get iceDragon() { return iceDragon; }, get warmth() { return warmth; }, set warmth(v) { warmth = v; }, get frozen() { return frozen; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
   get boost() { return boost; }, collideTest: collide, kickflip, boostCar, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,

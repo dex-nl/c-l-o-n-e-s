@@ -190,6 +190,15 @@ const SONGS = {
       'A5 ~ ~ G5 E5 ~ ~ ~', 'F5 ~ A5 ~ C6 ~ A5 ~', 'D5 ~ F5 ~ A5 ~ F5 ~', 'G#5 ~ ~ ~ E5 ~ ~ ~',
     ],
   },
+  // De IJswereld: helder en twinkelend (als ijskristallen), met een spannend randje
+  ijs: {
+    bpm: 104, lead: 'triangle', drums: true,
+    chords: ['Em', 'C', 'G', 'D', 'Em', 'C', 'Am', 'B'],
+    melody: [
+      'E6 ~ B5 ~ G5 ~ B5 E6', 'C6 ~ G5 ~ E5 ~ - -', 'D6 ~ B5 ~ G5 ~ D6 ~', 'F#5 ~ A5 ~ D6 ~ - -',
+      'G6 ~ E6 ~ B5 ~ E6 ~', 'E6 ~ C6 ~ G5 ~ C6 ~', 'C6 ~ A5 ~ E5 ~ A5 ~', 'B5 ~ D#6 ~ F#6 ~ - -',
+    ],
+  },
   baas: {
     bpm: 150, lead: 'square', drums: true, busyBass: true,
     chords: ['Em', 'C', 'D', 'B', 'Em', 'C', 'D', 'B'],
