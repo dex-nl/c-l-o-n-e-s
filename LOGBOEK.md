@@ -172,6 +172,14 @@
 - Getest op de computer in iPhone-formaat (liggend en rechtop), iPad-formaat en MacBook-formaat, ook zonder internet. Nog niet getest op een echte iPhone.
 - Later bijgewerkt met de Vulkaan en de Onderwaterwereld: de app krijgt die nieuwe werelden ook (nieuwe cache-versie in `sw.js`, zodat iPhones de nieuwe versie ophalen).
 
+## 27 oktober 2026: Voortgang meenemen (wens van Dex)
+- Gemaakt met een AI-helper op de tak `voortgang-meenemen`. **Dex of papa beslist of het erin komt.**
+- Probleem: de app op het beginscherm heeft een eigen save, dus je begon daar opnieuw.
+- Nieuw in de 🎒 Rugzak: **📤 Voortgang kopiëren** (maakt een code van je save en kopieert hem) en **📥 Voortgang plakken** (code plakken, "Zeker weten?", en dan start het spel opnieuw met je voortgang).
+- De code heeft een controlegetal: een kapotte of verkeerde code doet niets. De code gaat door dezelfde `migrate()` als een gewone save, dus oude save-versies werken ook. De save zelf is niet veranderd.
+- Nieuwe cache-versie in `sw.js`, zodat iPhones de nieuwe versie ophalen.
+- Getest op de computer in iPhone-, iPad- en MacBook-formaat (kopiëren in het ene spel, plakken in een leeg spel, foute codes, Nee zeggen, een oude save van versie 7, rare waarden). Nog niet getest op een echte iPhone.
+
 ## 27 oktober 2026: Hoofdstuk 7, De IJswereld (idee van Dex)
 - Gemaakt met een AI-helper op de tak `ijswereld`. **Papa merget het als het goed is.**
 - Nieuw: De IJswereld, wereld 5. De witte poort verschijnt in de woestijn tegenover de oase als Reuzeninktvis Inka verslagen is.
@@ -180,5 +188,5 @@
 - Sneeuwpoppen die sneeuwballen gooien (blauwe mik-ring), ijsmonsters, vallende ijspegels in de gletsjer, 3 schatkisten.
 - Eindbaas IJsdraak IJzel (140 levens, ijsadem bevriest je even). Hij geeft stukje 5 van de schatkaart. Moeilijker dan de onderwaterwereld (level 6 in `difficulty.js`).
 - De Wolkenflitser mag niet in de ijswereld (hij glijdt niet en vliegt over de draak heen). Eigen liedje voor de ijswereld.
-- Save naar versie 11 (`ice`: draak verslagen en open kistjes). Oude saves blijven werken. Nieuwe cache-versie `clones-v3`.
+- Save naar versie 11 (`ice`: draak verslagen en open kistjes). Oude saves blijven werken. Nieuwe cache-versie `clones-v4`.
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat, met touch). Nog niet getest op een echte iPad, iPhone of MacBook.

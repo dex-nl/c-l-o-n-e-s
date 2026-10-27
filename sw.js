@@ -2,7 +2,7 @@
 // Altijd EERST internet proberen ("network-first"): zo krijg je updates meteen.
 // Alleen als er geen internet is, pakken we de bewaarde kopie uit de cache.
 // Nieuwe versie van dit bestand? Verhoog dan het nummer hieronder.
-const CACHE = 'clones-v3';
+const CACHE = 'clones-v4';
 
 // Andere websites die we ook mogen bewaren (Three.js, PeerJS en de lettertypes)
 const CDN = ['https://cdn.jsdelivr.net', 'https://fonts.googleapis.com', 'https://fonts.gstatic.com'];
