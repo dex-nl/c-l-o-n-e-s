@@ -48,6 +48,19 @@ export function buildBackpack(body, state, hearts, onWear, city = null) {
     c.addEventListener('pointerdown', (e) => { e.preventDefault(); city.onJobs(); });
   }
 
+  // 📲 Voortgang meenemen (bijvoorbeeld van Safari naar de app op het beginscherm)
+  if (city && city.onCopy) {
+    const g = section(body, '📲 Voortgang meenemen');
+    const a = item(g, '📤', 'Voortgang kopiëren', 'Maak een code van je spel');
+    a.id = 'bag-kopieren';
+    const b = item(g, '📥', 'Voortgang plakken', 'Zet een code in dit spel');
+    b.id = 'bag-plakken';
+    for (const [c, fn] of [[a, city.onCopy], [b, city.onPaste]]) {
+      c.classList.add('pick');
+      c.addEventListener('click', (e) => { e.preventDefault(); fn(); });
+    }
+  }
+
   const hats = section(body, 'Hoedjes');
   const options = [[null, '🧢', 'Rood petje'], ...state.hats.map((id) => [id, HAT_ICONS[id], HAT_NAMES[id]])];
   for (const [id, icon, name] of options) {

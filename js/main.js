@@ -38,6 +38,7 @@ import { Slime, SLIME_COLORS } from './enemies.js';
 import { Pickups } from './pickups.js';
 import { buildShop } from './shop.js';
 import { buildBackpack } from './backpack.js';
+import { makeCode, readCode } from './voortgang.js';
 import { buildMap } from './map.js';
 import { createNet, playerName, PLAYER_COLORS } from './net.js';
 import { sfx, setSoundOn, setMusicOn, playMusic } from './sound.js';
@@ -654,7 +655,9 @@ function seaAppear() {
 let dirty = false;
 const num = (v, alt) => (Number.isFinite(v) ? +v.toFixed(2) : alt);
 
+let saveLocked = false; // na "Voortgang plakken": niet meer opslaan, anders schrijven we over de nieuwe save heen
 function save() {
+  if (saveLocked) return;
   if (game.zone === maze) state.maze.seen = maze.seenHex();
   const old = state.player || {};
   state.player = { x: num(player.pos.x, num(old.x, 0)), z: num(player.pos.z, num(old.z, 5)), rot: num(player.rot, num(old.rot, 0)) };
@@ -1232,8 +1235,94 @@ function openBackpack() {
     onCandy(id) { cityActions.onCandy(id); ui.refreshPanel(build); },
     onMap() { ui.closePanel(); openTreasure(); },
     onJobs() { ui.closePanel(); openJobs(); },
+    onCopy() { ui.closePanel(); openVoortgang('kopieren'); },
+    onPaste() { ui.closePanel(); openVoortgang('plakken'); },
   });
   ui.openPanel('Rugzak', build);
+}
+
+// ---------- 📲 Voortgang meenemen (Safari -> app op het beginscherm) ----------
+// Alleen kopiëren en plakken op hetzelfde apparaat: dit gaat nooit over het netwerk.
+const mk = (tag, props = {}, text = '') => { const e = Object.assign(document.createElement(tag), props); if (text) e.textContent = text; return e; };
+const vgTap = (b, fn) => b.addEventListener('click', (e) => { e.preventDefault(); fn(); }); // click: dan mag kopiëren op de iPhone
+function saveSummary(s) {
+  const bits = [`💎 ${fmt(s.crystals)} kristallen`];
+  if (s.mapPieces && s.mapPieces.length) bits.push(`📜 ${s.mapPieces.length} van ${MAP_PIECES_TOTAL} stukjes schatkaart`);
+  if (s.clones) bits.push(`🧬 ${s.clones} clones`);
+  if (s.cars && s.cars.length) bits.push(`🚗 ${s.cars.length} auto${s.cars.length > 1 ? "'s" : ''}`);
+  return bits.join(' · ');
+}
+function openVoortgang(mode = 'kopieren') {
+  if (ui.dialogOpen || ui.panelOpen || !started) return;
+  let code = '';
+  const build = (body) => {
+    const tabs = mk('div', { className: 'vg-tabs' });
+    const t1 = mk('button', { type: 'button', id: 'vg-tab-kopieren', className: 'vg-tab' + (mode === 'kopieren' ? ' on' : '') }, '📤 Voortgang kopiëren');
+    const t2 = mk('button', { type: 'button', id: 'vg-tab-plakken', className: 'vg-tab' + (mode === 'plakken' ? ' on' : '') }, '📥 Voortgang plakken');
+    vgTap(t1, () => { mode = 'kopieren'; sfx.click(); ui.refreshPanel(build); });
+    vgTap(t2, () => { mode = 'plakken'; sfx.click(); ui.refreshPanel(build); });
+    tabs.append(t1, t2);
+    body.append(tabs);
+    const steps = mk('ol', { className: 'vg-steps' });
+    for (const t of ['Kopieer je voortgang in Safari (hier op 📤).', 'Open de app op je beginscherm.', 'Ga naar 🎒 → 📥 Voortgang plakken en plak de code.']) steps.append(mk('li', {}, t));
+    if (mode === 'kopieren') {
+      save();
+      code = makeCode(state);
+      body.append(mk('p', { className: 'panel-note' }, 'Neem je spel mee naar een ander spel op dit apparaat, bijvoorbeeld van Safari naar de app op je beginscherm:'), steps);
+      const box = mk('textarea', { id: 'vg-code', className: 'vg-code', readOnly: true, rows: 3, spellcheck: false });
+      box.value = code;
+      box.setAttribute('autocomplete', 'off');
+      const msg = mk('div', { id: 'vg-msg', className: 'code-msg' });
+      const copy = mk('button', { type: 'button', id: 'vg-copy', className: 'vg-btn' }, '📋 Kopieer de code');
+      vgTap(copy, async () => {
+        let ok = false;
+        try { if (navigator.clipboard && window.isSecureContext) { await navigator.clipboard.writeText(code); ok = true; } } catch (e) { /* hieronder het oude trucje */ }
+        if (!ok) {
+          try { box.focus(); box.select(); box.setSelectionRange(0, code.length); ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        }
+        if (ok) { sfx.tada(); msg.style.color = '#2d6a4f'; msg.textContent = '✅ Gekopieerd! Open nu de app en plak hem daar.'; }
+        else { sfx.nope(); msg.style.color = '#c1121f'; msg.textContent = 'Kopiëren lukte niet vanzelf. Houd je vinger op de code, kies "Selecteer alles" en dan "Kopieer".'; box.focus(); box.select(); }
+      });
+      body.append(box, mk('div', { className: 'code-row' }), msg);
+      body.querySelector('.code-row').append(copy);
+      body.append(mk('p', { className: 'panel-note small' }, `Dit zit erin: ${saveSummary(state)}. Geef deze code niet aan anderen: het is jouw spel!`));
+    } else {
+      body.append(mk('p', { className: 'panel-note' }, 'Heb je een code gekopieerd? Plak hem hier (houd je vinger in het vak en kies "Plak"):'));
+      const box = mk('textarea', { id: 'vg-input', className: 'vg-code', rows: 3, spellcheck: false, placeholder: 'CLONES1....' });
+      box.setAttribute('autocomplete', 'off'); box.setAttribute('autocapitalize', 'off'); box.setAttribute('autocorrect', 'off');
+      const msg = mk('div', { id: 'vg-msg', className: 'code-msg' });
+      const row = mk('div', { className: 'code-row' });
+      const go = mk('button', { type: 'button', id: 'vg-go', className: 'vg-btn' }, '✅ Zet in dit spel');
+      const ask = mk('div', { id: 'vg-ask', className: 'vg-ask hidden' });
+      row.append(go);
+      vgTap(go, () => {
+        const r = readCode(box.value);
+        ask.classList.add('hidden'); ask.innerHTML = '';
+        if (!r.ok) { sfx.nope(); msg.style.color = '#c1121f'; msg.textContent = r.msg; return; }
+        msg.textContent = '';
+        sfx.click();
+        ask.append(mk('p', { className: 'vg-found' }, `In deze code: ${saveSummary(r.save)}`),
+          mk('p', { className: 'vg-warn' }, '⚠️ Dit vervangt je huidige voortgang. Zeker weten?'));
+        const yes = mk('button', { type: 'button', id: 'vg-yes', className: 'vg-btn' }, '👍 Ja, zet erin');
+        const no = mk('button', { type: 'button', id: 'vg-no', className: 'vg-btn grey' }, '✋ Nee, toch niet');
+        vgTap(no, () => { sfx.click(); ask.classList.add('hidden'); ask.innerHTML = ''; msg.style.color = '#2d3142'; msg.textContent = 'Oké, er is niets veranderd.'; });
+        vgTap(yes, () => {
+          saveLocked = true; // vanaf nu niet meer opslaan (ook niet bij het herladen)
+          writeSave(r.save);
+          sfx.tada();
+          msg.style.color = '#2d6a4f'; msg.textContent = '🎉 Gelukt! Het spel start opnieuw met je voortgang...';
+          ask.classList.add('hidden');
+          setTimeout(() => location.reload(), 900);
+        });
+        const r2 = mk('div', { className: 'code-row' }); r2.append(yes, no);
+        ask.append(r2);
+        ask.classList.remove('hidden');
+        try { ask.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* oude browser */ }
+      });
+      body.append(box, row, msg, ask);
+    }
+  };
+  ui.openPanel('📲 Voortgang meenemen', build);
 }
 
 // Waar moet je heen? (de ster op de kaart)
@@ -2145,7 +2234,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.clones = {
   net, openCoop,
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
-  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones,
+  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones, openVoortgang,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
   get boost() { return boost; }, collideTest: collide, kickflip, boostCar, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,
