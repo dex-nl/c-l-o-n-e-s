@@ -17,8 +17,10 @@ const KINDS = {
   bladkoning: { color: 0x3fa34d, size: 1.9, hp: 36, speed: 2.5, aggro: 18, loot: 20 },
   // Lavamonster (vulkaan): een gloeiend slijmpje met stukjes steen erop. Heet en taai!
   lava: { color: 0xff6a1f, size: 0.7, hp: 4, speed: 3.4, aggro: 9, loot: 3, glow: 0x7a1d00 },
+  // IJsmonster (ijswereld): een koud blauw slijmpje met ijspunten op zijn kop. Taai en snel!
+  ijs: { color: 0xa5d8ff, size: 0.72, hp: 4, speed: 3.6, aggro: 10, loot: 3, glow: 0x123a5c },
 };
-export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e, bladkoning: 0x3fa34d, lava: 0xff6a1f };
+export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e, bladkoning: 0x3fa34d, lava: 0xff6a1f, ijs: 0xa5d8ff };
 const REST = 0.45, HOP = 0.5; // even stilzitten, dan een sprongetje
 
 // Vormen en kleuren die alle slijmpjes delen (scheelt geheugen)
@@ -32,6 +34,7 @@ const bandGeo = new THREE.TorusGeometry(0.93, 0.07, 3, 14);
 const bandM = mat(0xfffaf0), sleepyGeo = new THREE.BoxGeometry(0.3, 0.06, 0.08);
 const leafGeo = new THREE.ConeGeometry(0.22, 0.5, 4), leafM = mat(0x55c26b);
 const crustGeo = new THREE.DodecahedronGeometry(0.28, 0), crustM = mat(0x3b2a26, { roughness: 1 });
+const iceSpikeGeo = new THREE.ConeGeometry(0.16, 0.6, 4), iceSpikeM = mat(0xe7f5ff, { emissive: 0x4dabf7, emissiveIntensity: 0.35, roughness: 0.2 });
 
 export class Slime {
   constructor(group, x, z, kind = 'groen', zoneId = null) {
@@ -105,6 +108,20 @@ export class Slime {
       [[0, 0.95, 0], [0.45, 0.7, -0.2], [-0.5, 0.65, 0.1], [0.1, 0.6, -0.6]].forEach(([x, y, z], i) => {
         const c = new THREE.Mesh(crustGeo, crustM);
         c.position.set(x, y, z); c.rotation.set(i, i * 2, 0);
+        face.add(c);
+      });
+      for (const sx of [-0.32, 0.32]) {
+        const brow = new THREE.Mesh(browGeo, black);
+        brow.position.set(sx, 0.36, 0.93);
+        brow.rotation.z = sx > 0 ? 0.35 : -0.35;
+        face.add(brow);
+      }
+    }
+    if (kind === 'ijs') {
+      // ijspunten bovenop en boze (maar lieve) wenkbrauwen
+      [[0, 0.95, 0, 0], [0.4, 0.78, -0.15, -0.5], [-0.4, 0.78, -0.15, 0.5], [0, 0.75, -0.5, 0]].forEach(([x, y, z, tilt]) => {
+        const c = new THREE.Mesh(iceSpikeGeo, iceSpikeM);
+        c.position.set(x, y, z); c.rotation.set(z * 0.8, 0, tilt);
         face.add(c);
       });
       for (const sx of [-0.32, 0.32]) {

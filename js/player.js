@@ -20,6 +20,8 @@ export class Player {
     this.swingHit = false; // true in het beeldje waarin het zwaard raakt
     this.kx = 0; this.kz = 0; // terugduwen als je geraakt wordt
     this.invuln = 0;      // even onkwetsbaar na een klap
+    this.vx = 0; this.vz = 0; // hoe snel je nu gaat (op glad ijs glij je door!)
+    this.slip = 0;        // 0 = gewoon lopen; anders: hoe snel je grip krijgt op glad ijs (klein = gladder)
   }
 
   setPosition(x, z, rot = 0) {
@@ -30,6 +32,7 @@ export class Player {
     this.rot = rot;
     this.mesh.rotation.y = rot;
     this.kx = this.kz = 0;
+    this.vx = this.vz = 0;
   }
 
   setSword(level) { this.swordLevel = level; giveSword(this.ch, level); }
@@ -54,7 +57,9 @@ export class Player {
   // move = { x, y } tussen -1 en 1 (y omhoog = naar voren op het scherm)
   update(dt, move, zone) {
     const len = Math.hypot(move.x, move.y);
-    if (len > 0.05) {
+    if (this.slip > 0) {
+      this.slide(dt, move, len, zone);
+    } else if (len > 0.05) {
       const k = Math.min(len, 1);
       const dx = (move.x / len) * k * this.speed * dt;
       const dz = (-move.y / len) * k * this.speed * dt;
@@ -70,9 +75,11 @@ export class Player {
       this.mesh.rotation.y = this.rot;
       this.phase += dt * 11 * k;
       this.walkAmount = Math.min(1, this.walkAmount + dt * 6);
+      if (dt > 0) { this.vx = dx / dt; this.vz = dz / dt; }
     } else {
       this.walkAmount = Math.max(0, this.walkAmount - dt * 6);
       this.phase += dt * 4;
+      this.vx = this.vz = 0;
     }
 
     // Teruggeduwd worden
@@ -101,6 +108,32 @@ export class Player {
       this.invuln = Math.max(0, this.invuln - dt);
       this.mesh.visible = this.invuln === 0 || Math.floor(this.invuln * 14) % 2 === 0;
     }
+  }
+
+  // Glad ijs: je snelheid verandert maar langzaam. Je glijdt door, en remmen duurt lang!
+  slide(dt, move, len, zone) {
+    const k = Math.min(len, 1);
+    const tx = len > 0.05 ? (move.x / len) * k * this.speed : 0, tz = len > 0.05 ? (-move.y / len) * k * this.speed : 0;
+    const a = Math.min(1, dt * this.slip);
+    this.vx += (tx - this.vx) * a; this.vz += (tz - this.vz) * a;
+    const bx = this.pos.x, bz = this.pos.z;
+    this.pos.x += this.vx * dt; this.pos.z += this.vz * dt;
+    this.resolveCollisions(zone);
+    if (dt > 0) { this.vx = (this.pos.x - bx) / dt; this.vz = (this.pos.z - bz) / dt; } // tegen een muur: stop
+    const sp = Math.hypot(this.vx, this.vz);
+    // kijk naar waar je heen wilt (of naar waar je heen glijdt)
+    const fx = len > 0.05 ? tx : this.vx, fz = len > 0.05 ? tz : this.vz;
+    if (Math.hypot(fx, fz) > 0.3) {
+      let diff = Math.atan2(fx, fz) - this.rot;
+      while (diff > Math.PI) diff -= Math.PI * 2;
+      while (diff < -Math.PI) diff += Math.PI * 2;
+      this.rot += diff * Math.min(1, dt * 8);
+      this.mesh.rotation.y = this.rot;
+    }
+    // lopen als je duwt, stilstaan (glijden!) als je loslaat
+    if (len > 0.05) { this.phase += dt * 9 * k; this.walkAmount = Math.min(1, this.walkAmount + dt * 6); }
+    else { this.walkAmount = Math.max(0, this.walkAmount - dt * 6); this.phase += dt * 4; }
+    this.sliding = len <= 0.05 && sp > 1.2;
   }
 
   resolveCollisions(zone) { collide(this.pos, RADIUS, zone); }

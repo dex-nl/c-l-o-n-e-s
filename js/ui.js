@@ -64,6 +64,15 @@ export const ui = {
     $('air-fill').style.width = `${Math.max(0, Math.min(1, frac)) * 100}%`;
     el.classList.toggle('low', frac < 0.3);
   },
+  // warmte-meter in De IJswereld (frac = 0..1, of null = weg)
+  setWarm(frac) {
+    const el = $('warm');
+    el.classList.toggle('hidden', frac === null);
+    if (frac === null) return;
+    $('warm-fill').style.width = `${Math.max(0, Math.min(1, frac)) * 100}%`;
+    el.classList.toggle('low', frac < 0.35);
+  },
+  setFrost(on) { $('frost').classList.toggle('hidden', !on); },
   setInk(on) { $('ink').classList.toggle('hidden', !on); },
 
   setBoss(name, frac) {

@@ -283,6 +283,16 @@ body.title #fly-btns { visibility: hidden; }
 /* Inktwolk */
 #ink { position: fixed; inset: 0; pointer-events: none; z-index: 3; background: radial-gradient(circle at 50% 55%, rgba(20,10,30,0.55) 0, rgba(10,5,20,0.92) 60%); transition: opacity .5s; opacity: 1; }
 #ink.hidden { opacity: 0; }
+/* Warmte-meter in De IJswereld (en een randje ijs op het scherm als je bevroren bent) */
+#warm { display: flex; align-items: center; gap: 8px; padding: 5px 12px; width: fit-content; }
+#warm.hidden { display: none; }
+#warm .ico { font-size: 20px; }
+#warm-bar { width: 150px; height: 16px; border-radius: 8px; background: rgba(0,0,0,0.25); border: 2px solid #fff; overflow: hidden; }
+#warm-fill { height: 100%; width: 100%; background: linear-gradient(#ffd43b, #fd7e14); transition: width .15s; }
+#warm.low #warm-fill { background: linear-gradient(#a5d8ff, #1c7ed6); }
+#warm.low { animation: airblink .6s infinite alternate; }
+#frost { position: fixed; inset: 0; pointer-events: none; z-index: 3; box-shadow: inset 0 0 90px 30px rgba(208,235,255,0.95); transition: opacity .3s; opacity: 1; }
+#frost.hidden { opacity: 0; }
 
 /* ---------- Kleine schermen (iPhone liggend) ---------- */
 @media (max-height: 500px) {
@@ -312,8 +322,8 @@ body.title #fly-btns { visibility: hidden; }
   #fly-btns { right: calc(138px + env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); gap: 8px; }
   #fly-btns button { width: 70px; height: 62px; font-size: 22px; border-radius: 18px; }
   #fly-btns button span { font-size: 12px; }
-  #air-bar { width: 100px; height: 12px; }
-  #air { padding: 3px 9px; }
+  #air-bar, #warm-bar { width: 100px; height: 12px; }
+  #air, #warm { padding: 3px 9px; }
   #start-btn { font-size: 26px; padding: 12px 34px; margin-top: 8px; }
 }
 

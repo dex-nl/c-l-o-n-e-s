@@ -6,6 +6,7 @@
 // - Bij 2/3 en 1/3 van zijn leven roept hij 2 lavamonsters (die geven altijd een hartje).
 // - Bij de helft wordt hij boos: sneller, vaker vuur, en zijn klappen doen 2 hartjes.
 // Hij werkt net als een slijmpje: pos, r, dead, removed, update() en hurt().
+// IJsdraak IJzel (de baas van De IJswereld) is ook zo'n draak, maar dan van ijs: zie ICE_DRAGON hieronder.
 import * as THREE from 'three';
 import { mat, disposeTree } from './characters.js';
 import { collide } from './physics.js';
@@ -26,15 +27,34 @@ const box = (w, h, d, m, x = 0, y = 0, z = 0) => {
 export const BREATH_RANGE = 7.5, BREATH_HALF = 0.42; // zo ver en zo breed is de vuuradem
 const FLY_H = 6;
 
+// Hoe ziet de draak eruit en hoe snel is hij? (Vuurdraak Vonk is de gewone draak)
+const FIRE_DRAGON = {
+  zone: 'vulkaan', name: 'Vuurdraak Vonk', ice: false, baseHp: 40,
+  color: 0xe63946, belly: 0xffd166, dark: 0xa4161a, wing: 0xff8c42, horn: 0xfff1d0,
+  aim: 0xff4d6d, fire: 0xff9f1c, flames: [0xff9f1c, 0xffd23f, 0xe63946], slamColor: 0xff7b39, helper: 'lava',
+  walk: [2.3, 3.0], breathCool: [3.8, 2.6], flyCool: [8, 5.5], rainCool: [11, 8], rainN: [5, 7], aimT: [1.1, 0.85], flyAim: [1.7, 1.3],
+  angryMsg: '🐉 Vuurdraak Vonk wordt boos! Pas op voor zijn vuur!',
+};
+// IJsdraak IJzel (De IJswereld, idee van Dex): sneller, sterker, en zijn ijsadem bevriest je even (dan loop je langzaam)
+export const ICE_DRAGON = {
+  zone: 'ijs', name: 'IJsdraak IJzel', ice: true, baseHp: 40,
+  color: 0x74c0fc, belly: 0xe7f5ff, dark: 0x1971c2, wing: 0xa5d8ff, horn: 0xffffff,
+  aim: 0x4dabf7, fire: 0xd0ebff, flames: [0xffffff, 0xd0ebff, 0x74c0fc], slamColor: 0x9bf6ff, helper: 'ijs',
+  walk: [2.6, 3.4], breathCool: [3.2, 2.2], flyCool: [7, 4.8], rainCool: [9, 6.5], rainN: [5, 8], aimT: [1.0, 0.8], flyAim: [1.5, 1.15],
+  angryMsg: '🐲 IJsdraak IJzel wordt boos! Pas op voor zijn ijsadem!',
+};
+
 export class Dragon {
-  constructor(group, x, z) {
-    this.kind = 'draak';
-    this.dragon = true;
+  constructor(group, x, z, look = FIRE_DRAGON) {
+    const o = this.o = look;
+    this.kind = o.ice ? 'ijsdraak' : 'draak';
+    this.dragon = !o.ice;     // Vuurdraak Vonk
+    this.iceDragon = !!o.ice; // IJsdraak IJzel
     this.boss = false; this.king = false;
-    this.name = 'Vuurdraak Vonk';
-    this.color = 0xe63946;
-    this.D = difficulty('vulkaan');
-    this.hp = this.maxHp = Math.round(40 * this.D.bossHp); // 100 (zie difficulty.js)
+    this.name = o.name;
+    this.color = o.color;
+    this.D = difficulty(o.zone);
+    this.hp = this.maxHp = Math.round(o.baseHp * this.D.bossHp); // Vonk 100, IJzel 140 (zie difficulty.js)
     this.r = 1.8;
     this.loot = 25;
     this.group = group;
@@ -54,8 +74,8 @@ export class Dragon {
     const g = new THREE.Group();
     this.mesh = g;
     this.bodyM = mat(this.color, { emissive: 0x000000 });
-    const belly = mat(0xffd166), dark = mat(0xa4161a), white = mat(0xffffff), black = mat(0x1d1d1d), horn = mat(0xfff1d0), pink = mat(0xff8fab);
-    const wingM = mat(0xff8c42, { side: THREE.DoubleSide });
+    const belly = mat(o.belly), dark = mat(o.dark), white = mat(0xffffff), black = mat(0x1d1d1d), horn = mat(o.horn), pink = mat(0xff8fab);
+    const wingM = mat(o.wing, { side: THREE.DoubleSide, ...(o.ice ? { transparent: true, opacity: 0.85 } : {}) });
     this.rig = new THREE.Group();
     g.add(this.rig);
     // lijf en buik
@@ -118,7 +138,7 @@ export class Dragon {
 
     // de rode punt op de grond (hier komt de vuuradem)
     this.cone = new THREE.Mesh(new THREE.CircleGeometry(BREATH_RANGE, 18, -Math.PI / 2 - BREATH_HALF, BREATH_HALF * 2).rotateX(-Math.PI / 2),
-      new THREE.MeshBasicMaterial({ color: 0xff4d6d, transparent: true, opacity: 0.35, depthWrite: false }));
+      new THREE.MeshBasicMaterial({ color: o.aim, transparent: true, opacity: 0.35, depthWrite: false }));
     this.cone.visible = false;
     group.add(this.cone);
     // schaduw (waar hij landt)
@@ -195,14 +215,14 @@ export class Dragon {
     while (this.summons.length && this.hp <= this.maxHp * this.summons[0] && this.state !== 'fly') {
       this.summons.shift();
       for (const [dx, dz] of [[3, 1.5], [-3, -1.5]]) {
-        const h = game.spawnSlime(this.pos.x + dx, this.pos.z + dz, 'lava');
+        const h = game.spawnSlime(this.pos.x + dx, this.pos.z + dz, this.o.helper);
         if (h) h.helper = true; // geeft altijd een hartje
       }
     }
     if (!this.angry && this.hp <= this.maxHp / 2) {
       this.angry = true;
       this.slamDamage = this.D.bossDamage;
-      game.onBossPhase?.(this, '🐉 Vuurdraak Vonk wordt boos! Pas op voor zijn vuur!');
+      game.onBossPhase?.(this, this.o.angryMsg);
     }
     let walk = 0;
     switch (this.state) {
@@ -220,7 +240,7 @@ export class Dragon {
         const goal = near ? p : this.home;
         if (Math.hypot(goal.x - this.pos.x, goal.z - this.pos.z) > this.r + 1.6) {
           if (!near) this.face(goal.x, goal.z, dt, 3);
-          const sp = (this.angry ? 3.0 : 2.3) * dt;
+          const sp = this.o.walk[this.angry ? 1 : 0] * dt;
           this.pos.x += Math.sin(this.rot) * sp;
           this.pos.z += Math.cos(this.rot) * sp;
           walk = 1;
@@ -229,35 +249,38 @@ export class Dragon {
       }
       case 'breath': {
         // eerst richten (rode punt op de grond), dan VUUR
-        const AIM = this.angry ? 0.85 : 1.1, FIRE = 1.1;
+        const AIM = this.o.aimT[this.angry ? 1 : 0], FIRE = 1.1;
         if (this.t < AIM * 0.5) this.face(p.x, p.z, dt, 4); // daarna draait hij niet meer: tijd om opzij te gaan
         this.cone.visible = true;
         this.cone.position.set(this.pos.x, 0.07, this.pos.z);
         this.cone.rotation.y = this.rot;
         this.head.rotation.x = this.t < AIM ? -0.25 : 0.15;
         if (this.t < AIM) {
-          this.cone.material.color.setHex(0xff4d6d);
+          this.cone.material.color.setHex(this.o.aim);
           this.cone.material.opacity = 0.2 + Math.abs(Math.sin(this.t * 12)) * 0.3;
         } else {
-          this.cone.material.color.setHex(0xff9f1c);
+          this.cone.material.color.setHex(this.o.fire);
           this.cone.material.opacity = 0.5;
           if (!this.burned) { this.burned = true; game.sfx.whoosh?.(); }
           // vlammen
           for (let i = 0; i < 3; i++) {
             const a = this.rot + (Math.random() - 0.5) * BREATH_HALF * 2, r = 1.5 + Math.random() * (BREATH_RANGE - 1.5);
-            game.fx.sparkle({ x: this.pos.x + Math.sin(a) * r, y: 0.6 + Math.random(), z: this.pos.z + Math.cos(a) * r }, [0xff9f1c, 0xffd23f, 0xe63946], 2, 1.2);
+            game.fx.sparkle({ x: this.pos.x + Math.sin(a) * r, y: 0.6 + Math.random(), z: this.pos.z + Math.cos(a) * r }, this.o.flames, 2, 1.2);
           }
-          if (this.inBreath(game.player.pos)) game.hurtPlayer(this.slamDamage, this.pos.x, this.pos.z, 14);
+          if (this.inBreath(game.player.pos)) {
+            if (this.o.ice && game.player.invuln <= 0) game.freezePlayer?.(1.6); // ijsadem: even bevroren (langzaam)
+            game.hurtPlayer(this.slamDamage, this.pos.x, this.pos.z, 14);
+          }
         }
         if (this.t > AIM + FIRE) {
           this.state = 'walk'; this.t = 0; this.cone.visible = false; this.head.rotation.x = 0;
-          this.breathCool = this.angry ? 2.6 : 3.8;
+          this.breathCool = this.o.breathCool[this.angry ? 1 : 0];
         }
         break;
       }
       case 'fly': {
         // omhoog (0,8 s), de schaduw volgt je (1,6 s), dan omlaag met een KLAP
-        const UP = 0.8, AIMT = this.angry ? 1.3 : 1.7, DOWN = 0.45;
+        const UP = 0.8, AIMT = this.o.flyAim[this.angry ? 1 : 0], DOWN = 0.45;
         this.wings.forEach((w) => { w.w.rotation.z = w.sgn * Math.sin(t * 16) * 0.6; });
         if (this.t < UP) {
           this.pos.y = FLY_H * (this.t / UP);
@@ -273,9 +296,9 @@ export class Dragon {
           this.pos.y = FLY_H * (1 - k * k);
           if (k >= 1) {
             this.pos.y = 0;
-            game.slam(this.pos.x, this.pos.z, 3.8, 0xff7b39, this.slamDamage);
+            game.slam(this.pos.x, this.pos.z, 3.8, this.o.slamColor, this.slamDamage);
             this.state = 'walk'; this.t = 0;
-            this.flyCool = this.angry ? 5.5 : 8;
+            this.flyCool = this.o.flyCool[this.angry ? 1 : 0];
             this.wings.forEach((w) => { w.w.rotation.z = 0; });
           }
         }
@@ -290,13 +313,13 @@ export class Dragon {
         this.face(p.x, p.z, dt, 3);
         this.head.rotation.x = -0.5;
         this.flash = Math.max(this.flash, Math.sin(this.t * 30) > 0 ? 0.02 : 0);
-        const n = this.angry ? 7 : 5;
+        const n = this.o.rainN[this.angry ? 1 : 0];
         while (this.rained < n && this.t > 0.4 + this.rained * 0.22) {
           const a = Math.random() * Math.PI * 2, r = this.rained === 0 ? 0 : 1.5 + Math.random() * 3.5;
           game.zone.fireball?.(p.x + Math.cos(a) * r, p.z + Math.sin(a) * r);
           this.rained++;
         }
-        if (this.t > 0.6 + n * 0.22) { this.state = 'walk'; this.t = 0; this.head.rotation.x = 0; this.rainCool = this.angry ? 8 : 11; }
+        if (this.t > 0.6 + n * 0.22) { this.state = 'walk'; this.t = 0; this.head.rotation.x = 0; this.rainCool = this.o.rainCool[this.angry ? 1 : 0]; }
         break;
       }
     }
