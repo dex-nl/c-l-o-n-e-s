@@ -171,3 +171,14 @@
 - De app op het beginscherm heeft een eigen save (los van Safari). De save zelf is niet veranderd door de app.
 - Getest op de computer in iPhone-formaat (liggend en rechtop), iPad-formaat en MacBook-formaat, ook zonder internet. Nog niet getest op een echte iPhone.
 - Later bijgewerkt met de Vulkaan en de Onderwaterwereld: de app krijgt die nieuwe werelden ook (nieuwe cache-versie in `sw.js`, zodat iPhones de nieuwe versie ophalen).
+
+## 27 oktober 2026: Hoofdstuk 7, De IJswereld (idee van Dex)
+- Gemaakt met een AI-helper op de tak `ijswereld`. **Papa merget het als het goed is.**
+- Nieuw: De IJswereld, wereld 5. De witte poort verschijnt in de woestijn tegenover de oase als Reuzeninktvis Inka verslagen is.
+- Glad ijs: je glijdt door. Wakken in het ijs (plons!). Een eilandje met een iglo.
+- Sneeuwstormen: eerst een waarschuwing, dan witte mist, wind die je terugduwt en kou (🔥-warmtemeter). Schuilen in iglo's en de ijsgrot.
+- Sneeuwpoppen die sneeuwballen gooien (blauwe mik-ring), ijsmonsters, vallende ijspegels in de gletsjer, 3 schatkisten.
+- Eindbaas IJsdraak IJzel (140 levens, ijsadem bevriest je even). Hij geeft stukje 5 van de schatkaart. Moeilijker dan de onderwaterwereld (level 6 in `difficulty.js`).
+- De Wolkenflitser mag niet in de ijswereld (hij glijdt niet en vliegt over de draak heen). Eigen liedje voor de ijswereld.
+- Save naar versie 11 (`ice`: draak verslagen en open kistjes). Oude saves blijven werken. Nieuwe cache-versie `clones-v3`.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat, met touch). Nog niet getest op een echte iPad, iPhone of MacBook.

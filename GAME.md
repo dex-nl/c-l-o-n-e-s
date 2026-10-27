@@ -86,13 +86,37 @@ Het spel van Dex (11 jaar).
 - Versla haar samen met je clones: dan krijg je **stukje 4 van 10** van de schatkaart (en 1 clone meer, dus 14). Breng het naar Professor Bolt: *"Hoofdstuk 6 uitgespeeld!"* Wordt vervolgd...
 - Er zijn geen auto's onder water: de **Wolkenflitser mag niet onder water**. De onderwaterwereld heeft een eigen liedje.
 
+### Hoofdstuk 7: De IJswereld (idee van Dex!)
+- Heb je **Reuzeninktvis Inka** verslagen? Dan verschijnt in de woestijn, **tegenover de oase**, een witte poort (met glitters en *"Er is een nieuwe poort verschenen!"*). Op de kaart staat **De IJswereld**.
+- **Glad ijs ⛸️**: op het ijs glij je door, ook als je de joystick loslaat. Laat dus op tijd los, en stuur bij om te remmen. Op de sneeuw loop je gewoon.
+- **Wakken**: blauwe gaten in het ijs. Glij je erin? *Plons!* 1 hartje kwijt en je staat weer op het laatste veilige plekje.
+- **Sneeuwstorm 🌨️**: af en toe komt er een sneeuwstorm. Eerst een waarschuwing (*"Er komt een SNEEUWSTORM aan!"*), dan:
+  - je ziet bijna niks (witte mist en heel veel sneeuw),
+  - de wind duwt je terug (op het ijs glij je nog verder weg!),
+  - je wordt **koud**: de **🔥-warmtemeter** (linksboven) loopt leeg. Leeg? Dan om de paar tellen 1 hartje.
+  - Schuil in een **iglo** (bij het kamp, op het eiland, links op de sneeuwvlakte en rechts voor de gletsjer) of in de **ijsgrot**. Daar word je weer warm en waait het niet. In de IJsburcht van de draak is het ook windstil.
+- Je loopt van het kamp (onder) naar de IJsburcht (boven):
+  1. **Het kamp**: sneeuw, dennenbomen en de eerste iglo.
+  2. **Het IJsmeer**: glad ijs met wakken en een eilandje met een iglo (en een kistje).
+  3. **De Sneeuwvlakte**: dennenbomen, **sneeuwpoppen** en **ijsmonsters**. Een sneeuwpop mikt eerst (je ziet een **blauwe ring** op de grond waar hij gooit): loop opzij! Een sneeuwbal kost 1 hartje. Sta je in een iglo, dan gooien ze niet.
+  4. **De Gletsjer**: een smal pad tussen ijsmuren. Er vallen **ijspegels** (blauwe rondjes op de grond: ga weg!). Links in de muur zit de **ijsgrot** met de grote schatkist (45 kristallen). Er liggen nog 2 kistjes (20 en 25).
+  5. **De IJsburcht**: hier woont **IJsdraak IJzel** 🐲 (**140 levens**).
+- **IJsdraak IJzel**:
+  - **IJsadem**: hij kijkt je aan en er komt een punt op de grond. Ga opzij! Raakt hij je, dan ben je even **bevroren** (je loopt langzaam en het scherm wordt wit aan de randen).
+  - **Vliegen**: hij vliegt omhoog, zijn schaduw volgt je... en dan landt hij met een **KLAP**. Loop weg van de schaduw!
+  - **IJspegelregen**: hij brult en er vallen ijspegels om je heen.
+  - Bij 2/3 en 1/3 van zijn leven roept hij 2 ijsmonsters.
+  - Bij de helft wordt hij **boos**: sneller en vaker ijsadem.
+- Versla hem samen met je clones: dan krijg je **stukje 5 van 10** van de schatkaart (en 1 clone meer, dus 15). Breng het naar Professor Bolt: *"Hoofdstuk 7 uitgespeeld! De helft!"* Wordt vervolgd...
+- De **Wolkenflitser mag niet in de ijswereld**: hij glijdt niet op het ijs en vliegt over alles heen (dan is de draak te makkelijk). Met de geheime auto-code in de ijswereld wacht hij in De Stad. De ijswereld heeft een eigen liedje.
+
 ### Meer clones 🧬
 - Linksboven zie je hoeveel clones je hebt: **🧬 Clones 3/10**.
 - Elk stukje schatkaart geeft **1 clone meer**: *"🧬 Je kunt nu 1 clone meer maken!"*
-- De getallen: aan het begin 5, met de Superbatterij 10, met stukje 1 = 11, stukje 2 = 12, stukje 3 = 13, stukje 4 = 14, ... alle 10 stukjes = 20.
+- De getallen: aan het begin 5, met de Superbatterij 10, met stukje 1 = 11, stukje 2 = 12, stukje 3 = 13, stukje 4 = 14, stukje 5 = 15, ... alle 10 stukjes = 20.
 
 ### Moeilijkheid
-- Elke nieuwe wereld is een beetje moeilijker. Dat staat op één plek: `js/difficulty.js` (bos 1, woestijn 2, piramide 2,2, doolhof 3, vulkaan 4, onderwater 5). Slijmpjes krijgen meer leven en zijn iets sneller, bazen slaan harder en er vallen minder hartjes. Met je clones blijft het altijd te halen.
+- Elke nieuwe wereld is een beetje moeilijker. Dat staat op één plek: `js/difficulty.js` (bos 1, woestijn 2, piramide 2,2, doolhof 3, vulkaan 4, onderwater 5, ijs 6). Slijmpjes krijgen meer leven en zijn iets sneller, bazen slaan harder en er vallen minder hartjes. Met je clones blijft het altijd te halen.
 
 ### Samen spelen 🤝 (idee van Dex!)
 - Rechtsboven zit de knop **🤝 Samen spelen** (op een iPhone alleen 🤝). Daar kies je:
@@ -230,15 +254,16 @@ Het spel van Dex (11 jaar).
 - [x] Meer clones per stukje schatkaart
 - [x] Hoofdstuk 5: De Vulkaan met springende stenen, stijgende lava, vuurballen, lavamonsters, Vuurdraak Vonk en stukje 3 van de schatkaart (idee van Dex)
 - [x] Hoofdstuk 6: De Onderwaterwereld met een luchtmeter, luchtbellen, haaien, kwallen, stroming, een gezonken schip, Reuzeninktvis Inka en stukje 4 van de schatkaart (idee van Dex)
-- [ ] De andere 6 stukjes van de schatkaart (zie hieronder, Dex kiest!)
+- [x] Hoofdstuk 7: De IJswereld met glad ijs, wakken, sneeuwstormen, iglo's, sneeuwpoppen, ijsmonsters, IJsdraak IJzel en stukje 5 van de schatkaart (idee van Dex)
+- [ ] De andere 5 stukjes van de schatkaart (zie hieronder, Dex kiest!)
 
 ## De schatkaart: 10 stukjes 🗺️
-Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. Stukje 1 tot en met 4 zijn klaar, de rest zijn ideeën (Dex mag ze veranderen!):
+Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. Stukje 1 tot en met 5 zijn klaar, de rest zijn ideeën (Dex mag ze veranderen!):
 1. ✅ De Grote Woestijn: Schorpioen Sjors
 2. ✅ Het Doolhof: Bladkoning Bram
 3. ✅ De Vulkaan: springende stenen, stijgende lava en Vuurdraak Vonk
 4. ✅ De Onderwaterwereld: luchtmeter, haaien, kwallen, stroming, een gezonken schip en Reuzeninktvis Inka
-5. De IJsberg: glijden over ijs, een sneeuwpopslijm als baas
+5. ✅ De IJswereld: glad ijs, sneeuwstormen, iglo's, sneeuwpoppen en IJsdraak IJzel
 6. Het Spookkasteel: lichtjes aandoen, een spook dat verstoppertje speelt
 7. De Wolkenstad: vliegen met de Wolkenflitser van wolk naar wolk
 8. De Jungle: lianen en een gorilla-koning
@@ -254,4 +279,4 @@ Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. St
 - Dag en nacht, met lantaarns in het dorp.
 - Een boot op de vijver, of een eiland.
 - Een racebaan of een garage om je auto te verven.
-- De verborgen schat zoeken met een kaart in 10 stukjes: waar liggen stukje 4 tot en met 10? (zie de lijst hierboven)
+- De verborgen schat zoeken met een kaart in 10 stukjes: waar liggen stukje 6 tot en met 10? (zie de lijst hierboven)

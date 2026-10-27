@@ -29,7 +29,7 @@ export const IGLOOS = [{ id: 'kamp', x: -14, z: 33, door: 0.5 }, { id: 'eiland',
 export const IGLOO_R = 2.9, IGLOO_IN = 2.3;
 export const CAVE = { x1: -12, x2: -8, z1: -34.5, z2: -29.5 }; // de ijsgrot (een nis in de linker gletsjermuur)
 export const ICE_GRIP = 1.3;     // hoe goed je grip hebt op glad ijs (klein = gladder). Op sneeuw: gewoon lopen
-export const WARM_MAX = 10;      // seconden warmte in een sneeuwstorm (daarna wordt je koud: au!)
+export const WARM_MAX = 10;      // seconden warmte in een sneeuwstorm (daarna word je koud: au!)
 export const STORM = { calm: [30, 40], warn: 5, storm: 14 }; // seconden
 export const CHESTS = [
   { id: 'ikist1', x: ISLAND.x + 0.6, z: ISLAND.z - 0.8, n: 20, igloo: true },
