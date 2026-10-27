@@ -40,7 +40,7 @@ export const ICE_DRAGON = {
   zone: 'ijs', name: 'IJsdraak IJzel', ice: true, baseHp: 40,
   color: 0x74c0fc, belly: 0xe7f5ff, dark: 0x1971c2, wing: 0xa5d8ff, horn: 0xffffff,
   aim: 0x4dabf7, fire: 0xd0ebff, flames: [0xffffff, 0xd0ebff, 0x74c0fc], slamColor: 0x9bf6ff, helper: 'ijs',
-  walk: [2.6, 3.4], breathCool: [3.2, 2.2], flyCool: [7, 4.8], rainCool: [9, 6.5], rainN: [6, 9], aimT: [1.0, 0.8], flyAim: [1.5, 1.15],
+  walk: [2.6, 3.4], breathCool: [3.2, 2.2], flyCool: [7, 4.8], rainCool: [9, 6.5], rainN: [5, 8], aimT: [1.0, 0.8], flyAim: [1.5, 1.15],
   angryMsg: '🐲 IJsdraak IJzel wordt boos! Pas op voor zijn ijsadem!',
 };
 
