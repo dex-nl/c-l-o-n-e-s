@@ -110,13 +110,34 @@ Het spel van Dex (11 jaar).
 - Versla hem samen met je clones: dan krijg je **stukje 5 van 10** van de schatkaart (en 1 clone meer, dus 15). Breng het naar Professor Bolt: *"Hoofdstuk 7 uitgespeeld! De helft!"* Wordt vervolgd...
 - De **Wolkenflitser mag niet in de ijswereld**: hij glijdt niet op het ijs en vliegt over alles heen (dan is de draak te makkelijk). Met de geheime auto-code in de ijswereld wacht hij in De Stad. De ijswereld heeft een eigen liedje.
 
+### Hoofdstuk 8: Het Spookkasteel 🏰👻 (idee van Dex!)
+- Heb je **IJsdraak IJzel** verslagen? Dan verschijnt in de woestijn, **links bij de ingang**, een paarse poort (*"Er is een nieuwe poort verschenen!"*). Op de kaart staat **Het Spookkasteel**.
+- Het is nacht en een beetje griezelig, maar de spoken zijn grappig: ze giechelen, hebben roze wangetjes en zeggen *"Boe!"*. Je lampje gaat vanzelf aan.
+- **Spoken** 👻 vliegen **dwars door muren** heen! Ze raken je voor 1 hartje en vliegen dan giechelend weg. Soms worden ze bijna **onzichtbaar**: dan gaat je zwaard erdoorheen. Wacht tot je ze weer goed ziet.
+- **Ridders** 🛡️ lopen heen en weer. Bonk je ertegen, dan kost dat 1 hartje. Geef een ridder een **tik met je zwaard**: dan is hij even **duizelig** (sterretjes) en kun je erlangs.
+- **Valluiken** 📌: tegels die eerst **rood** worden en dan gaan de **pinnen omhoog**. Wacht tot de tegel weer gewoon is en loop dan snel door. Naast een rode tegel is er altijd een veilige.
+- De route:
+  1. **Het voorplein** met een kerkhofje. Daar zweeft **Spookje Pip**, een lief spookje dat je tips geeft. Op het kerkhofje ligt de **groene sleutel**.
+  2. Met de groene sleutel gaat de **groene poort** open: de **Grote Hal** (met valluiken en 2 ridders).
+  3. Links: **De Bibliotheek** met de **rode sleutel**. Rechts: **De Kerker** achter de **rode deur** (met een kistje en **hendel 2**).
+  4. In het midden zit de **gouden deur**. Die gaat pas open als **allebei de hendels** omlaag zijn.
+  5. Hendel 1 zit in de **Geheime Kamer**. Hoe kom je daar? Lees de boeken in de bibliotheek goed... (de ster wijst hem niet aan, en op de kaart zie je hem pas als je hem gevonden hebt). In de Geheime Kamer staat ook de grote geheime schatkist (60 kristallen).
+  6. Achter de gouden deur: **De Wapenzaal** (valluiken en een ridder) en dan **De Troonzaal**.
+- **Spookkoning Sjaak** 👑👻 (**160 levens**) wacht op zijn troon tot je binnenkomt:
+  - **Spookvuurtjes**: paarse rondjes op de grond, daar vallen vuurtjes. Ga opzij!
+  - **De verdwijntruc**: hij wordt onzichtbaar en er komt een **paarse ring** onder je die met je meeloopt. Ren eruit! Daarna roept hij *"BOE!"*. Raakt het je niet, dan is hij **duizelig** (sterretjes) en doet je zwaard **dubbele schade**.
+  - Bij 3/4, de helft en 1/4 van zijn leven roept hij 2 spoken. Bij de helft wordt hij **boos**: meer vuurtjes en een hardere BOE.
+- Versla hem samen met je clones: dan krijg je **stukje 6 van 10** van de schatkaart (en 1 clone meer, dus 16). Breng het naar Professor Bolt: *"Hoofdstuk 8 uitgespeeld!"* Wordt vervolgd...
+- Er liggen 3 schatkisten: 25 (voorplein), 35 (kerker) en de geheime (60).
+- De **Wolkenflitser mag niet in het spookkasteel** (hij vliegt over de muren en de puzzel heen). Met de geheime auto-code in het kasteel wacht hij in De Stad. Het kasteel heeft een eigen (spookachtig vrolijk) liedje.
+
 ### Meer clones 🧬
 - Linksboven zie je hoeveel clones je hebt: **🧬 Clones 3/10**.
 - Elk stukje schatkaart geeft **1 clone meer**: *"🧬 Je kunt nu 1 clone meer maken!"*
-- De getallen: aan het begin 5, met de Superbatterij 10, met stukje 1 = 11, stukje 2 = 12, stukje 3 = 13, stukje 4 = 14, stukje 5 = 15, ... alle 10 stukjes = 20.
+- De getallen: aan het begin 5, met de Superbatterij 10, met stukje 1 = 11, stukje 2 = 12, stukje 3 = 13, stukje 4 = 14, stukje 5 = 15, stukje 6 = 16, ... alle 10 stukjes = 20.
 
 ### Moeilijkheid
-- Elke nieuwe wereld is een beetje moeilijker. Dat staat op één plek: `js/difficulty.js` (bos 1, woestijn 2, piramide 2,2, doolhof 3, vulkaan 4, onderwater 5, ijs 6). Slijmpjes krijgen meer leven en zijn iets sneller, bazen slaan harder en er vallen minder hartjes. Met je clones blijft het altijd te halen.
+- Elke nieuwe wereld is een beetje moeilijker. Dat staat op één plek: `js/difficulty.js` (bos 1, woestijn 2, piramide 2,2, doolhof 3, vulkaan 4, onderwater 5, ijs 6, spookkasteel 7). Slijmpjes krijgen meer leven en zijn iets sneller, bazen slaan harder en er vallen minder hartjes. Met je clones blijft het altijd te halen.
 
 ### Samen spelen 🤝 (idee van Dex!)
 - Rechtsboven zit de knop **🤝 Samen spelen** (op een iPhone alleen 🤝). Daar kies je:
@@ -265,16 +286,17 @@ Het spel van Dex (11 jaar).
 - [x] Hoofdstuk 5: De Vulkaan met springende stenen, stijgende lava, vuurballen, lavamonsters, Vuurdraak Vonk en stukje 3 van de schatkaart (idee van Dex)
 - [x] Hoofdstuk 6: De Onderwaterwereld met een luchtmeter, luchtbellen, haaien, kwallen, stroming, een gezonken schip, Reuzeninktvis Inka en stukje 4 van de schatkaart (idee van Dex)
 - [x] Hoofdstuk 7: De IJswereld met glad ijs, wakken, sneeuwstormen, iglo's, sneeuwpoppen, ijsmonsters, IJsdraak IJzel en stukje 5 van de schatkaart (idee van Dex)
-- [ ] De andere 5 stukjes van de schatkaart (zie hieronder, Dex kiest!)
+- [x] Hoofdstuk 8: Het Spookkasteel met spoken die door muren vliegen, ridders, valluiken, sleutels, hendels, een geheime deur, Spookkoning Sjaak en stukje 6 van de schatkaart (idee van Dex)
+- [ ] De andere 4 stukjes van de schatkaart (zie hieronder, Dex kiest!)
 
 ## De schatkaart: 10 stukjes 🗺️
-Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. Stukje 1 tot en met 5 zijn klaar, de rest zijn ideeën (Dex mag ze veranderen!):
+Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. Stukje 1 tot en met 6 zijn klaar, de rest zijn ideeën (Dex mag ze veranderen!):
 1. ✅ De Grote Woestijn: Schorpioen Sjors
 2. ✅ Het Doolhof: Bladkoning Bram
 3. ✅ De Vulkaan: springende stenen, stijgende lava en Vuurdraak Vonk
 4. ✅ De Onderwaterwereld: luchtmeter, haaien, kwallen, stroming, een gezonken schip en Reuzeninktvis Inka
 5. ✅ De IJswereld: glad ijs, sneeuwstormen, iglo's, sneeuwpoppen en IJsdraak IJzel
-6. Het Spookkasteel: lichtjes aandoen, een spook dat verstoppertje speelt
+6. ✅ Het Spookkasteel: spoken door de muren, ridders, valluiken, sleutels, hendels, een geheime deur en Spookkoning Sjaak
 7. De Wolkenstad: vliegen met de Wolkenflitser van wolk naar wolk
 8. De Jungle: lianen en een gorilla-koning
 9. Het Piratenschip: de schatkaart van de piraat zelf, kanonnen
@@ -289,4 +311,4 @@ Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. St
 - Dag en nacht, met lantaarns in het dorp.
 - Een boot op de vijver, of een eiland.
 - Een racebaan of een garage om je auto te verven.
-- De verborgen schat zoeken met een kaart in 10 stukjes: waar liggen stukje 6 tot en met 10? (zie de lijst hierboven)
+- De verborgen schat zoeken met een kaart in 10 stukjes: waar liggen stukje 7 tot en met 10? (zie de lijst hierboven)

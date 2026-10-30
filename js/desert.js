@@ -37,7 +37,7 @@ export const SEA_PORTAL = { x: -17, z: 0.4 };
 // De witte poort naar De IJswereld, tegenover de oase (verschijnt als Reuzeninktvis Inka verslagen is)
 export const ICE_PORTAL = { x: 17, z: 0.4 };
 // De paarse poort naar Het Spookkasteel, bij de ingang van de woestijn (verschijnt als IJsdraak IJzel verslagen is)
-export const CASTLE_PORTAL = { x: 13, z: 17 };
+export const CASTLE_PORTAL = { x: -9, z: 10 };
 // (geheim: zie GAME.md)
 const PEBBLE = { x: 29.8, z: -18.6 };
 

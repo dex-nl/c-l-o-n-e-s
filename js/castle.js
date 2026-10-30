@@ -63,7 +63,7 @@ for (let i = 0; i < 17; i++) TRAPS.push({ x: -19.2 + i * TRAP_S, z: 10, g: i % 2
 for (const [i, x] of [10.2, 12.6, 15.0, 17.4].entries()) TRAPS.push({ x, z: -11, g: i % 2 }); // Kerker
 for (const [i, x] of [-4.8, -2.4, 0, 2.4, 4.8].entries()) { TRAPS.push({ x, z: -6.5, g: i % 2 }); TRAPS.push({ x, z: -18, g: (i + 1) % 2 }); } // Wapenzaal
 export const TRAP_T = { period: 3.2, warn: 1.2, up: 2.0, down: 3.0 }; // seconden: veilig, rood (pas op!), pinnen omhoog, weer omlaag
-export const GHOST_SPOTS = [[-8, 29], [9, 25], [-12, 8], [12, 16], [0, 3], [-18, -8], [-11, -15], [18, -6], [12, -15], [-5, -21], [5, -3], [-17, -30]];
+export const GHOST_SPOTS = [[-14, 24], [9, 25], [-12, 8], [12, 16], [0, 3], [-18, -8], [-11, -15], [18, -6], [12, -15], [-5, -21], [5, -3], [-17, -30]];
 
 export function createCastle(group) {
   const rand = seeded(2066);

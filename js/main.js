@@ -253,7 +253,7 @@ let dragon = null; // Vuurdraak Vonk, de baas van de vulkaan
 let squid = null; // Reuzeninktvis Inka, de baas van de onderwaterwereld
 let iceDragon = null; // IJsdraak IJzel, de baas van de ijswereld
 let ghostKing = null; // Spookkoning Sjaak, de baas van het spookkasteel
-let castleToastCd = 0, knightToastCd = 0, trapToastCd = 0, doorToastCd = 0, booSeen = false; // in het spookkasteel
+let castleToastCd = 0, knightToastCd = 0, klonkToastCd = 0, trapToastCd = 0, doorToastCd = 0, lastDoorToast = null, booSeen = false; // in het spookkasteel
 let warmth = WARM_MAX, coldHurt = 0, frozen = 0, iceLast = null, iceToastCd = 0, slipToastCd = 0, stormWasIce = 'calm', pegCd = 2; // in de ijswereld
 let air = 32, airHurt = 0, inkTime = 0, airWarned = false, seaToastCd = 0, urchinToastCd = 0; // onder water: lucht (seconden), inkt
 let shake = 0, hitStop = 0, fainting = false, transition = false;
@@ -762,7 +762,7 @@ function castleAppear() {
   setTimeout(() => fx.sparkle(at, [0x5f3dc4, 0xffffff, 0xd0bfff], 40, 5), 500);
   fx.confetti({ x: at.x, z: at.z }, 50);
   sfx.powerUp();
-  ui.toast('✨ Er is een nieuwe poort verschenen! Bij de ingang van de woestijn: naar HET SPOOKKASTEEL!', 4500);
+  ui.toast('✨ Er is een nieuwe poort verschenen! Links bij de ingang van de woestijn: naar HET SPOOKKASTEEL!', 4500);
 }
 
 let dirty = false;
@@ -2217,7 +2217,7 @@ castle.focus = player.pos; // muren tussen jou en de camera worden doorzichtig
 function updateCastle(dt, paused) {
   if (paused || transition || fainting) return;
   const p = player.pos, c = state.castle;
-  castleToastCd -= dt; knightToastCd -= dt; trapToastCd -= dt; doorToastCd -= dt;
+  castleToastCd -= dt; knightToastCd -= dt; klonkToastCd -= dt; trapToastCd -= dt; doorToastCd -= dt;
   // sleutels oppakken
   for (const k of castle.keys) {
     if (k.taken || Math.hypot(p.x - k.x, p.z - k.z) > 1.3) continue;
@@ -2240,8 +2240,8 @@ function updateCastle(dt, paused) {
       fx.sparkle({ x: d.x, y: 2, z: d.z }, [d.color, 0xffffff], 30, 4);
       ui.toast(`🔓 Klik! De ${d.name} gaat open!`, 3000);
       refresh(); save();
-    } else if (doorToastCd <= 0) {
-      doorToastCd = 4; sfx.nope();
+    } else if (doorToastCd <= 0 || lastDoorToast !== d.id) {
+      doorToastCd = 4; lastDoorToast = d.id; sfx.nope();
       ui.toast(d.levers ? `🔒 De gouden deur zit op slot. Er staan 2 hendels op getekend... (${c.levers.length} van 2)` : `🔒 De ${d.name} zit op slot. Zoek de ${d.key === 'groen' ? 'groene' : 'rode'} sleutel!`, 3000);
     }
   }
@@ -2263,7 +2263,7 @@ function updateCastle(dt, paused) {
   if (ghostKing && !ghostKing.dead && castle.inThroneRoom(p) && !castle.__kingSeen) { castle.__kingSeen = true; ui.toast('👻 Spookkoning Sjaak: "Boe! Wie durft er in MIJN troonzaal te komen?!"', 3600); sfx.rumble(); }
   // kistjes
   for (const ch of castle.chests) {
-    if (ch.opened || Math.hypot(p.x - ch.x, p.z - ch.z) > 1.4) continue;
+    if (ch.opened || Math.hypot(p.x - ch.x, p.z - ch.z) > (ch.big ? 1.8 : 1.4)) continue;
     ch.opened = true;
     if (!c.chests.includes(ch.id)) c.chests.push(ch.id);
     state.crystals = Math.min(MAX_CRYSTALS, state.crystals + ch.n);
@@ -2348,7 +2348,7 @@ function frame() {
     swordHits(player.pos, player.rot, state.sword, false); hitStones(player.pos, player.rot);
     if (zone === castle && castle.hitKnights(player.pos, player.rot, SWORD_REACH)) {
       sfx.hit(); sfx.bump(); shake = Math.max(shake, 0.2);
-      if (knightToastCd <= 0) { ui.toast('🛡️ KLONK! De ridder is duizelig. Snel erlangs!', 2400); knightToastCd = 12; }
+      if (klonkToastCd <= 0) { ui.toast('🛡️ KLONK! De ridder is duizelig. Snel erlangs!', 2400); klonkToastCd = 12; }
     }
   }
 

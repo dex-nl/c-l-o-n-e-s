@@ -139,7 +139,7 @@ export function questText(state, zoneId) {
       return '❄️ Zoek stukje 5: ga naar <b>De IJswereld</b> (de witte poort in de woestijn)';
     case 'kaart5': return '📜 Breng stukje 5 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
     case 'schat5':
-      if (zoneId === 'woestijn') return '🏰 Ga door de paarse poort (bij de ingang van de woestijn) naar <b>Het Spookkasteel</b>';
+      if (zoneId === 'woestijn') return '🏰 Ga door de paarse poort (links bij de ingang van de woestijn) naar <b>Het Spookkasteel</b>';
       if (zoneId === 'ijs' || zoneId === 'onderwater' || zoneId === 'vulkaan' || zoneId === 'doolhof' || zoneId === 'piramide') return '🏰 Ga terug naar de woestijn: daar is een paarse poort naar <b>Het Spookkasteel</b>!';
       return '🏰 Zoek stukje 6: ga naar <b>Het Spookkasteel</b> (de paarse poort in de woestijn)';
     case 'kaart6': return '📜 Breng stukje 6 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
