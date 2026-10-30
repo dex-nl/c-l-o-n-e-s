@@ -126,7 +126,7 @@ Het spel van Dex (11 jaar).
 - **Spookkoning Sjaak** 👑👻 (**160 levens**) wacht op zijn troon tot je binnenkomt:
   - **Spookvuurtjes**: paarse rondjes op de grond, daar vallen vuurtjes. Ga opzij!
   - **De verdwijntruc**: hij wordt onzichtbaar en er komt een **paarse ring** onder je die met je meeloopt. Ren eruit! Daarna roept hij *"BOE!"*. Raakt het je niet, dan is hij **duizelig** (sterretjes) en doet je zwaard **dubbele schade**.
-  - Bij 3/4, de helft en 1/4 van zijn leven roept hij 2 spoken. Bij de helft wordt hij **boos**: meer vuurtjes en een hardere BOE.
+  - Bij 3/4 en de helft van zijn leven roept hij een spook, bij 1/4 zelfs 2 (versla ze: ze geven een hartje!). Bij de helft wordt hij **boos**: meer vuurtjes en een hardere BOE.
 - Versla hem samen met je clones: dan krijg je **stukje 6 van 10** van de schatkaart (en 1 clone meer, dus 16). Breng het naar Professor Bolt: *"Hoofdstuk 8 uitgespeeld!"* Wordt vervolgd...
 - Er liggen 3 schatkisten: 25 (voorplein), 35 (kerker) en de geheime (60).
 - De **Wolkenflitser mag niet in het spookkasteel** (hij vliegt over de muren en de puzzel heen). Met de geheime auto-code in het kasteel wacht hij in De Stad. Het kasteel heeft een eigen (spookachtig vrolijk) liedje.

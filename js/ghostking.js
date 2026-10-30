@@ -11,7 +11,7 @@ import { mat } from './characters.js';
 import { difficulty } from './difficulty.js';
 import { makeGhostBody, Ghost } from './ghosts.js';
 
-const ORB_R = 1.35, ORB_T = 1.15, BOO_R = 2.8;
+const ORB_R = 1.35, ORB_T = 1.3, BOO_R = 2.8;
 const orbGeo = new THREE.IcosahedronGeometry(0.4, 1);
 const warnGeo = new THREE.RingGeometry(ORB_R - 0.22, ORB_R, 22).rotateX(-Math.PI / 2), fillGeo = new THREE.CircleGeometry(ORB_R, 22).rotateX(-Math.PI / 2);
 
@@ -150,7 +150,7 @@ export class GhostKing {
     // hulp roepen
     while (this.summons.length && this.hp <= this.maxHp * this.summons[0]) {
       this.summons.shift();
-      for (const [ox, oz] of [[3.5, 1], [-3.5, 1]]) {
+      for (const [ox, oz] of this.angry ? [[3.5, 1], [-3.5, 1]] : [[this.summons.length % 2 ? 3.5 : -3.5, 1]]) { // 1 spook, als hij boos is 2
         const g = game.addEnemy(new Ghost(this.group, this.pos.x + ox, this.pos.z + oz, { helper: true }));
         game.fx.poof({ x: g.pos.x, z: g.pos.z }, 0xd0bfff, 1.2);
       }
@@ -204,7 +204,7 @@ export class GhostKing {
         this.setFade(Math.max(0.05, 1 - this.t / VAN));
         if (this.t >= VAN) {
           if (!this.target) this.target = { x: p.x, z: p.z };
-          if (this.t < VAN + AIM * 0.45) { this.target.x += (p.x - this.target.x) * Math.min(1, dt * 5); this.target.z += (p.z - this.target.z) * Math.min(1, dt * 5); }
+          if (this.t < VAN + AIM * 0.35) { this.target.x += (p.x - this.target.x) * Math.min(1, dt * 5); this.target.z += (p.z - this.target.z) * Math.min(1, dt * 5); }
           this.target.x = Math.max(T.x1 + 2, Math.min(T.x2 - 2, this.target.x)); this.target.z = Math.max(T.z1 + 2, Math.min(T.z2 - 2, this.target.z));
           this.booRing.visible = this.booFill.visible = true;
           this.booRing.position.set(this.target.x, 0.1, this.target.z); this.booFill.position.set(this.target.x, 0.09, this.target.z);
