@@ -13,6 +13,9 @@ import { createVolcano } from './volcano.js';
 import { Dragon, ICE_DRAGON } from './dragon.js';
 import { createIce, ICE_GRIP, WARM_MAX } from './ice.js';
 import { Snowman } from './snowman.js';
+import { createCastle } from './castle.js';
+import { Ghost } from './ghosts.js';
+import { GhostKing } from './ghostking.js';
 import { createSea, AIR_MAX, BUBBLE_AIR, SURFACE } from './sea.js';
 import { Shark, Jelly } from './seacreatures.js';
 import { Squid } from './squid.js';
@@ -128,6 +131,7 @@ const maze = addZone(createMaze); // Het Doolhof (hoofdstuk 4, idee van Dex)
 const volcano = addZone(createVolcano); // De Vulkaan (hoofdstuk 5, idee van Dex). Geen auto's hier!
 const sea = addZone(createSea); // De Onderwaterwereld (hoofdstuk 6, idee van Dex). Zwemmen! Geen auto's hier.
 const ice = addZone(createIce); // De IJswereld (hoofdstuk 7, idee van Dex). Glad ijs en sneeuwstormen! Geen auto's hier.
+const castle = addZone(createCastle); // Het Spookkasteel (hoofdstuk 8, idee van Dex). Spoken, sleutels en ridders! Geen auto's hier.
 
 // Dorpelingen
 const bolt = makeBolt(world.group, world.npcSpot);
@@ -185,6 +189,10 @@ sea.exits = [{ x: sea.exit.x, z: sea.exit.z, r: 1.4, to: 'woestijn', spawn: () =
 const iceVisible = () => state.sea.squid || state.mapPieces.includes('onderwater');
 desert.exits.push({ x: desert.icePortal.x, z: desert.icePortal.z, r: 1.4, to: 'ijs', spawn: () => ice.spawns.fromWoestijn, active: iceVisible, open: () => true });
 ice.exits = [{ x: ice.exit.x, z: ice.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromIjs, open: () => true }];
+// De paarse poort naar Het Spookkasteel, bij de ingang van de woestijn (verschijnt als IJsdraak IJzel verslagen is)
+const castleVisible = () => state.ice.dragon || state.mapPieces.includes('ijs');
+desert.exits.push({ x: desert.castlePortal.x, z: desert.castlePortal.z, r: 1.4, to: 'spook', spawn: () => castle.spawns.fromWoestijn, active: castleVisible, open: () => true });
+castle.exits = [{ x: castle.exit.x, z: castle.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromSpook, open: () => true }];
 pyramid.exits = [{ x: pyramid.exit.x, z: pyramid.exit.z, r: 1.0, to: 'woestijn', spawn: () => desert.spawns.fromPiramide, open: () => true }];
 city.exits = [{ x: city.exit.x, z: city.exit.z, r: 1.4, to: 'dorp', spawn: () => world.spots.uitStad, open: () => true }];
 forest.exits = [
@@ -244,6 +252,8 @@ let bram = null;  // Bladkoning Bram, de baas van het doolhof
 let dragon = null; // Vuurdraak Vonk, de baas van de vulkaan
 let squid = null; // Reuzeninktvis Inka, de baas van de onderwaterwereld
 let iceDragon = null; // IJsdraak IJzel, de baas van de ijswereld
+let ghostKing = null; // Spookkoning Sjaak, de baas van het spookkasteel
+let castleToastCd = 0, knightToastCd = 0, trapToastCd = 0, doorToastCd = 0, booSeen = false; // in het spookkasteel
 let warmth = WARM_MAX, coldHurt = 0, frozen = 0, iceLast = null, iceToastCd = 0, slipToastCd = 0, stormWasIce = 'calm', pegCd = 2; // in de ijswereld
 let air = 32, airHurt = 0, inkTime = 0, airWarned = false, seaToastCd = 0, urchinToastCd = 0; // onder water: lucht (seconden), inkt
 let shake = 0, hitStop = 0, fainting = false, transition = false;
@@ -279,6 +289,7 @@ const game = {
     if (s.dragon) { game.onDragonDefeated(s); return; }
     if (s.squid) { game.onSquidDefeated(s); return; }
     if (s.iceDragon) { game.onIceDragonDefeated(s); return; }
+    if (s.ghostKing) { game.onGhostKingDefeated(s); return; }
     if (s.king) {
       state.quest.kingBeaten = true; // onthouden, ook als de iPad de pagina opnieuw laadt
       game.showLanding(0, 0, 0);
@@ -370,6 +381,23 @@ const game = {
     for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
     save();
   },
+  // Spookkoning Sjaak is verslagen: hij geeft je stukje 6 van de schatkaart
+  onGhostKingDefeated(s) {
+    state.castle.king = true;
+    hitStop = 0.35;
+    shake = 1;
+    fx.confetti(s.pos, 120);
+    sfx.fanfare();
+    ui.toast('👻 Spookkoning Sjaak: "Boe-hoe! Jij bent helemaal niet bang! Hier, dit lag onder mijn troon..."', 4500);
+    pickups.spawn('kaartstuk', Math.max(-10, Math.min(10, s.pos.x)), Math.max(-58, Math.min(-30, s.pos.z)));
+    for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
+    save();
+  },
+  // de BOE van de spookkoning (de eerste keer een tip)
+  onBoo() {
+    shake = Math.max(shake, 0.6);
+    if (!booSeen) { booSeen = true; setTimeout(() => ui.toast('⭐ Sjaak is duizelig! Nu snel slaan: dubbele schade!', 2600), 300); }
+  },
   // de ijsadem van IJzel: even bevroren (dan loop je langzaam)
   freezePlayer(secs) { if (!fainting && !transition) frozen = Math.max(frozen, secs); },
   // sta je in een iglo of de ijsgrot? (dan gooien sneeuwpoppen niet)
@@ -429,6 +457,13 @@ function spawnEnemies(zone) {
     zone.snowmanSpots.forEach((sp, i) => enemies.push(new Snowman(zone.group, sp.x, sp.z, i)));
     if (!state.ice.dragon) { iceDragon = new Dragon(zone.group, zone.boss.x, zone.boss.z, ICE_DRAGON); enemies.push(iceDragon); }
     else if (!state.mapPieces.includes('ijs')) pickups.spawn('kaartstuk', zone.arena.x, zone.arena.z);
+    for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z);
+  }
+  ghostKing = null;
+  if (zone.id === 'spook') {
+    zone.ghostSpots.forEach((sp, i) => enemies.push(new Ghost(zone.group, sp.x, sp.z, { n: i })));
+    if (!state.castle.king) { ghostKing = new GhostKing(zone.group, zone.boss.x, zone.boss.z, zone.throne); enemies.push(ghostKing); }
+    else if (!state.mapPieces.includes('spook')) pickups.spawn('kaartstuk', zone.arena.x, zone.arena.z);
     for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z);
   }
 }
@@ -506,6 +541,7 @@ function setZone(id, spawn) {
   if (id === 'vulkaan') { volcano.applyState(state.volcano); volcano.reset(); volcanoLast = null; }
   if (id === 'onderwater') { sea.applyState(state.sea); sea.reset(); air = AIR_MAX; airHurt = 0; inkTime = 0; airWarned = false; player.pos.y = 0.6; }
   if (id === 'ijs') { ice.applyState(state.ice); ice.reset(); warmth = WARM_MAX; coldHurt = 0; frozen = 0; iceLast = null; stormWasIce = 'calm'; }
+  if (id === 'spook') { castle.applyState(state.castle); castle.reset(); booSeen = false; }
   if (id !== 'vulkaan' && id !== 'onderwater') player.pos.y = 0;
   player.vx = player.vz = 0; player.slip = 0;
   setSwimming(id === 'onderwater');
@@ -513,7 +549,7 @@ function setZone(id, spawn) {
   state.zone = id;
   zone.group.visible = true;
   applyEnv(zone.env);
-  lantern.visible = id === 'grot' || id === 'piramide';
+  lantern.visible = id === 'grot' || id === 'piramide' || id === 'spook';
   player.setPosition(spawn.x, spawn.z, spawn.rot ?? player.rot);
   player.resolveCollisions(zone);
   squad.regroup(player);
@@ -583,6 +619,7 @@ function refresh() {
   updateVolcanoPortal();
   updateSeaPortal();
   updateIcePortal();
+  updateCastlePortal();
   desert.setPebbleOn(state.maze.levers.includes('kris'));
   world.desertGate.setOpen(reached(q, 'woestijn'));
   desert.setDoorOpen(reached(q, 'piramide'));
@@ -709,6 +746,25 @@ function iceAppear() {
   ui.toast('✨ Er is een nieuwe poort verschenen! Tegenover de oase: naar DE IJSWERELD!', 4500);
 }
 
+// ---------- De spookpoort verschijnt bij de ingang van de woestijn (als IJsdraak IJzel verslagen is) ----------
+let castlePortalShown = false, castleAppearPending = false;
+function updateCastlePortal() {
+  const vis = castleVisible();
+  if (vis === castlePortalShown) return;
+  castlePortalShown = vis;
+  desert.setCastlePortal(vis);
+  if (vis && started) castleAppearPending = true;
+}
+function castleAppear() {
+  castleAppearPending = false;
+  const at = { x: desert.castlePortal.x, y: 2, z: desert.castlePortal.z };
+  fx.sparkle(at, [0x9775fa, 0xffffff, 0xda77f2], 50, 6);
+  setTimeout(() => fx.sparkle(at, [0x5f3dc4, 0xffffff, 0xd0bfff], 40, 5), 500);
+  fx.confetti({ x: at.x, z: at.z }, 50);
+  sfx.powerUp();
+  ui.toast('✨ Er is een nieuwe poort verschenen! Bij de ingang van de woestijn: naar HET SPOOKKASTEEL!', 4500);
+}
+
 let dirty = false;
 const num = (v, alt) => (Number.isFinite(v) ? +v.toFixed(2) : alt);
 
@@ -759,6 +815,8 @@ function talkTo(t) {
     }
     if (newJob) startJob(newJob);
     if (t.lever) pullLever(t.lever);
+    if (t.castleLever) pullCastleLever(t.castleLever);
+    if (t.castleSecret) openCastleSecret();
     refresh();
     save();
   }, t.voice);
@@ -911,8 +969,45 @@ function afterBolt(before, wasAllFound) {
     q.state = 'schat5';
     fx.confetti(bolt.pos, 200);
     sfx.fanfare();
-    ui.toast(`🏆 Hoofdstuk 7 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. De helft! Wordt vervolgd!`, 4500);
+    ui.toast(`🏆 Hoofdstuk 7 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. De helft! Op naar Het Spookkasteel!`, 4500);
+    if (state.mapPieces.includes('spook')) q.state = 'kaart6'; // stukje 6 had je al!
+  } else if (before === 'kaart6') {
+    q.state = 'schat6';
+    fx.confetti(bolt.pos, 220);
+    sfx.fanfare();
+    ui.toast(`🏆 Hoofdstuk 8 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Wordt vervolgd!`, 4500);
   }
+}
+
+// ---------- Het Spookkasteel: hendels en de geheime boekenkast ----------
+function pullCastleLever(id) {
+  const c = state.castle;
+  if (c.levers.includes(id)) return;
+  c.levers.push(id);
+  castle.setLever(id, true);
+  sfx.click(); sfx.rumble();
+  shake = Math.max(shake, 0.4);
+  if (c.levers.length >= 2 && !c.doors.includes('goud')) {
+    c.doors.push('goud');
+    castle.setDoorOpen('goud', true);
+    setTimeout(() => { fx.sparkle({ x: 0, y: 2, z: 0 }, [0xffd43b, 0xffffff], 40, 5); sfx.tada(); }, 400);
+    ui.toast('🔧 Hendel 2 van 2! KRRR... Je hoort iets... De GOUDEN DEUR in de Grote Hal is open!', 4200);
+  } else ui.toast(`🔧 Klonk! Hendel ${c.levers.length} van 2. Zoek de andere hendel!`, 3200);
+  refresh();
+  save();
+}
+function openCastleSecret() {
+  const c = state.castle;
+  if (c.secret) return;
+  c.secret = true;
+  castle.setDoorOpen('geheim', true);
+  castle.secretSeen = true;
+  sfx.rumble();
+  shake = Math.max(shake, 0.5);
+  fx.sparkle({ x: -15, y: 1.5, z: -23 }, [0xffd43b, 0xffffff, 0x9775fa], 40, 4);
+  ui.toast('🤫 Een GEHEIME DEUR! Achter de boekenkast is een verborgen kamer!', 4000);
+  refresh();
+  save();
 }
 
 // ---------- De geheime steentjes (zie GAME.md, "Geheim!") ----------
@@ -1420,13 +1515,22 @@ function questTarget() {
   }
   if (z === 'onderwater') {
     // onder water: naar de inktvis (of het kaartstuk), en daarna terug naar de uitgang
-    if (state.mapPieces.includes('onderwater')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5'].includes(q.state) ? sea.exit : null);
+    if (state.mapPieces.includes('onderwater')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6'].includes(q.state) ? sea.exit : null);
     return sea.boss;
   }
   if (z === 'ijs') {
     // in de ijswereld: naar de draak (of het kaartstuk), en daarna terug naar de uitgang
-    if (state.mapPieces.includes('ijs')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5'].includes(q.state) ? ice.exit : null);
+    if (state.mapPieces.includes('ijs')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6'].includes(q.state) ? ice.exit : null);
     return ice.boss;
+  }
+  if (z === 'spook') {
+    // in het spookkasteel: stap voor stap (sleutel, deur, hendel...), daarna naar de spookkoning en terug naar de uitgang
+    if (state.mapPieces.includes('spook')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6'].includes(q.state) ? castle.exit : null);
+    if (state.castle.king) return castle.arena;
+    return castle.goal(state.castle);
+  }
+  if (q.state === 'schat5' && !state.mapPieces.includes('spook')) {
+    return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.castlePortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'vulkaan' ? volcano.exit : z === 'onderwater' ? sea.exit : z === 'ijs' ? ice.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
   if (q.state === 'schat4' && !state.mapPieces.includes('ijs')) {
     return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.icePortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'vulkaan' ? volcano.exit : z === 'onderwater' ? sea.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
@@ -1437,7 +1541,7 @@ function questTarget() {
   if (q.state === 'schat2' && !state.mapPieces.includes('vulkaan')) {
     return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.volcanoPortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
-  if (q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || (q.state === 'held' && isCityDone(state))) {
+  if (q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || q.state === 'kaart6' || (q.state === 'held' && isCityDone(state))) {
     if (z === 'doolhof') return maze.exit;
     return z === 'dorp' ? bolt.pos : z === 'woestijn' ? desert.exit : z === 'piramide' ? pyramid.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
@@ -2108,6 +2212,68 @@ function updateIce(dt, paused) {
   }
 }
 
+// ---------- Het Spookkasteel: sleutels, deuren, valluiken, ridders en kistjes ----------
+castle.focus = player.pos; // muren tussen jou en de camera worden doorzichtig
+function updateCastle(dt, paused) {
+  if (paused || transition || fainting) return;
+  const p = player.pos, c = state.castle;
+  castleToastCd -= dt; knightToastCd -= dt; trapToastCd -= dt; doorToastCd -= dt;
+  // sleutels oppakken
+  for (const k of castle.keys) {
+    if (k.taken || Math.hypot(p.x - k.x, p.z - k.z) > 1.3) continue;
+    castle.setKeyTaken(k.id, true);
+    if (!c.keys.includes(k.id)) c.keys.push(k.id);
+    sfx.ding(); sfx.tada();
+    fx.sparkle({ x: k.x, y: 1.2, z: k.z }, [k.color, 0xffffff], 30, 4);
+    ui.toast(k.id === 'groen' ? '🗝️ De GROENE SLEUTEL! Die past vast op de groene poort.' : '🔑 De RODE SLEUTEL! Ergens is een rode deur...', 3400);
+    refresh(); save();
+  }
+  // deuren met een sleutel: loop ertegenaan
+  for (const d of castle.doors) {
+    if (d.open || !d.key && !d.levers) continue;
+    const near = Math.abs(p.x - d.x) < d.hw + 0.6 && Math.abs(p.z - d.z) < 1.7;
+    if (!near) continue;
+    if (d.key && c.keys.includes(d.key)) {
+      if (!c.doors.includes(d.id)) c.doors.push(d.id);
+      castle.setDoorOpen(d.id, true);
+      sfx.rumble(); shake = Math.max(shake, 0.4);
+      fx.sparkle({ x: d.x, y: 2, z: d.z }, [d.color, 0xffffff], 30, 4);
+      ui.toast(`🔓 Klik! De ${d.name} gaat open!`, 3000);
+      refresh(); save();
+    } else if (doorToastCd <= 0) {
+      doorToastCd = 4; sfx.nope();
+      ui.toast(d.levers ? `🔒 De gouden deur zit op slot. Er staan 2 hendels op getekend... (${c.levers.length} van 2)` : `🔒 De ${d.name} zit op slot. Zoek de ${d.key === 'groen' ? 'groene' : 'rode'} sleutel!`, 3000);
+    }
+  }
+  // valluiken: pinnen omhoog? au!
+  const tr = castle.trapAt(p);
+  if (tr) {
+    const was = player.invuln;
+    game.hurtPlayer(1, tr.x, tr.z + (p.z > tr.z ? -0.01 : 0.01), 9);
+    if (was <= 0 && player.invuln > 0) { fx.sparkle({ x: p.x, y: 0.6, z: p.z }, [0xffffff, 0xff6b6b], 10, 2); if (trapToastCd <= 0) { ui.toast('📌 Au, pinnen! Wacht tot de tegel niet meer rood is.', 2800); trapToastCd = 10; } }
+  }
+  // ridders: botsen doet pijn
+  const kn = castle.knightAt(p);
+  if (kn) {
+    const was = player.invuln;
+    game.hurtPlayer(1, kn.pos.x, kn.pos.z, 15);
+    if (was <= 0 && player.invuln > 0 && knightToastCd <= 0) { ui.toast('🛡️ Bonk! Een ridder! Geef hem een tik met je zwaard, dan staat hij even stil.', 3200); knightToastCd = 10; }
+  }
+  // de spookkoning: eerst een waarschuwing als je binnenkomt
+  if (ghostKing && !ghostKing.dead && castle.inThroneRoom(p) && !castle.__kingSeen) { castle.__kingSeen = true; ui.toast('👻 Spookkoning Sjaak: "Boe! Wie durft er in MIJN troonzaal te komen?!"', 3600); sfx.rumble(); }
+  // kistjes
+  for (const ch of castle.chests) {
+    if (ch.opened || Math.hypot(p.x - ch.x, p.z - ch.z) > 1.4) continue;
+    ch.opened = true;
+    if (!c.chests.includes(ch.id)) c.chests.push(ch.id);
+    state.crystals = Math.min(MAX_CRYSTALS, state.crystals + ch.n);
+    sfx.tada();
+    fx.sparkle({ x: ch.x, y: 1, z: ch.z }, [0x7af7ff, 0xffffff, 0xffd23f], ch.big ? 60 : 30, 4);
+    ui.toast(ch.big ? `🤫 De geheime schatkist! +${fmt(ch.n)} kristallen 💎` : `🧰 Een schatkist! +${fmt(ch.n)} kristallen 💎`, 3000);
+    refresh(); save();
+  }
+}
+
 // ---------- Spel-lus ----------
 const clock = new THREE.Clock();
 let t = 0, saveTimer = 0, lastStep = 0, started = false;
@@ -2178,7 +2344,13 @@ function frame() {
   }
   if (!Number.isFinite(player.rot)) player.rot = 0;
   if (before.distanceToSquared(player.pos) > 1e-6) dirty = true;
-  if (player.swingHit) { swordHits(player.pos, player.rot, state.sword, false); hitStones(player.pos, player.rot); }
+  if (player.swingHit) {
+    swordHits(player.pos, player.rot, state.sword, false); hitStones(player.pos, player.rot);
+    if (zone === castle && castle.hitKnights(player.pos, player.rot, SWORD_REACH)) {
+      sfx.hit(); sfx.bump(); shake = Math.max(shake, 0.2);
+      if (knightToastCd <= 0) { ui.toast('🛡️ KLONK! De ridder is duizelig. Snel erlangs!', 2400); knightToastCd = 12; }
+    }
+  }
 
   zone.update(t, realDt);
   for (const n of zone.npcs) n.update(t, realDt, player.pos, zone);
@@ -2202,7 +2374,7 @@ function frame() {
       save();
     }
     if (type === 'kaartstuk') {
-      const id = zone === maze ? 'doolhof' : zone === volcano ? 'vulkaan' : zone === sea ? 'onderwater' : zone === ice ? 'ijs' : 'woestijn';
+      const id = zone === maze ? 'doolhof' : zone === volcano ? 'vulkaan' : zone === sea ? 'onderwater' : zone === ice ? 'ijs' : zone === castle ? 'spook' : 'woestijn';
       const had = state.mapPieces.length;
       if (!state.mapPieces.includes(id)) state.mapPieces.push(id);
       if (id === 'woestijn') { state.quest.state = 'kaart'; delete state.quest.bossBeaten; }
@@ -2210,9 +2382,10 @@ function frame() {
       else if (id === 'vulkaan' && reached(state.quest, 'schat2')) state.quest.state = 'kaart3';
       else if (id === 'onderwater' && reached(state.quest, 'schat3')) state.quest.state = 'kaart4';
       else if (id === 'ijs' && reached(state.quest, 'schat4')) state.quest.state = 'kaart5';
+      else if (id === 'spook' && reached(state.quest, 'schat5')) state.quest.state = 'kaart6';
       sfx.fanfare();
       fx.confetti(player.pos, 100);
-      ui.toast(`📜 Stukje ${{ woestijn: 1, doolhof: 2, vulkaan: 3, onderwater: 4, ijs: 5 }[id]} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
+      ui.toast(`📜 Stukje ${{ woestijn: 1, doolhof: 2, vulkaan: 3, onderwater: 4, ijs: 5, spook: 6 }[id]} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
       // elk stukje maakt de clonemachine sterker
       if (state.mapPieces.length > had && reached(state.quest, 'held')) {
         setTimeout(() => { ui.toast('🧬 Je kunt nu 1 clone meer maken!', 3500); sfx.powerUp(); }, 2600);
@@ -2252,6 +2425,7 @@ function frame() {
   if (zone === volcano && started) updateVolcano(realDt, paused);
   if (zone === sea && started) updateSea(realDt, paused);
   if (zone === ice && started) updateIce(realDt, paused);
+  if (zone === castle && started) updateCastle(realDt, paused);
 
   // Uitgangen naar andere zones
   exitCooldown -= realDt;
@@ -2305,10 +2479,15 @@ function frame() {
     const fight = iceDragon && !iceDragon.dead && ice.inArena(player.pos);
     ui.setBoss('🐲 IJsdraak IJzel', fight ? iceDragon.hp / iceDragon.maxHp : null);
     playMusic(fight ? 'baas' : 'ijs');
+  } else if (zone === castle) {
+    const fight = ghostKing && !ghostKing.dead && castle.inArena(player.pos);
+    ui.setBoss('👻 Spookkoning Sjaak', fight ? ghostKing.hp / ghostKing.maxHp : null);
+    playMusic(fight ? 'baas' : 'spook');
   } else ui.setBoss('', null);
   ui.setAir(zone === sea ? air / AIR_MAX : null);
   ui.setWarm(zone === ice ? warmth / WARM_MAX : null);
   if (zone !== ice && frozen) { frozen = 0; ui.setFrost(false); }
+  if (zone === desert && castleAppearPending && !transition) castleAppear();
   if (zone === desert && iceAppearPending && !transition) iceAppear();
   if (zone === desert && seaAppearPending && !transition) seaAppear();
   if (zone === desert && volcanoAppearPending && !transition) volcanoAppear();
@@ -2404,7 +2583,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.clones = {
   net, openCoop,
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
-  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, ice, get iceDragon() { return iceDragon; }, get warmth() { return warmth; }, set warmth(v) { warmth = v; }, get frozen() { return frozen; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones, openVoortgang,
+  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, ice, get iceDragon() { return iceDragon; }, castle, get ghostKing() { return ghostKing; }, pullCastleLever, openCastleSecret, get warmth() { return warmth; }, set warmth(v) { warmth = v; }, get frozen() { return frozen; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones, openVoortgang,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
   get boost() { return boost; }, collideTest: collide, kickflip, boostCar, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,
