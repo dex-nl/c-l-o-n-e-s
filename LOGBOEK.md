@@ -190,3 +190,15 @@
 - De Wolkenflitser mag niet in de ijswereld (hij glijdt niet en vliegt over de draak heen). Eigen liedje voor de ijswereld.
 - Save naar versie 11 (`ice`: draak verslagen en open kistjes). Oude saves blijven werken. Nieuwe cache-versie `clones-v4`.
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat, met touch). Nog niet getest op een echte iPad, iPhone of MacBook.
+
+## 30 oktober 2026: Hoofdstuk 8, Het Spookkasteel (idee van Dex)
+- Gemaakt met een AI-helper op de tak `spookkasteel`. **Papa merget het als het goed is.**
+- Dex koos "Spookkasteel met spoken" en wilde er alles in.
+- Nieuw: Het Spookkasteel, wereld 6. De paarse poort verschijnt links bij de ingang van de woestijn als IJsdraak IJzel verslagen is.
+- Lieve, grappige spoken die dwars door muren vliegen (en soms bijna onzichtbaar worden). Spookje Pip geeft tips.
+- Ridders die heen en weer lopen (een tik met je zwaard maakt ze duizelig) en valluiken met pinnen (eerst rood).
+- Puzzel: groene sleutel, rode sleutel, 2 hendels voor de gouden deur en een geheime deur achter een boekenkast. 3 schatkisten.
+- Eindbaas Spookkoning Sjaak (160 levens): spookvuurtjes, een verdwijntruc met BOE!, spoken roepen. Hij geeft stukje 6 van de schatkaart (16 clones). Moeilijker dan de ijswereld (level 7 in `difficulty.js`).
+- De Wolkenflitser mag niet in het kasteel. Eigen liedje. Samen spelen werkt ook in het kasteel.
+- Save naar versie 12 (`castle`: koning, kistjes, sleutels, deuren, hendels, geheime deur). Oude saves en Voortgang meenemen blijven werken. Nieuwe cache-versie `clones-v5`.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat, met touch). Nog niet getest op een echte iPad, iPhone of MacBook.

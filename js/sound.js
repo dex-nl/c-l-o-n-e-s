@@ -199,6 +199,15 @@ const SONGS = {
       'G6 ~ E6 ~ B5 ~ E6 ~', 'E6 ~ C6 ~ G5 ~ C6 ~', 'C6 ~ A5 ~ E5 ~ A5 ~', 'B5 ~ D#6 ~ F#6 ~ - -',
     ],
   },
+  // Het Spookkasteel: een griezelig-grappig liedje (langzaam, met een wals-gevoel, zoals in een spookhuis op de kermis)
+  spook: {
+    bpm: 96, lead: 'triangle', drums: true,
+    chords: ['Am', 'E', 'Am', 'Dm', 'Am', 'F', 'E', 'Am'],
+    melody: [
+      'A5 ~ C6 ~ E6 ~ D#6 E6', 'G#5 ~ B5 ~ E6 ~ - -', 'A5 ~ C6 ~ E6 ~ A6 ~', 'F6 ~ D6 ~ A5 ~ - -',
+      'E6 ~ C6 ~ A5 ~ C6 E6', 'F6 ~ E6 ~ C6 ~ A5 ~', 'G#5 ~ B5 ~ D6 ~ B5 ~', 'A5 ~ ~ ~ - - - -',
+    ],
+  },
   baas: {
     bpm: 150, lead: 'square', drums: true, busyBass: true,
     chords: ['Em', 'C', 'D', 'B', 'Em', 'C', 'D', 'B'],

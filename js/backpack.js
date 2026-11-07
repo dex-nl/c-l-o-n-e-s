@@ -34,6 +34,8 @@ export function buildBackpack(body, state, hearts, onWear, city = null) {
   if (reached(q, 'aan')) item(stuff, '🧬', 'Clones', `${state.clones} van ${maxClones(state)}`);
   if (q.state === 'bezig') item(stuff, '⚙️', 'Tandwielen', `${q.gears.length} van ${GEARS_NEEDED}`);
   if (q.state === 'batterij') item(stuff, '🔋', 'Superbatterij', 'Voor Professor Bolt');
+  const ck = state.castle && !state.castle.king ? state.castle.keys : [];
+  if (ck.length) item(stuff, '🗝️', 'Sleutels', ck.map((k) => (k === 'groen' ? 'Groen' : 'Rood')).join(' en ') + ' (Spookkasteel)');
   if (state.mapPieces && state.mapPieces.length && city && city.onMap) {
     const c = item(stuff, '📜', 'Schatkaart', `${state.mapPieces.length} van ${MAP_PIECES_TOTAL} stukjes. Tik om te bekijken`);
     c.classList.add('pick');
