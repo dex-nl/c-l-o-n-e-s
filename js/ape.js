@@ -64,7 +64,7 @@ export class Ape {
     const face = new THREE.Mesh(new THREE.SphereGeometry(0.55, 8, 6), skin); face.scale.set(0.95, 1.0, 0.7); face.position.set(0, -0.1, 0.45); head.add(face);
     for (const sx of [-0.28, 0.28]) {
       const eye = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), white); eye.position.set(sx, 0.15, 0.7); head.add(eye);
-      head.add(Object.assign(new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 4), black), { position: new THREE.Vector3(sx, 0.15, 0.82) }));
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 4), black); pupil.position.set(sx, 0.15, 0.82); head.add(pupil);
       // oren
       const ear = new THREE.Mesh(new THREE.SphereGeometry(0.28, 6, 4), fur); ear.position.set(sx * 1.05, 0.15, 0); head.add(ear);
     }
