@@ -176,6 +176,8 @@ export function createJungle(group) {
           'Het standbeeld kijkt streng. Op de sokkel staat: "Duw me opzij voor het geheim."',
           'Je duwt... en er gaat een steen open!',
         ],
+        distanceTo(p) { return Math.hypot(p.x - sg.position.x, p.z - sg.position.z); },
+        showMarker() {}, update() {},
       };
       talkables.push(statue);
     }

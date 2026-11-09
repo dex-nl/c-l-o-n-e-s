@@ -151,7 +151,7 @@ export class Ape {
     for (const o of this.orbs) this.group.remove(o.m, o.warn, o.fill);
   }
 
-  update(dt, game) {
+  update(t, dt, game) {
     if (this.removed) return;
     if (this.dead) {
       this.deadT += dt;
