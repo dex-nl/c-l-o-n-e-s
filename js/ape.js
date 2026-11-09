@@ -136,12 +136,17 @@ export class Ape {
   inArena(p) { return Math.hypot(p.x - this.arena.x, p.z - this.arena.z) < this.arena.r + 0.5; }
 
   hurt(dmg, fromX, fromZ, game) {
-    if (this.dead || this.invuln > 0 || this.state === 'wait') return;
+    if (this.dead || this.invuln > 0) return false;
+    if (dmg < 99 && this.state === 'wait') return false; // nog op zijn totum: wacht tot je dichterbij komt
     this.hp -= dmg;
-    this.flash = 0.18; this.invuln = 0.28;
+    this.flash = 0.12; this.invuln = 0.16;
     const dx = this.pos.x - fromX, dz = this.pos.z - fromZ, d = Math.hypot(dx, dz) || 1;
-    this.kx = (dx / d) * 5; this.kz = (dz / d) * 5;
-    if (this.hp <= 0) { this.hp = 0; this.dead = true; this.deadT = 0; game?.onApeDefeated?.(this); }
+    this.kx = (dx / d) * 4; this.kz = (dz / d) * 4;
+    if (this.hp <= 0) {
+      this.hp = 0; this.dead = true; this.deadT = 0;
+      game.onSlimeDefeated(this);
+    }
+    return true;
   }
 
   remove() {
