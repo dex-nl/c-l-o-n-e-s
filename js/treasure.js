@@ -3,7 +3,7 @@
 // De kaart is 5 stukjes breed en 2 hoog (stukje 1 linksboven, stukje 10 rechtsonder).
 import { MAP_PIECES, MAP_PIECES_TOTAL } from './quest.js';
 
-const NAMES = { woestijn: 'De Grote Woestijn', doolhof: 'Het Doolhof', vulkaan: 'De Vulkaan', onderwater: 'De Onderwaterwereld', ijs: 'De IJswereld', spook: 'Het Spookkasteel' };
+const NAMES = { woestijn: 'De Grote Woestijn', doolhof: 'Het Doolhof', vulkaan: 'De Vulkaan', onderwater: 'De Onderwaterwereld', ijs: 'De IJswereld', spook: 'Het Spookkasteel', jungle: 'De Junglewereld' };
 // Wat staat er op elk stukje? (de stukjes 7 t/m 10 komen nog, zie GAME.md)
 const PIECES = Array.from({ length: MAP_PIECES_TOTAL }, (_, i) => ({ id: MAP_PIECES[i] || null, name: NAMES[MAP_PIECES[i]] }));
 const COLS = 5;
@@ -136,6 +136,23 @@ function drawCastle(g, x, y, w, h) {
   g.beginPath(); g.moveTo(cx - 6, cy - 6); g.lineTo(cx + 6, cy + 6); g.moveTo(cx + 6, cy - 6); g.lineTo(cx - 6, cy + 6); g.stroke();
 }
 
+function drawJungle(g, x, y, w, h) {
+  // groen met bomen, een tempel en een aapje
+  g.fillStyle = '#2b8a3e'; g.fillRect(x, y, w, h);
+  g.fillStyle = '#40c057';
+  g.beginPath(); g.moveTo(x + w * 0.15, y + h * 0.85); g.quadraticCurveTo(x + w * 0.3, y + h * 0.2, x + w * 0.45, y + h * 0.85); g.fill();
+  g.beginPath(); g.moveTo(x + w * 0.55, y + h * 0.9); g.quadraticCurveTo(x + w * 0.7, y + h * 0.25, x + w * 0.85, y + h * 0.9); g.fill();
+  // tempel
+  g.fillStyle = '#c2b280'; g.fillRect(x + w * 0.35, y + h * 0.45, w * 0.3, h * 0.4);
+  g.fillStyle = '#e67700';
+  g.beginPath(); g.moveTo(x + w * 0.32, y + h * 0.45); g.lineTo(x + w * 0.5, y + h * 0.28); g.lineTo(x + w * 0.68, y + h * 0.45); g.fill();
+  // aapje
+  g.fillStyle = '#8d6e4c';
+  g.beginPath(); g.arc(x + w * 0.72, y + h * 0.62, Math.min(w, h) * 0.08, 0, Math.PI * 2); g.fill();
+  g.beginPath(); g.arc(x + w * 0.72, y + h * 0.52, Math.min(w, h) * 0.055, 0, Math.PI * 2); g.fill();
+}
+
+
 function drawDesert(g, x, y, w, h) {
   // zand
   g.fillStyle = '#f2d38f'; g.fillRect(x + 8, y + 8, w - 16, h - 16);
@@ -175,6 +192,7 @@ export function drawTreasureMap(canvas, pieces) {
     if (have && p.id === 'onderwater') drawSea(g, x, y, pw, ph);
     if (have && p.id === 'ijs') drawIce(g, x, y, pw, ph);
     if (have && p.id === 'spook') drawCastle(g, x, y, pw, ph);
+    if (have && p.id === 'jungle') drawJungle(g, x, y, pw, ph);
     g.textAlign = 'center'; g.textBaseline = 'middle';
     if (!have) {
       g.fillStyle = 'rgba(90,80,60,0.6)'; g.font = `bold ${Math.round(ph * 0.4)}px sans-serif`;

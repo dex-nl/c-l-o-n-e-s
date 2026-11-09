@@ -16,6 +16,8 @@ import { Snowman } from './snowman.js';
 import { createCastle } from './castle.js';
 import { Ghost } from './ghosts.js';
 import { GhostKing } from './ghostking.js';
+import { createJungle } from './jungle.js';
+import { Ape } from './ape.js';
 import { createSea, AIR_MAX, BUBBLE_AIR, SURFACE } from './sea.js';
 import { Shark, Jelly } from './seacreatures.js';
 import { Squid } from './squid.js';
@@ -132,6 +134,7 @@ const volcano = addZone(createVolcano); // De Vulkaan (hoofdstuk 5, idee van Dex
 const sea = addZone(createSea); // De Onderwaterwereld (hoofdstuk 6, idee van Dex). Zwemmen! Geen auto's hier.
 const ice = addZone(createIce); // De IJswereld (hoofdstuk 7, idee van Dex). Glad ijs en sneeuwstormen! Geen auto's hier.
 const castle = addZone(createCastle); // Het Spookkasteel (hoofdstuk 8, idee van Dex). Spoken, sleutels en ridders! Geen auto's hier.
+const jungle = addZone(createJungle); // De Junglewereld (hoofdstuk 9, idee van Dex). Lianen, tempels en een reuzenaap! Geen auto's hier.
 
 // Dorpelingen
 const bolt = makeBolt(world.group, world.npcSpot);
@@ -193,6 +196,10 @@ ice.exits = [{ x: ice.exit.x, z: ice.exit.z, r: 1.4, to: 'woestijn', spawn: () =
 const castleVisible = () => state.ice.dragon || state.mapPieces.includes('ijs');
 desert.exits.push({ x: desert.castlePortal.x, z: desert.castlePortal.z, r: 1.4, to: 'spook', spawn: () => castle.spawns.fromWoestijn, active: castleVisible, open: () => true });
 castle.exits = [{ x: castle.exit.x, z: castle.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromSpook, open: () => true }];
+// De groene poort naar De Junglewereld, rechts bij de ingang van de woestijn (verschijnt als Spookkoning Sjaak verslagen is)
+const jungleVisible = () => state.castle.king || state.mapPieces.includes('spook');
+desert.exits.push({ x: desert.junglePortal.x, z: desert.junglePortal.z, r: 1.4, to: 'jungle', spawn: () => jungle.spawns.fromWoestijn, active: jungleVisible, open: () => true });
+jungle.exits = [{ x: jungle.exit.x, z: jungle.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromJungle, open: () => true }];
 pyramid.exits = [{ x: pyramid.exit.x, z: pyramid.exit.z, r: 1.0, to: 'woestijn', spawn: () => desert.spawns.fromPiramide, open: () => true }];
 city.exits = [{ x: city.exit.x, z: city.exit.z, r: 1.4, to: 'dorp', spawn: () => world.spots.uitStad, open: () => true }];
 forest.exits = [
@@ -253,6 +260,8 @@ let dragon = null; // Vuurdraak Vonk, de baas van de vulkaan
 let squid = null; // Reuzeninktvis Inka, de baas van de onderwaterwereld
 let iceDragon = null; // IJsdraak IJzel, de baas van de ijswereld
 let ghostKing = null; // Spookkoning Sjaak, de baas van het spookkasteel
+let ape = null; // Reuzenaap Rokko, de baas van de junglewereld
+let jungleToastCd = 0, swingToastSeen = false; // in de junglewereld
 let castleToastCd = 0, knightToastCd = 0, klonkToastCd = 0, trapToastCd = 0, doorToastCd = 0, lastDoorToast = null, booSeen = false; // in het spookkasteel
 let warmth = WARM_MAX, coldHurt = 0, frozen = 0, iceLast = null, iceToastCd = 0, slipToastCd = 0, stormWasIce = 'calm', pegCd = 2; // in de ijswereld
 let air = 32, airHurt = 0, inkTime = 0, airWarned = false, seaToastCd = 0, urchinToastCd = 0; // onder water: lucht (seconden), inkt
@@ -290,6 +299,7 @@ const game = {
     if (s.squid) { game.onSquidDefeated(s); return; }
     if (s.iceDragon) { game.onIceDragonDefeated(s); return; }
     if (s.ghostKing) { game.onGhostKingDefeated(s); return; }
+    if (s.ape) { game.onApeDefeated(s); return; }
     if (s.king) {
       state.quest.kingBeaten = true; // onthouden, ook als de iPad de pagina opnieuw laadt
       game.showLanding(0, 0, 0);
@@ -393,6 +403,18 @@ const game = {
     for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
     save();
   },
+  // Reuzenaap Rokko is verslagen: hij geeft je stukje 7 van de schatkaart
+  onApeDefeated(s) {
+    state.jungle.ape = true;
+    hitStop = 0.35;
+    shake = 1;
+    fx.confetti(s.pos, 120);
+    sfx.fanfare();
+    ui.toast('🦍 Reuzenaap Rokko: "Ook... ook... jij bent sterker dan mijn kokosnoten! Dit lag onder mijn bananenboom..."', 4500);
+    pickups.spawn('kaartstuk', Math.max(-8, Math.min(8, s.pos.x)), Math.max(-60, Math.min(-42, s.pos.z)));
+    for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
+    save();
+  },
   // de BOE van de spookkoning (de eerste keer een tip)
   onBoo() {
     shake = Math.max(shake, 0.6);
@@ -464,6 +486,12 @@ function spawnEnemies(zone) {
     zone.ghostSpots.forEach((sp, i) => enemies.push(new Ghost(zone.group, sp.x, sp.z, { n: i })));
     if (!state.castle.king) { ghostKing = new GhostKing(zone.group, zone.boss.x, zone.boss.z, zone.throne); enemies.push(ghostKing); }
     else if (!state.mapPieces.includes('spook')) pickups.spawn('kaartstuk', zone.arena.x, zone.arena.z);
+    for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z);
+  }
+  ape = null;
+  if (zone.id === 'jungle') {
+    if (!state.jungle.ape) { ape = new Ape(zone.group, zone.boss.x, zone.boss.z, zone.arena); enemies.push(ape); }
+    else if (!state.mapPieces.includes('jungle')) pickups.spawn('kaartstuk', zone.arena.x, zone.arena.z);
     for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z);
   }
 }
@@ -542,6 +570,7 @@ function setZone(id, spawn) {
   if (id === 'onderwater') { sea.applyState(state.sea); sea.reset(); air = AIR_MAX; airHurt = 0; inkTime = 0; airWarned = false; player.pos.y = 0.6; }
   if (id === 'ijs') { ice.applyState(state.ice); ice.reset(); warmth = WARM_MAX; coldHurt = 0; frozen = 0; iceLast = null; stormWasIce = 'calm'; }
   if (id === 'spook') { castle.applyState(state.castle); castle.reset(); booSeen = false; }
+  if (id === 'jungle') { jungle.applyState(state.jungle); jungle.reset(); swingToastSeen = false; }
   if (id !== 'vulkaan' && id !== 'onderwater') player.pos.y = 0;
   player.vx = player.vz = 0; player.slip = 0;
   setSwimming(id === 'onderwater');
@@ -620,6 +649,7 @@ function refresh() {
   updateSeaPortal();
   updateIcePortal();
   updateCastlePortal();
+  updateJunglePortal();
   desert.setPebbleOn(state.maze.levers.includes('kris'));
   world.desertGate.setOpen(reached(q, 'woestijn'));
   desert.setDoorOpen(reached(q, 'piramide'));
@@ -765,6 +795,25 @@ function castleAppear() {
   ui.toast('✨ Er is een nieuwe poort verschenen! Links bij de ingang van de woestijn: naar HET SPOOKKASTEEL!', 4500);
 }
 
+// ---------- De junglepoort verschijnt rechts bij de ingang van de woestijn (als Spookkoning Sjaak verslagen is) ----------
+let junglePortalShown = false, jungleAppearPending = false;
+function updateJunglePortal() {
+  const vis = jungleVisible();
+  if (vis === junglePortalShown) return;
+  junglePortalShown = vis;
+  desert.setJunglePortal(vis);
+  if (vis && started) jungleAppearPending = true;
+}
+function jungleAppear() {
+  jungleAppearPending = false;
+  const at = { x: desert.junglePortal.x, y: 2, z: desert.junglePortal.z };
+  fx.sparkle(at, [0x40c057, 0xffffff, 0x8ce99a], 50, 6);
+  setTimeout(() => fx.sparkle(at, [0x2f9e44, 0xffffff, 0xb2f2bb], 40, 5), 500);
+  fx.confetti({ x: at.x, z: at.z }, 50);
+  sfx.powerUp();
+  ui.toast('✨ Er is een nieuwe poort verschenen! Rechts bij de ingang van de woestijn: naar DE JUNGLEWERELD!', 4500);
+}
+
 let dirty = false;
 const num = (v, alt) => (Number.isFinite(v) ? +v.toFixed(2) : alt);
 
@@ -817,6 +866,8 @@ function talkTo(t) {
     if (t.lever) pullLever(t.lever);
     if (t.castleLever) pullCastleLever(t.castleLever);
     if (t.castleSecret) openCastleSecret();
+    if (t.vine) startJungleSwing(t.vine, t.vineEnd);
+    if (t.jungleSecret) openJungleSecret();
     refresh();
     save();
   }, t.voice);
@@ -975,7 +1026,13 @@ function afterBolt(before, wasAllFound) {
     q.state = 'schat6';
     fx.confetti(bolt.pos, 220);
     sfx.fanfare();
-    ui.toast(`🏆 Hoofdstuk 8 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Wordt vervolgd!`, 4500);
+    ui.toast(`🏆 Hoofdstuk 8 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Op naar De Junglewereld!`, 4500);
+    if (state.mapPieces.includes('jungle')) q.state = 'kaart7'; // stukje 7 had je al!
+  } else if (before === 'kaart7') {
+    q.state = 'schat7';
+    fx.confetti(bolt.pos, 240);
+    sfx.fanfare();
+    ui.toast(`🏆 Hoofdstuk 9 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Wordt vervolgd!`, 4500);
   }
 }
 
@@ -1008,6 +1065,23 @@ function openCastleSecret() {
   ui.toast('🤫 Een GEHEIME DEUR! Achter de boekenkast is een verborgen kamer!', 4000);
   refresh();
   save();
+}
+
+function openJungleSecret() {
+  const j = state.jungle;
+  if (j.secret) return;
+  j.secret = true;
+  jungle.setSecretOpen(true);
+  sfx.rumble(); shake = Math.max(shake, 0.45);
+  fx.sparkle({ x: jungle.secretDoor.x, y: 1.5, z: jungle.secretDoor.z }, [0xffc300, 0xffffff, 0x40c057], 40, 5);
+  ui.toast('🗿 De steen schuift weg! Er zit een geheime schatkist achter!', 3400);
+  refresh(); save();
+}
+function startJungleSwing(vineId, fromEnd) {
+  if (jungle.swing) return;
+  if (!jungle.startSwing(vineId, fromEnd)) return;
+  sfx.whoosh();
+  if (!swingToastSeen) { swingToastSeen = true; ui.toast('🌿 Woehoe! Je zwaait aan de liaan!', 2600); }
 }
 
 // ---------- De geheime steentjes (zie GAME.md, "Geheim!") ----------
@@ -1515,19 +1589,28 @@ function questTarget() {
   }
   if (z === 'onderwater') {
     // onder water: naar de inktvis (of het kaartstuk), en daarna terug naar de uitgang
-    if (state.mapPieces.includes('onderwater')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6'].includes(q.state) ? sea.exit : null);
+    if (state.mapPieces.includes('onderwater')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7'].includes(q.state) ? sea.exit : null);
     return sea.boss;
   }
   if (z === 'ijs') {
     // in de ijswereld: naar de draak (of het kaartstuk), en daarna terug naar de uitgang
-    if (state.mapPieces.includes('ijs')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6'].includes(q.state) ? ice.exit : null);
+    if (state.mapPieces.includes('ijs')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7'].includes(q.state) ? ice.exit : null);
     return ice.boss;
   }
   if (z === 'spook') {
     // in het spookkasteel: stap voor stap (sleutel, deur, hendel...), daarna naar de spookkoning en terug naar de uitgang
-    if (state.mapPieces.includes('spook')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6'].includes(q.state) ? castle.exit : null);
+    if (state.mapPieces.includes('spook')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7'].includes(q.state) ? castle.exit : null);
     if (state.castle.king) return castle.arena;
     return castle.goal(state.castle);
+  }
+  if (z === 'jungle') {
+    // in de jungle: tempels/lianen, daarna naar de reuzenaap en terug naar de uitgang
+    if (state.mapPieces.includes('jungle')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7'].includes(q.state) ? jungle.exit : null);
+    if (state.jungle.ape) return jungle.arena;
+    return jungle.goal(state.jungle);
+  }
+  if (q.state === 'schat6' && !state.mapPieces.includes('jungle')) {
+    return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.junglePortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'vulkaan' ? volcano.exit : z === 'onderwater' ? sea.exit : z === 'ijs' ? ice.exit : z === 'spook' ? castle.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
   if (q.state === 'schat5' && !state.mapPieces.includes('spook')) {
     return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.castlePortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'vulkaan' ? volcano.exit : z === 'onderwater' ? sea.exit : z === 'ijs' ? ice.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
@@ -1541,7 +1624,7 @@ function questTarget() {
   if (q.state === 'schat2' && !state.mapPieces.includes('vulkaan')) {
     return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.volcanoPortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
-  if (q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || q.state === 'kaart6' || (q.state === 'held' && isCityDone(state))) {
+  if (q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || q.state === 'kaart6' || q.state === 'kaart7' || (q.state === 'held' && isCityDone(state))) {
     if (z === 'doolhof') return maze.exit;
     return z === 'dorp' ? bolt.pos : z === 'woestijn' ? desert.exit : z === 'piramide' ? pyramid.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
@@ -2274,6 +2357,71 @@ function updateCastle(dt, paused) {
   }
 }
 
+
+// ---------- De Junglewereld: lianen, rivier, geheime tempel en kistjes ----------
+jungle.focus = player.pos;
+function updateJungle(dt, paused) {
+  if (paused || transition || fainting) return;
+  const p = player.pos, j = state.jungle;
+  jungleToastCd -= dt;
+
+  // zwaaien aan een liaan
+  if (jungle.swing) {
+    jungle.swing.t += dt;
+    const sp = jungle.swingPos();
+    if (sp) {
+      player.pos.x = sp.x; player.pos.z = sp.z; player.pos.y = sp.y;
+      player.vx = player.vz = 0; player.kx = player.kz = 0;
+      const dx = jungle.swing.ex - jungle.swing.sx, dz = jungle.swing.ez - jungle.swing.sz;
+      if (Math.hypot(dx, dz) > 0.1) player.rot = Math.atan2(dx, dz);
+      player.mesh.rotation.y = player.rot;
+      if (sp.done) {
+        jungle.swing = null;
+        player.pos.y = 0;
+        player.pos.x = sp.x; player.pos.z = sp.z;
+        jungle.lastSafe = { x: sp.x, z: sp.z };
+        sfx.bump();
+        ui.toast('🌿 Gelukt! Je bent aan de overkant.', 2200);
+      }
+    }
+    return; // tijdens het zwaaien geen rivier-check
+  } else if (player.pos.y && player.pos.y !== 0) {
+    player.pos.y = 0;
+  }
+
+  // veilige plek onthouden (niet in water/kloof)
+  if (!jungle.inRiver(p) && !jungle.inGap(p)) jungle.lastSafe = { x: p.x, z: p.z };
+
+  // in de rivier of kloof zonder liaan? terugzetten
+  if (jungle.inRiver(p) || jungle.inGap(p)) {
+    const back = jungle.lastSafe || jungle.spawns.fromWoestijn;
+    player.setPosition(back.x, back.z, player.rot);
+    sfx.whoosh();
+    fx.sparkle({ x: p.x, y: 0.5, z: p.z }, [0x1c7ed6, 0xffffff], 16, 2);
+    if (jungleToastCd <= 0) { ui.toast(jungle.inRiver(p) ? '💦 Nat! Gebruik de lianen (groene ringetjes) om over te steken!' : '🕳️ Een kloof! Zwaai aan de liaan naar de overkant!', 3200); jungleToastCd = 4; }
+  }
+
+  // reuzenaap: waarschuwing bij binnenkomst
+  if (ape && !ape.dead && jungle.inArena(p) && !jungle.__apeSeen) {
+    jungle.__apeSeen = true;
+    ui.toast('🦍 Reuzenaap Rokko: "OOK OOK! Wie komt er in MIJN jungle?!"', 3600);
+    sfx.rumble();
+  }
+
+  // kistjes
+  for (const ch of jungle.chests) {
+    if (ch.secret && !j.secret) continue;
+    if (ch.opened || Math.hypot(p.x - ch.x, p.z - ch.z) > (ch.secret ? 1.8 : 1.4)) continue;
+    ch.opened = true;
+    if (!j.chests.includes(ch.id)) j.chests.push(ch.id);
+    state.crystals = Math.min(MAX_CRYSTALS, state.crystals + ch.n);
+    sfx.tada();
+    fx.sparkle({ x: ch.x, y: 1, z: ch.z }, [0x7af7ff, 0xffffff, 0xffd23f], ch.secret ? 60 : 30, 4);
+    ui.toast(ch.secret ? `🗿 De geheime tempelschatkist! +${fmt(ch.n)} kristallen 💎` : `🧰 Een schatkist! +${fmt(ch.n)} kristallen 💎`, 3000);
+    refresh(); save();
+  }
+}
+
 // ---------- Spel-lus ----------
 const clock = new THREE.Clock();
 let t = 0, saveTimer = 0, lastStep = 0, started = false;
@@ -2334,7 +2482,12 @@ function frame() {
   } else {
     if (driving) { driving = false; myCar.setDriving(false); stopFlying(); player.pos.y = 0; }
     if (player.mesh.rotation.z) player.mesh.rotation.z = 0;
-    player.update(dt, move, zone);
+    if (zone === jungle && jungle.swing) {
+      // tijdens het zwaaien aan een liaan: niet zelf lopen (updateJungle zet je neer)
+      player.update(dt, { x: 0, y: 0 }, zone);
+    } else {
+      player.update(dt, move, zone);
+    }
   }
   // Veiligheid: raakt de speler ooit een kapotte plek kwijt (NaN), zet hem terug
   if (!Number.isFinite(player.pos.x) || !Number.isFinite(player.pos.z)) {
@@ -2374,7 +2527,7 @@ function frame() {
       save();
     }
     if (type === 'kaartstuk') {
-      const id = zone === maze ? 'doolhof' : zone === volcano ? 'vulkaan' : zone === sea ? 'onderwater' : zone === ice ? 'ijs' : zone === castle ? 'spook' : 'woestijn';
+      const id = zone === maze ? 'doolhof' : zone === volcano ? 'vulkaan' : zone === sea ? 'onderwater' : zone === ice ? 'ijs' : zone === castle ? 'spook' : zone === jungle ? 'jungle' : 'woestijn';
       const had = state.mapPieces.length;
       if (!state.mapPieces.includes(id)) state.mapPieces.push(id);
       if (id === 'woestijn') { state.quest.state = 'kaart'; delete state.quest.bossBeaten; }
@@ -2383,9 +2536,10 @@ function frame() {
       else if (id === 'onderwater' && reached(state.quest, 'schat3')) state.quest.state = 'kaart4';
       else if (id === 'ijs' && reached(state.quest, 'schat4')) state.quest.state = 'kaart5';
       else if (id === 'spook' && reached(state.quest, 'schat5')) state.quest.state = 'kaart6';
+      else if (id === 'jungle' && reached(state.quest, 'schat6')) state.quest.state = 'kaart7';
       sfx.fanfare();
       fx.confetti(player.pos, 100);
-      ui.toast(`📜 Stukje ${{ woestijn: 1, doolhof: 2, vulkaan: 3, onderwater: 4, ijs: 5, spook: 6 }[id]} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
+      ui.toast(`📜 Stukje ${{ woestijn: 1, doolhof: 2, vulkaan: 3, onderwater: 4, ijs: 5, spook: 6, jungle: 7 }[id]} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
       // elk stukje maakt de clonemachine sterker
       if (state.mapPieces.length > had && reached(state.quest, 'held')) {
         setTimeout(() => { ui.toast('🧬 Je kunt nu 1 clone meer maken!', 3500); sfx.powerUp(); }, 2600);
@@ -2426,6 +2580,7 @@ function frame() {
   if (zone === sea && started) updateSea(realDt, paused);
   if (zone === ice && started) updateIce(realDt, paused);
   if (zone === castle && started) updateCastle(realDt, paused);
+  if (zone === jungle && started) updateJungle(realDt, paused);
 
   // Uitgangen naar andere zones
   exitCooldown -= realDt;
@@ -2483,11 +2638,16 @@ function frame() {
     const fight = ghostKing && !ghostKing.dead && castle.inArena(player.pos);
     ui.setBoss('👻 Spookkoning Sjaak', fight ? ghostKing.hp / ghostKing.maxHp : null);
     playMusic(fight ? 'baas' : 'spook');
+  } else if (zone === jungle) {
+    const fight = ape && !ape.dead && jungle.inArena(player.pos);
+    ui.setBoss('🦍 Reuzenaap Rokko', fight ? ape.hp / ape.maxHp : null);
+    playMusic(fight ? 'baas' : 'jungle');
   } else ui.setBoss('', null);
   ui.setAir(zone === sea ? air / AIR_MAX : null);
   ui.setWarm(zone === ice ? warmth / WARM_MAX : null);
   if (zone !== ice && frozen) { frozen = 0; ui.setFrost(false); }
   if (zone === desert && castleAppearPending && !transition) castleAppear();
+  if (zone === desert && jungleAppearPending && !transition) jungleAppear();
   if (zone === desert && iceAppearPending && !transition) iceAppear();
   if (zone === desert && seaAppearPending && !transition) seaAppear();
   if (zone === desert && volcanoAppearPending && !transition) volcanoAppear();
@@ -2583,7 +2743,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.clones = {
   net, openCoop,
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
-  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, ice, get iceDragon() { return iceDragon; }, castle, get ghostKing() { return ghostKing; }, pullCastleLever, openCastleSecret, get warmth() { return warmth; }, set warmth(v) { warmth = v; }, get frozen() { return frozen; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones, openVoortgang,
+  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, ice, get iceDragon() { return iceDragon; }, castle, get ghostKing() { return ghostKing; }, jungle, get ape() { return ape; }, pullCastleLever, openCastleSecret, openJungleSecret, startJungleSwing, get warmth() { return warmth; }, set warmth(v) { warmth = v; }, get frozen() { return frozen; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones, openVoortgang,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
   get boost() { return boost; }, collideTest: collide, kickflip, boostCar, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,
