@@ -14,12 +14,14 @@
 //   Hoofdstuk 7: De IJswereld (de witte poort verschijnt in de woestijn als de inktvis verslagen is)
 //                -> 'kaart5' (stukje 5 gevonden: breng het naar Bolt) -> 'schat5' (op naar Het Spookkasteel!)
 //   Hoofdstuk 8: Het Spookkasteel (de paarse poort verschijnt in de woestijn als de ijsdraak verslagen is)
-//                -> 'kaart6' (stukje 6 gevonden: breng het naar Bolt) -> 'schat6' (wordt vervolgd!)
+//                -> 'kaart6' (stukje 6 gevonden: breng het naar Bolt) -> 'schat6' (op naar De Junglewereld!)
+//   Hoofdstuk 9: De Junglewereld (de groene poort verschijnt in de woestijn als de spookkoning verslagen is)
+//                -> 'kaart7' (stukje 7 gevonden: breng het naar Bolt) -> 'schat7' (wordt vervolgd!)
 export const NPC_NAME = 'Professor Bolt';
 export const GEARS_NEEDED = 3;
 export const TEAM_SIZE = 3; // zoveel clones heb je nodig voordat Bolt over het Slijmbos vertelt
-export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat', 'kaart2', 'schat2', 'kaart3', 'schat3', 'kaart4', 'schat4', 'kaart5', 'schat5', 'kaart6', 'schat6'];
-export const MAP_PIECES = ['woestijn', 'doolhof', 'vulkaan', 'onderwater', 'ijs', 'spook']; // de stukjes van de schatkaart die er al zijn (er komen er 10, zie GAME.md)
+export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat', 'kaart2', 'schat2', 'kaart3', 'schat3', 'kaart4', 'schat4', 'kaart5', 'schat5', 'kaart6', 'schat6', 'kaart7', 'schat7'];
+export const MAP_PIECES = ['woestijn', 'doolhof', 'vulkaan', 'onderwater', 'ijs', 'spook', 'jungle']; // de stukjes van de schatkaart die er al zijn (er komen er 10, zie GAME.md)
 export const MAP_PIECES_TOTAL = 10;
 export const SUN_STONE_IDS = ['west', 'oost', 'tempel']; // de zonnestenen in de woestijn (zie desert.js)
 
@@ -83,6 +85,7 @@ export function questText(state, zoneId) {
   if (zoneId === 'onderwater') return seaText(state);
   if (zoneId === 'ijs') return iceText(state);
   if (zoneId === 'spook') return castleText(state);
+  if (zoneId === 'jungle') return jungleText(state);
   switch (q.state) {
     case 'nieuw': return '💡 Tip: loop naar de uitvinder bij de <b>clonemachine</b>';
     case 'bezig': {
@@ -143,7 +146,12 @@ export function questText(state, zoneId) {
       if (zoneId === 'ijs' || zoneId === 'onderwater' || zoneId === 'vulkaan' || zoneId === 'doolhof' || zoneId === 'piramide') return '🏰 Ga terug naar de woestijn: daar is een paarse poort naar <b>Het Spookkasteel</b>!';
       return '🏰 Zoek stukje 6: ga naar <b>Het Spookkasteel</b> (de paarse poort in de woestijn)';
     case 'kaart6': return '📜 Breng stukje 6 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
-    case 'schat6': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
+    case 'schat6':
+      if (zoneId === 'woestijn') return '🌴 Ga door de groene poort (rechts bij de ingang van de woestijn) naar <b>De Junglewereld</b>';
+      if (zoneId === 'spook' || zoneId === 'ijs' || zoneId === 'onderwater' || zoneId === 'vulkaan' || zoneId === 'doolhof' || zoneId === 'piramide') return '🌴 Ga terug naar de woestijn: daar is een groene poort naar <b>De Junglewereld</b>!';
+      return '🌴 Zoek stukje 7: ga naar <b>De Junglewereld</b> (de groene poort in de woestijn)';
+    case 'kaart7': return '📜 Breng stukje 7 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
+    case 'schat7': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
     default: return `⭐ Held van het dorp! Clones: <b>${n}/${max}</b>. Wat wordt je volgende avontuur?`;
   }
 }
@@ -196,10 +204,19 @@ function castleText(state) {
   return `🔧 Trek aan de <b>hendel in de Geheime Kamer</b>. Hendels: <b>${n} van 2</b>`;
 }
 
+// In De Junglewereld: wat moet je doen?
+function jungleText(state) {
+  const j = state.jungle || {};
+  if ((state.mapPieces || []).includes('jungle')) return '📜 Breng stukje 7 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
+  if (j.ape) return '📜 Pak het stukje <b>schatkaart</b> in de Arenatempel!';
+  if (!j.secret) return '🗿 Zoek de <b>verborgen tempels</b>. Bij één staat een standbeeld met een geheim...';
+  return '🦍 Ga naar de <b>Arenatempel</b> en versla <b>Reuzenaap Rokko</b>!';
+}
+
 // Heeft Professor Bolt iets nieuws te vertellen? (dan staat er een ! boven zijn hoofd)
 export function boltHasNews(state) {
   const q = state.quest;
-  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || q.state === 'kaart6'
+  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || q.state === 'kaart6' || q.state === 'kaart7'
     || (q.state === 'bezig' && q.gears.length >= GEARS_NEEDED)
     || (q.state === 'aan' && state.clones >= TEAM_SIZE);
 }
@@ -516,9 +533,25 @@ function boltLines(q, clones, state) {
         'Stukje 6! Uit Het Spookkasteel! Was je niet bang? Ik zou me onder mijn bed verstoppen...',
         'Kijk: een kasteel, een maan en een spookje. En de stippellijn loopt weer verder...',
         'Nu heb je 6 van de 10 stukjes. En de machine kan weer 1 clone meer maken!',
-        'Waar zou stukje 7 liggen? Wordt vervolgd!',
+        'En kijk: de stippellijn loopt naar een GROENE JUNGLE met tempels... Stukje 7 ligt in De Junglewereld!',
+        'In de woestijn, rechts bij de ingang, is een groene poort verschenen. Avontuurlijk!',
+        'Er zijn lianen om over de rivier te zwaaien, verborgen tempels en een reuzenaap. Neem al je clones mee!',
       ];
     case 'schat6':
+      return [
+        'In De Junglewereld is de rivier te diep. Gebruik de groene LIANEN: ga op het ringetje staan en druk op Praat!',
+        'Er zijn twee VERBORGEN TEMPELS. Bij één staat een standbeeld... dat houdt een geheim.',
+        'Reuzenaap Rokko trommelt op zijn borst (schokgolf!), gooit kokosnoten en springt. Zie je een schaduw? Wegwezen!',
+        'En onthoud: de Wolkenflitser mag niet in de jungle. Dat zou te makkelijk zijn!',
+      ];
+    case 'kaart7':
+      return [
+        'Stukje 7! Uit De Junglewereld! Je bent een echte jungleheld!',
+        'Kijk: bomen, een tempel en een aap. En de stippellijn loopt weer verder...',
+        'Nu heb je 7 van de 10 stukjes. En de machine kan weer 1 clone meer maken!',
+        'Waar zou stukje 8 liggen? Wordt vervolgd!',
+      ];
+    case 'schat7':
       return [
         `Hoe gaat het met de schatkaart? Nog ${MAP_PIECES_TOTAL - (state.mapPieces || []).length} stukjes te gaan!`,
         'Ik ben benieuwd waar het volgende stukje ligt... Misschien heeft Dex een idee?',

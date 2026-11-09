@@ -208,6 +208,15 @@ const SONGS = {
       'E6 ~ C6 ~ A5 ~ C6 E6', 'F6 ~ E6 ~ C6 ~ A5 ~', 'G#5 ~ B5 ~ D6 ~ B5 ~', 'A5 ~ ~ ~ - - - -',
     ],
   },
+  // De Junglewereld: vrolijk en avontuurlijk (alsof je door de bomen rent)
+  jungle: {
+    bpm: 118, lead: 'square', drums: true,
+    chords: ['C', 'G', 'Am', 'F', 'C', 'G', 'Dm', 'G'],
+    melody: [
+      'C5 E5 G5 ~ C6 ~ B5 A5', 'G5 ~ E5 ~ C5 ~ - -', 'A5 ~ C6 ~ E6 ~ D6 C6', 'F5 ~ A5 ~ C6 ~ - -',
+      'G5 ~ B5 ~ D6 ~ G6 ~', 'E6 ~ C6 ~ G5 ~ C6 ~', 'F5 ~ A5 ~ D6 ~ A5 ~', 'G5 ~ B5 ~ D6 ~ - -',
+    ],
+  },
   baas: {
     bpm: 150, lead: 'square', drums: true, busyBass: true,
     chords: ['Em', 'C', 'D', 'B', 'Em', 'C', 'D', 'B'],

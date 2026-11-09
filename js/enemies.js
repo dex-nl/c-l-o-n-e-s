@@ -19,8 +19,9 @@ const KINDS = {
   lava: { color: 0xff6a1f, size: 0.7, hp: 4, speed: 3.4, aggro: 9, loot: 3, glow: 0x7a1d00 },
   // IJsmonster (ijswereld): een koud blauw slijmpje met ijspunten op zijn kop. Taai en snel!
   ijs: { color: 0xa5d8ff, size: 0.72, hp: 4, speed: 3.6, aggro: 10, loot: 3, glow: 0x123a5c },
+  jungle: { color: 0x40c057, size: 0.75, hp: 4, speed: 3.7, aggro: 10, loot: 3, glow: 0x1b4d2a },
 };
-export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e, bladkoning: 0x3fa34d, lava: 0xff6a1f, ijs: 0xa5d8ff };
+export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e, bladkoning: 0x3fa34d, lava: 0xff6a1f, ijs: 0xa5d8ff, jungle: 0x40c057 };
 const REST = 0.45, HOP = 0.5; // even stilzitten, dan een sprongetje
 
 // Vormen en kleuren die alle slijmpjes delen (scheelt geheugen)

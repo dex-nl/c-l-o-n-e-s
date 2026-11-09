@@ -7,7 +7,7 @@ import { SHIRTS, TOYS, CANDIES, BOOKS, MAX_CANDY } from './cityshop.js';
 import { CARS } from './autowinkel.js';
 
 export const SAVE_KEY = 'clones-save';
-export const SAVE_VERSION = 12;
+export const SAVE_VERSION = 13;
 // geheime codes (zie GAME.md, niet verder vertellen!) en hoeveel kristallen ze geven (elke code 1 keer per save)
 export const CODE_REWARDS = { KRISTAL100: 100, KRISTAL100K: 100000 };
 export const SECRET_CODES = Object.keys(CODE_REWARDS);
@@ -24,11 +24,13 @@ export const defaultIce = () => ({ dragon: false, chests: [] });
 const ICE_CHESTS = ['ikist1', 'ikist2', 'ikist3'];
 export const defaultCastle = () => ({ king: false, chests: [], keys: [], doors: [], levers: [], secret: false });
 const CASTLE_CHESTS = ['skist1', 'skist2', 'skist3'], CASTLE_KEYS = ['groen', 'rood'], CASTLE_DOORS = ['groen', 'rood', 'goud'], CASTLE_LEVERS = ['west', 'oost'];
+export const defaultJungle = () => ({ ape: false, chests: [], secret: false });
+const JUNGLE_CHESTS = ['jkist1', 'jkist2', 'jkist3'];
 
 export function defaultSave() {
   return {
     version: SAVE_VERSION,
-    zone: 'dorp',       // 'dorp' | 'bos' | 'grot' | 'stad' | 'woestijn' | 'piramide' | 'doolhof' | 'vulkaan' | 'onderwater' | 'ijs' | 'spook'
+    zone: 'dorp',       // 'dorp' | 'bos' | 'grot' | 'stad' | 'woestijn' | 'piramide' | 'doolhof' | 'vulkaan' | 'onderwater' | 'ijs' | 'spook' | 'jungle'
     player: { x: 0, z: 5, rot: Math.PI },
     quest: { state: 'nieuw', gears: [] }, // zie quest.js voor alle stappen
     clones: 0,          // hoeveel clones je hebt gemaakt
@@ -65,6 +67,8 @@ export function defaultSave() {
     ice: defaultIce(),
     // Versie 12: Het Spookkasteel (Spookkoning Sjaak verslagen? sleutels, deuren, hendels, de geheime kast en de kistjes)
     castle: defaultCastle(),
+    // Versie 13: De Junglewereld (Reuzenaap Rokko verslagen? geheime tempel en kistjes)
+    jungle: defaultJungle(),
   };
 }
 
@@ -140,8 +144,13 @@ export function migrate(data) {
     data = { ...data, castle: defaultCastle(), version: 12 };
     v = 12;
   }
+  if (v === 12) {
+    // Versie 13: De Junglewereld. Alles blijft hetzelfde; er komt alleen een leeg jungle-vakje bij.
+    data = { ...data, jungle: defaultJungle(), version: 13 };
+    v = 13;
+  }
   // Voorbeeld voor later:
-  // if (v === 12) { data.huisdier = null; data.version = 13; v = 13; }
+  // if (v === 13) { data.huisdier = null; data.version = 14; v = 14; }
 
   // Vul ontbrekende velden aan en controleer of alles klopt.
   delete data._desertForced; // alleen voor testen, niet bewaren
@@ -166,6 +175,7 @@ export function migrate(data) {
   if (reached(quest, 'kaart4') && !mapPieces.includes('onderwater')) mapPieces.push('onderwater');
   if (reached(quest, 'kaart5') && !mapPieces.includes('ijs')) mapPieces.push('ijs');
   if (reached(quest, 'kaart6') && !mapPieces.includes('spook')) mapPieces.push('spook');
+  if (reached(quest, 'kaart7') && !mapPieces.includes('jungle')) mapPieces.push('jungle');
   if (!reached(quest, 'kaart')) mapPieces = mapPieces.filter((id) => id !== 'doolhof');
   // stukje 2 gevonden voordat Bolt stukje 1 zag? Dan gaat het verhaal gewoon verder
   if (mapPieces.includes('doolhof') && quest.state === 'schat') quest.state = 'kaart2';
@@ -222,6 +232,16 @@ export function migrate(data) {
     chests: cOk ? strs(rc.chests, (id) => CASTLE_CHESTS.includes(id)) : [],
     keys: cKeys, doors: cDoors, levers: cLevers, secret: cSecret,
   };
+  // de junglewereld (pas na de spookkoning)
+  if (!castle.king) mapPieces = mapPieces.filter((id) => id !== 'jungle');
+  if (mapPieces.includes('jungle') && quest.state === 'schat6') quest.state = 'kaart7';
+  const rj = data.jungle && typeof data.jungle === 'object' ? data.jungle : {};
+  const jOk = castle.king;
+  const jungle = {
+    ape: jOk && (rj.ape === true || mapPieces.includes('jungle')),
+    chests: jOk ? strs(rj.chests, (id) => JUNGLE_CHESTS.includes(id)) : [],
+    secret: jOk && rj.secret === true,
+  };
   const codes = Array.isArray(data.codes) ? [...new Set(data.codes.filter((c) => SECRET_CODES.includes(c)))] : [];
   // klusjes: altijd op volgorde, en pas na het welkomstcadeautje van Bert
   const rawJobs = data.jobs && typeof data.jobs === 'object' ? data.jobs : {};
@@ -236,7 +256,7 @@ export function migrate(data) {
   if (data.cityGift !== true) { jobs.done = []; jobs.active = null; jobs.step = 0; }
   const int = (n, lo, hi, d) => (Number.isInteger(n) ? Math.min(Math.max(n, lo), hi) : d);
   const clones = reached(quest, 'aan') ? int(data.clones, 0, maxClones({ quest, mapPieces }), 0) : 0;
-  let zone = ['dorp', 'bos', 'grot', 'stad', 'woestijn', 'piramide', 'doolhof', 'vulkaan', 'onderwater', 'ijs', 'spook'].includes(data.zone) ? data.zone : 'dorp';
+  let zone = ['dorp', 'bos', 'grot', 'stad', 'woestijn', 'piramide', 'doolhof', 'vulkaan', 'onderwater', 'ijs', 'spook', 'jungle'].includes(data.zone) ? data.zone : 'dorp';
   if ((zone === 'bos' && !reached(quest, 'zwaard')) || (zone === 'grot' && !reached(quest, 'grot'))) zone = 'dorp';
   if ((zone === 'woestijn' && !reached(quest, 'woestijn')) || (zone === 'piramide' && !reached(quest, 'piramide'))) zone = 'dorp';
   if (zone === 'doolhof' && !reached(quest, 'kaart')) zone = 'dorp';
@@ -244,6 +264,7 @@ export function migrate(data) {
   if (zone === 'onderwater' && !volcano.dragon) zone = 'dorp';
   if (zone === 'ijs' && !sea.squid) zone = 'dorp';
   if (zone === 'spook' && !ice.dragon) zone = 'dorp';
+  if (zone === 'jungle' && !castle.king) zone = 'dorp';
   let sword = int(data.sword, 0, 2, 0);
   if (reached(quest, 'zwaard')) sword = Math.max(sword, 1);
   const hats = Array.isArray(data.hats) ? data.hats.filter((h) => h in HAT_NAMES) : [];
@@ -258,7 +279,7 @@ export function migrate(data) {
   return {
     ...data, version: Math.max(v, SAVE_VERSION), zone, player, quest, clones, sword, hats, hat,
     shirts, shirt, toys, books, candy, cityGift: data.cityGift === true, cars, car,
-    mapPieces, codes, clonesHidden: data.clonesHidden === true, jobs, maze, volcano, sea, ice, castle,
+    mapPieces, codes, clonesHidden: data.clonesHidden === true, jobs, maze, volcano, sea, ice, castle, jungle,
     sound: data.sound !== false, music: data.music !== false,
     crystals: int(data.crystals, 0, MAX_CRYSTALS, 0), maxHearts: int(data.maxHearts, 5, MAX_HEARTS, 5),
   };
