@@ -18,6 +18,8 @@ import { Ghost } from './ghosts.js';
 import { GhostKing } from './ghostking.js';
 import { createJungle } from './jungle.js';
 import { Ape } from './ape.js';
+import { createSpace, JUMP_V, GRAVITY, SPACE_GRIP, AIR_GRIP, FALL_Y } from './space.js';
+import { Ufo, AlienBoss, LaserAlien, makeLasers } from './ufo.js';
 import { createSea, AIR_MAX, BUBBLE_AIR, SURFACE } from './sea.js';
 import { Shark, Jelly } from './seacreatures.js';
 import { Squid } from './squid.js';
@@ -135,6 +137,7 @@ const sea = addZone(createSea); // De Onderwaterwereld (hoofdstuk 6, idee van De
 const ice = addZone(createIce); // De IJswereld (hoofdstuk 7, idee van Dex). Glad ijs en sneeuwstormen! Geen auto's hier.
 const castle = addZone(createCastle); // Het Spookkasteel (hoofdstuk 8, idee van Dex). Spoken, sleutels en ridders! Geen auto's hier.
 const jungle = addZone(createJungle); // De Junglewereld (hoofdstuk 9, idee van Dex). Lianen, tempels en een reuzenaap! Geen auto's hier.
+const space = addZone(createSpace); // De Ruimtewereld (hoofdstuk 10, idee van Dex). Planeten, springen, meteorieten en aliens! Geen auto's hier.
 
 // Dorpelingen
 const bolt = makeBolt(world.group, world.npcSpot);
@@ -200,6 +203,10 @@ castle.exits = [{ x: castle.exit.x, z: castle.exit.z, r: 1.4, to: 'woestijn', sp
 const jungleVisible = () => state.castle.king || state.mapPieces.includes('spook');
 desert.exits.push({ x: desert.junglePortal.x, z: desert.junglePortal.z, r: 1.4, to: 'jungle', spawn: () => jungle.spawns.fromWoestijn, active: jungleVisible, open: () => true });
 jungle.exits = [{ x: jungle.exit.x, z: jungle.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromJungle, open: () => true }];
+// De sterrenpoort naar De Ruimtewereld, rechts van het grote pad (verschijnt als Reuzenaap Rokko verslagen is)
+const spaceVisible = () => state.jungle.ape || state.mapPieces.includes('jungle');
+desert.exits.push({ x: desert.spacePortal.x, z: desert.spacePortal.z, r: 1.4, to: 'ruimte', spawn: () => space.spawns.fromWoestijn, active: spaceVisible, open: () => true });
+space.exits = [{ x: space.exit.x, z: space.exit.z, r: 1.4, to: 'woestijn', spawn: () => desert.spawns.fromRuimte, open: () => true }];
 pyramid.exits = [{ x: pyramid.exit.x, z: pyramid.exit.z, r: 1.0, to: 'woestijn', spawn: () => desert.spawns.fromPiramide, open: () => true }];
 city.exits = [{ x: city.exit.x, z: city.exit.z, r: 1.4, to: 'dorp', spawn: () => world.spots.uitStad, open: () => true }];
 forest.exits = [
@@ -262,6 +269,9 @@ let iceDragon = null; // IJsdraak IJzel, de baas van de ijswereld
 let ghostKing = null; // Spookkoning Sjaak, de baas van het spookkasteel
 let ape = null; // Reuzenaap Rokko, de baas van de junglewereld
 let jungleToastCd = 0, swingToastSeen = false; // in de junglewereld
+let ufo = null; // Ufo Udo, de baas van de ruimtewereld (ronde 1)
+let alienBoss = null; // Alien Astro, die uit de ufo klimt (ronde 2)
+let spaceVy = 0, spaceFall = false, spaceToastCd = 0, meteorCd = 2.5, ufoSeen = false; // in de ruimtewereld: springen en vallen
 let castleToastCd = 0, knightToastCd = 0, klonkToastCd = 0, trapToastCd = 0, doorToastCd = 0, lastDoorToast = null, booSeen = false; // in het spookkasteel
 let warmth = WARM_MAX, coldHurt = 0, frozen = 0, iceLast = null, iceToastCd = 0, slipToastCd = 0, stormWasIce = 'calm', pegCd = 2; // in de ijswereld
 let air = 32, airHurt = 0, inkTime = 0, airWarned = false, seaToastCd = 0, urchinToastCd = 0; // onder water: lucht (seconden), inkt
@@ -300,6 +310,8 @@ const game = {
     if (s.iceDragon) { game.onIceDragonDefeated(s); return; }
     if (s.ghostKing) { game.onGhostKingDefeated(s); return; }
     if (s.ape) { game.onApeDefeated(s); return; }
+    if (s.ufo) { game.onUfoDefeated(s); return; }
+    if (s.alienBoss) { game.onAlienDefeated(s); return; }
     if (s.king) {
       state.quest.kingBeaten = true; // onthouden, ook als de iPad de pagina opnieuw laadt
       game.showLanding(0, 0, 0);
@@ -415,6 +427,42 @@ const game = {
     for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
     save();
   },
+  // Ufo Udo is kapot (ronde 1)... maar dan klimt Alien Astro eruit (ronde 2)!
+  onUfoDefeated(s) {
+    state.ruimte.ufo = true;
+    hitStop = 0.3;
+    shake = 1;
+    fx.confetti(s.pos, 60);
+    fx.poof(s.pos, 0x9775fa, 3);
+    sfx.slam();
+    ui.toast('💥 Ufo Udo is kapot! Maar wacht... er klimt iets uit de ufo!', 3800);
+    for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
+    const a = space.arena, d = Math.hypot(s.pos.x - a.x, s.pos.z - a.z), k = d > a.r - 2 ? (a.r - 2) / d : 1;
+    alienBoss = new AlienBoss(space.group, a.x + (s.pos.x - a.x) * k, a.z + (s.pos.z - a.z) * k, a);
+    enemies.push(alienBoss);
+    setTimeout(() => {
+      if (game.zone === space && alienBoss && !alienBoss.dead) { ui.toast('👽 Alien Astro: "MIJN UFO! Nu ben je echt de klos, aardbewoner!"', 3800); sfx.rumble(); }
+    }, 1900);
+    save();
+  },
+  // Alien Astro is verslagen (ronde 2): hij geeft je stukje 8 van de schatkaart
+  onAlienDefeated(s) {
+    state.ruimte.ufo = true;
+    state.ruimte.alien = true;
+    hitStop = 0.35;
+    shake = 1;
+    fx.confetti(s.pos, 140);
+    sfx.fanfare();
+    ui.toast('👽 Alien Astro: "Oké, oké... jij bent de sterkste van het heelal! Hier, dit vond ik op de maan..."', 4500);
+    const a = space.arena, d = Math.hypot(s.pos.x - a.x, s.pos.z - a.z), k = d > a.r - 3 ? (a.r - 3) / d : 1;
+    pickups.spawn('kaartstuk', a.x + (s.pos.x - a.x) * k, a.z + (s.pos.z - a.z) * k);
+    for (const e of enemies) if (!e.dead && e !== s) e.hurt(99, s.pos.x, s.pos.z, game);
+    save();
+  },
+  // je slaat naar Ufo Udo, maar hij zweeft te hoog (een tip)
+  onUfoHigh() {
+    ui.toast('🛸 Ufo Udo zweeft te hoog! SPRING (🚀) om hem te raken, of wacht tot hij moe is na zijn trekstraal.', 3600);
+  },
   // de BOE van de spookkoning (de eerste keer een tip)
   onBoo() {
     shake = Math.max(shake, 0.6);
@@ -494,6 +542,17 @@ function spawnEnemies(zone) {
     else if (!state.mapPieces.includes('jungle')) pickups.spawn('kaartstuk', zone.arena.x, zone.arena.z);
     for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z);
   }
+  ufo = null; alienBoss = null;
+  if (zone.id === 'ruimte') {
+    for (const a of zone.laserAliens) {
+      const home = zone.platforms.find((q) => q.id === a.home);
+      enemies.push(new LaserAlien(zone.group, a.x, a.z, { hx: home.x, hz: home.z, homeR: home.r - 1 }));
+    }
+    if (!state.ruimte.ufo) { ufo = new Ufo(zone.group, zone.boss.x, zone.boss.z, zone.arena, zone); enemies.push(ufo); }
+    else if (!state.ruimte.alien) { alienBoss = new AlienBoss(zone.group, zone.boss.x, zone.boss.z, zone.arena, { wait: true }); enemies.push(alienBoss); }
+    else if (!state.mapPieces.includes('ruimte')) pickups.spawn('kaartstuk', zone.arena.x, zone.arena.z);
+    for (const h of zone.heartSpots) pickups.spawn('hart', h.x, h.z);
+  }
 }
 
 // ---------- Omgeving per zone ----------
@@ -571,6 +630,8 @@ function setZone(id, spawn) {
   if (id === 'ijs') { ice.applyState(state.ice); ice.reset(); warmth = WARM_MAX; coldHurt = 0; frozen = 0; iceLast = null; stormWasIce = 'calm'; }
   if (id === 'spook') { castle.applyState(state.castle); castle.reset(); booSeen = false; }
   if (id === 'jungle') { jungle.applyState(state.jungle); jungle.reset(); swingToastSeen = false; }
+  if (id === 'ruimte') { space.applyState(state.ruimte); space.reset(); spaceVy = 0; spaceFall = false; ufoSeen = false; meteorCd = 2.5; space.lastSafe = { x: spawn.x, z: spawn.z }; }
+  jumpBtn.classList.toggle('hidden', id !== 'ruimte');
   if (id !== 'vulkaan' && id !== 'onderwater') player.pos.y = 0;
   player.vx = player.vz = 0; player.slip = 0;
   setSwimming(id === 'onderwater');
@@ -650,6 +711,7 @@ function refresh() {
   updateIcePortal();
   updateCastlePortal();
   updateJunglePortal();
+  updateSpacePortal();
   desert.setPebbleOn(state.maze.levers.includes('kris'));
   world.desertGate.setOpen(reached(q, 'woestijn'));
   desert.setDoorOpen(reached(q, 'piramide'));
@@ -814,6 +876,25 @@ function jungleAppear() {
   ui.toast('✨ Er is een nieuwe poort verschenen! Rechts bij de ingang van de woestijn: naar DE JUNGLEWERELD!', 4500);
 }
 
+// ---------- De sterrenpoort verschijnt rechts van het grote pad (als Reuzenaap Rokko verslagen is) ----------
+let spacePortalShown = false, spaceAppearPending = false;
+function updateSpacePortal() {
+  const vis = spaceVisible();
+  if (vis === spacePortalShown) return;
+  spacePortalShown = vis;
+  desert.setSpacePortal(vis);
+  if (vis && started) spaceAppearPending = true;
+}
+function spaceAppear() {
+  spaceAppearPending = false;
+  const at = { x: desert.spacePortal.x, y: 2, z: desert.spacePortal.z };
+  fx.sparkle(at, [0x5c7cfa, 0xffffff, 0xda77f2], 50, 6);
+  setTimeout(() => fx.sparkle(at, [0x9775fa, 0xffffff, 0x74c0fc], 40, 5), 500);
+  fx.confetti({ x: at.x, z: at.z }, 50);
+  sfx.powerUp();
+  ui.toast('✨ Er is een nieuwe poort verschenen! Rechts van het grote pad: naar DE RUIMTEWERELD!', 4500);
+}
+
 let dirty = false;
 const num = (v, alt) => (Number.isFinite(v) ? +v.toFixed(2) : alt);
 
@@ -822,7 +903,9 @@ function save() {
   if (saveLocked) return;
   if (game.zone === maze) state.maze.seen = maze.seenHex();
   const old = state.player || {};
-  state.player = { x: num(player.pos.x, num(old.x, 0)), z: num(player.pos.z, num(old.z, 5)), rot: num(player.rot, num(old.rot, 0)) };
+  // in de ruimte: zweef je net boven de lege ruimte? Bewaar dan je laatste veilige plek (anders val je na het laden)
+  const at = game.zone === space && (player.pos.y !== 0 || spaceFall || !space.onPlatform(player.pos)) ? space.lastSafe : player.pos;
+  state.player = { x: num(at.x, num(old.x, 0)), z: num(at.z, num(old.z, 5)), rot: num(player.rot, num(old.rot, 0)) };
   writeSave(state);
   dirty = false;
 }
@@ -1032,7 +1115,13 @@ function afterBolt(before, wasAllFound) {
     q.state = 'schat7';
     fx.confetti(bolt.pos, 240);
     sfx.fanfare();
-    ui.toast(`🏆 Hoofdstuk 9 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Wordt vervolgd!`, 4500);
+    ui.toast(`🏆 Hoofdstuk 9 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Op naar De Ruimtewereld!`, 4500);
+    if (state.mapPieces.includes('ruimte')) q.state = 'kaart8'; // stukje 8 had je al!
+  } else if (before === 'kaart8') {
+    q.state = 'schat8';
+    fx.confetti(bolt.pos, 260);
+    sfx.fanfare();
+    ui.toast(`🏆 Hoofdstuk 10 uitgespeeld! Schatkaart: ${state.mapPieces.length} van ${MAP_PIECES_TOTAL}. Wordt vervolgd!`, 4500);
   }
 }
 
@@ -1589,25 +1678,34 @@ function questTarget() {
   }
   if (z === 'onderwater') {
     // onder water: naar de inktvis (of het kaartstuk), en daarna terug naar de uitgang
-    if (state.mapPieces.includes('onderwater')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7'].includes(q.state) ? sea.exit : null);
+    if (state.mapPieces.includes('onderwater')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7', 'kaart8'].includes(q.state) ? sea.exit : null);
     return sea.boss;
   }
   if (z === 'ijs') {
     // in de ijswereld: naar de draak (of het kaartstuk), en daarna terug naar de uitgang
-    if (state.mapPieces.includes('ijs')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7'].includes(q.state) ? ice.exit : null);
+    if (state.mapPieces.includes('ijs')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7', 'kaart8'].includes(q.state) ? ice.exit : null);
     return ice.boss;
   }
   if (z === 'spook') {
     // in het spookkasteel: stap voor stap (sleutel, deur, hendel...), daarna naar de spookkoning en terug naar de uitgang
-    if (state.mapPieces.includes('spook')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7'].includes(q.state) ? castle.exit : null);
+    if (state.mapPieces.includes('spook')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7', 'kaart8'].includes(q.state) ? castle.exit : null);
     if (state.castle.king) return castle.arena;
     return castle.goal(state.castle);
   }
   if (z === 'jungle') {
     // in de jungle: tempels/lianen, daarna naar de reuzenaap en terug naar de uitgang
-    if (state.mapPieces.includes('jungle')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7'].includes(q.state) ? jungle.exit : null);
+    if (state.mapPieces.includes('jungle')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7', 'kaart8'].includes(q.state) || (q.state === 'schat7' && !state.mapPieces.includes('ruimte')) ? jungle.exit : null);
     if (state.jungle.ape) return jungle.arena;
     return jungle.goal(state.jungle);
+  }
+  if (z === 'ruimte') {
+    // in de ruimte: van planeet naar planeet, dan naar de baas en terug naar de uitgang
+    if (state.mapPieces.includes('ruimte')) return (['kaart', 'kaart2', 'kaart3', 'kaart4', 'kaart5', 'kaart6', 'kaart7', 'kaart8'].includes(q.state) ? space.exit : null);
+    if (state.ruimte.alien) return space.arena;
+    return space.goal(player.pos);
+  }
+  if (q.state === 'schat7' && !state.mapPieces.includes('ruimte')) {
+    return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.spacePortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'vulkaan' ? volcano.exit : z === 'onderwater' ? sea.exit : z === 'ijs' ? ice.exit : z === 'spook' ? castle.exit : z === 'jungle' ? jungle.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
   if (q.state === 'schat6' && !state.mapPieces.includes('jungle')) {
     return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.junglePortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'vulkaan' ? volcano.exit : z === 'onderwater' ? sea.exit : z === 'ijs' ? ice.exit : z === 'spook' ? castle.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
@@ -1624,7 +1722,7 @@ function questTarget() {
   if (q.state === 'schat2' && !state.mapPieces.includes('vulkaan')) {
     return z === 'dorp' ? toDesertGate : z === 'woestijn' ? desert.volcanoPortal : z === 'piramide' ? pyramid.exit : z === 'doolhof' ? maze.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
-  if (q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || q.state === 'kaart6' || q.state === 'kaart7' || (q.state === 'held' && isCityDone(state))) {
+  if (q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || q.state === 'kaart6' || q.state === 'kaart7' || q.state === 'kaart8' || (q.state === 'held' && isCityDone(state))) {
     if (z === 'doolhof') return maze.exit;
     return z === 'dorp' ? bolt.pos : z === 'woestijn' ? desert.exit : z === 'piramide' ? pyramid.exit : z === 'bos' ? { x: 0, z: 22 } : z === 'grot' ? cave.exit : null;
   }
@@ -1830,6 +1928,7 @@ const controls = new Controls({
     else if (k === 'r') boostCar();
     else if (k === 'm') openMap();
     else if (k === 'h') toggleClones();
+    else if (k === 'j') spaceJump();
     else openBackpack();
   },
 });
@@ -2422,6 +2521,108 @@ function updateJungle(dt, paused) {
   }
 }
 
+// ---------- De Ruimtewereld: springen (weinig zwaartekracht!), vallen, meteorieten en kistjes ----------
+space.focus = player.pos; // de sterren bewegen mee
+const jumpBtn = document.getElementById('jump-btn');
+jumpBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); spaceJump(); jumpBtn.classList.add('down'); });
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) jumpBtn.addEventListener(ev, () => jumpBtn.classList.remove('down'));
+jumpBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+// springen: alleen als je op een planeet staat
+function spaceJump() {
+  if (game.zone !== space || !started || ui.dialogOpen || ui.panelOpen || transition || fainting || spaceFall) return false;
+  if (player.pos.y > 0.02 || !space.onPlatform(player.pos)) return false;
+  spaceVy = JUMP_V;
+  player.pos.y = 0.03;
+  sfx.jump();
+  fx.dust(player.pos);
+  return true;
+}
+// een meteoriet slaat in
+space.onImpact = (x, z, r) => {
+  fx.poof({ x, z }, 0xff922b, 1.3);
+  sfx.bump();
+  shake = Math.max(shake, 0.25);
+  if (game.zone === space && Math.hypot(player.pos.x - x, player.pos.z - z) < r && player.pos.y < 2.2) game.hurtPlayer(1, x, z, 9);
+};
+function updateSpace(dt, paused) {
+  if (paused || transition || fainting) return;
+  const p = player.pos, r = state.ruimte;
+  spaceToastCd -= dt;
+  const ground = space.onPlatform(p);
+  // in de lucht (gesprongen, of van de rand gelopen)
+  if (p.y > 0 || spaceVy !== 0 || !ground) {
+    if (!ground && p.y <= 0 && spaceVy === 0) spaceFall = true; // van de rand gelopen: oei!
+    spaceVy -= GRAVITY * dt;
+    p.y += spaceVy * dt;
+    if (p.y <= 0 && spaceVy < 0) {
+      if (ground && !spaceFall) { p.y = 0; spaceVy = 0; sfx.bump(); fx.dust(p); }
+      else spaceFall = true;
+    }
+    if (spaceFall && p.y < FALL_Y) {
+      // in de ruimte gevallen: terug naar je laatste veilige plek, en dat kost een hartje
+      const back = space.lastSafe || space.spawns.fromWoestijn;
+      spaceFall = false; spaceVy = 0;
+      player.setPosition(back.x, back.z, player.rot);
+      player.pos.y = 0;
+      squad.regroup(player);
+      if (!player.invuln) {
+        hearts = Math.max(0, hearts - 1);
+        ui.hurtFlash(); sfx.hurt();
+        player.invuln = 1.1;
+        if (hearts <= 0) { faint(); return; }
+      }
+      fx.sparkle({ x: back.x, y: 1, z: back.z }, [0x74c0fc, 0xffffff, 0xda77f2], 24, 3);
+      if (spaceToastCd <= 0) { ui.toast('🌌 Oei, je zweefde de ruimte in! Druk op 🚀 SPRING (of J) om naar de volgende planeet te springen.', 3600); spaceToastCd = 5; }
+      return;
+    }
+  }
+  // veilige plek onthouden: op de grond, en een stukje van de rand af
+  if (ground && p.y <= 0.001 && !spaceFall) {
+    const dx = p.x - ground.x, dz = p.z - ground.z, d = Math.hypot(dx, dz), safe = Math.max(0, ground.r - 1.3);
+    space.lastSafe = d > safe ? { x: ground.x + dx / d * safe, z: ground.z + dz / d * safe } : { x: p.x, z: p.z };
+  }
+  // ruimteslijmpjes blijven op hun eigen planeet
+  for (const e of enemies) {
+    if (e.dead || e.kind !== 'ruimte' || !e.home) continue;
+    const q = space.onPlatform(e.home);
+    if (!q) continue;
+    const dx = e.pos.x - q.x, dz = e.pos.z - q.z, d = Math.hypot(dx, dz), max = q.r - 0.8;
+    if (d > max) { e.pos.x = q.x + dx / d * max; e.pos.z = q.z + dz / d * max; }
+  }
+  // meteorieten: op het Meteorietenveld heel vaak, op andere planeten soms (niet in de basis en niet bij de baas)
+  meteorCd -= dt;
+  if (meteorCd <= 0) {
+    const field = space.inMeteorField(p), safe = ground && ground.id === 'basis', boss = space.inArena(p);
+    if (field || (!safe && !boss)) {
+      const a = Math.random() * Math.PI * 2, rr = Math.random() * (field ? 2.8 : 2);
+      space.meteor(p.x + Math.cos(a) * rr, p.z + Math.sin(a) * rr);
+      if (field && Math.random() < 0.5) space.meteor(p.x + (Math.random() - 0.5) * 9, p.z + (Math.random() - 0.5) * 9);
+      meteorCd = field ? 0.85 : 3.2;
+    } else meteorCd = 0.6;
+  }
+  // de ufo: waarschuwing bij binnenkomst
+  if (ufo && !ufo.dead && space.inArena(p) && !ufoSeen) {
+    ufoSeen = true;
+    ui.toast('🛸 Ufo Udo: "Bliep bloep! Aardbewoners mogen hier NIET komen!"', 3600);
+    sfx.rumble();
+  }
+  if (!ufo && alienBoss && !alienBoss.dead && alienBoss.state === 'wait' && space.inArena(p) && !ufoSeen) {
+    ufoSeen = true;
+    ui.toast('👽 Alien Astro: "Jij weer?! Deze keer win ik!"', 3200);
+  }
+  // kistjes
+  for (const ch of space.chests) {
+    if (ch.opened || Math.hypot(p.x - ch.x, p.z - ch.z) > 1.4 || p.y > 1) continue;
+    ch.opened = true;
+    if (!r.chests.includes(ch.id)) r.chests.push(ch.id);
+    state.crystals = Math.min(MAX_CRYSTALS, state.crystals + ch.n);
+    sfx.tada();
+    fx.sparkle({ x: ch.x, y: 1, z: ch.z }, [0x7af7ff, 0xffffff, 0xda77f2], 34, 4);
+    ui.toast(`🧰 Een ruimteschatkist! +${fmt(ch.n)} kristallen 💎`, 3000);
+    refresh(); save();
+  }
+}
+
 // ---------- Spel-lus ----------
 const clock = new THREE.Clock();
 let t = 0, saveTimer = 0, lastStep = 0, started = false;
@@ -2454,6 +2655,7 @@ function frame() {
   if (zone === sea) player.speed *= 0.8; // zwemmen gaat iets langzamer dan lopen
   if (zone === ice && frozen > 0) player.speed *= 0.5; // bevroren door de ijsadem: langzaam
   player.slip = zone === ice && !driving && ice.slipAt(player.pos) ? ICE_GRIP : 0; // glad ijs: je glijdt door
+  if (zone === space && !driving) player.slip = player.pos.y > 0.05 ? AIR_GRIP : SPACE_GRIP; // weinig zwaartekracht: je zweeft een beetje
   const before = player.pos.clone();
   if (driving && carHere()) {
     const people = zone.npcs.map((n) => n.pos);
@@ -2527,7 +2729,7 @@ function frame() {
       save();
     }
     if (type === 'kaartstuk') {
-      const id = zone === maze ? 'doolhof' : zone === volcano ? 'vulkaan' : zone === sea ? 'onderwater' : zone === ice ? 'ijs' : zone === castle ? 'spook' : zone === jungle ? 'jungle' : 'woestijn';
+      const id = zone === maze ? 'doolhof' : zone === volcano ? 'vulkaan' : zone === sea ? 'onderwater' : zone === ice ? 'ijs' : zone === castle ? 'spook' : zone === jungle ? 'jungle' : zone === space ? 'ruimte' : 'woestijn';
       const had = state.mapPieces.length;
       if (!state.mapPieces.includes(id)) state.mapPieces.push(id);
       if (id === 'woestijn') { state.quest.state = 'kaart'; delete state.quest.bossBeaten; }
@@ -2537,9 +2739,10 @@ function frame() {
       else if (id === 'ijs' && reached(state.quest, 'schat4')) state.quest.state = 'kaart5';
       else if (id === 'spook' && reached(state.quest, 'schat5')) state.quest.state = 'kaart6';
       else if (id === 'jungle' && reached(state.quest, 'schat6')) state.quest.state = 'kaart7';
+      else if (id === 'ruimte' && reached(state.quest, 'schat7')) state.quest.state = 'kaart8';
       sfx.fanfare();
       fx.confetti(player.pos, 100);
-      ui.toast(`📜 Stukje ${{ woestijn: 1, doolhof: 2, vulkaan: 3, onderwater: 4, ijs: 5, spook: 6, jungle: 7 }[id]} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
+      ui.toast(`📜 Stukje ${{ woestijn: 1, doolhof: 2, vulkaan: 3, onderwater: 4, ijs: 5, spook: 6, jungle: 7, ruimte: 8 }[id]} van ${MAP_PIECES_TOTAL} van de schatkaart!`, 4000);
       // elk stukje maakt de clonemachine sterker
       if (state.mapPieces.length > had && reached(state.quest, 'held')) {
         setTimeout(() => { ui.toast('🧬 Je kunt nu 1 clone meer maken!', 3500); sfx.powerUp(); }, 2600);
@@ -2581,6 +2784,7 @@ function frame() {
   if (zone === ice && started) updateIce(realDt, paused);
   if (zone === castle && started) updateCastle(realDt, paused);
   if (zone === jungle && started) updateJungle(realDt, paused);
+  if (zone === space && started) updateSpace(realDt, paused);
 
   // Uitgangen naar andere zones
   exitCooldown -= realDt;
@@ -2642,11 +2846,20 @@ function frame() {
     const fight = ape && !ape.dead && jungle.inArena(player.pos);
     ui.setBoss('🦍 Reuzenaap Rokko', fight ? ape.hp / ape.maxHp : null);
     playMusic(fight ? 'baas' : 'jungle');
+  } else if (zone === space) {
+    const inA = space.inArena(player.pos);
+    const u = ufo && !ufo.dead && ufo.state !== 'wait' ? ufo : null;
+    const al = alienBoss && !alienBoss.dead && alienBoss.state !== 'wait' ? alienBoss : null;
+    if (u) ui.setBoss('🛸 Ufo Udo', u.hp / u.maxHp);
+    else if (al) ui.setBoss('👽 Alien Astro', al.hp / al.maxHp);
+    else ui.setBoss('', null);
+    playMusic(inA && ((ufo && !ufo.dead) || (alienBoss && !alienBoss.dead)) ? 'baas' : 'ruimte');
   } else ui.setBoss('', null);
   ui.setAir(zone === sea ? air / AIR_MAX : null);
   ui.setWarm(zone === ice ? warmth / WARM_MAX : null);
   if (zone !== ice && frozen) { frozen = 0; ui.setFrost(false); }
   if (zone === desert && castleAppearPending && !transition) castleAppear();
+  if (zone === desert && spaceAppearPending && !transition) spaceAppear();
   if (zone === desert && jungleAppearPending && !transition) jungleAppear();
   if (zone === desert && iceAppearPending && !transition) iceAppear();
   if (zone === desert && seaAppearPending && !transition) seaAppear();
@@ -2743,7 +2956,7 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) save(
 window.clones = {
   net, openCoop,
   state, player, npc: bolt, bolt, koopman, oma, hond, talk: action, save, scene, camera, gears, renderer, squad, makeClone, world,
-  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, ice, get iceDragon() { return iceDragon; }, castle, get ghostKing() { return ghostKing; }, jungle, get ape() { return ape; }, pullCastleLever, openCastleSecret, openJungleSecret, startJungleSwing, get warmth() { return warmth; }, set warmth(v) { warmth = v; }, get frozen() { return frozen; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones, openVoortgang,
+  forest, cave, city, desert, pyramid, maze, volcano, get dragon() { return dragon; }, sea, get squid() { return squid; }, ice, get iceDragon() { return iceDragon; }, castle, get ghostKing() { return ghostKing; }, jungle, get ape() { return ape; }, space, get ufo() { return ufo; }, get alienBoss() { return alienBoss; }, spaceJump, get spaceFall() { return spaceFall; }, makeLasers, pullCastleLever, openCastleSecret, openJungleSecret, startJungleSwing, get warmth() { return warmth; }, set warmth(v) { warmth = v; }, get frozen() { return frozen; }, get air() { return air; }, set air(v) { air = v; }, zones, get bram() { return bram; }, pullLever, game, get sjors() { return sjors; }, openTreasure, openCode, useCode, toggleClones, openVoortgang,
   // alleen voor testen: laat de woestijnpoort meteen verschijnen (alsof De Stad uitgespeeld is)
   unlockDesert: () => { state._desertForced = true; refresh(); }, cityJobs, openJobs, finishJob, refresh, goTo, setZone, openShop, openMap, openBackpack, openCityShop, cityActions, robot, pickups,
   get boost() { return boost; }, collideTest: collide, kickflip, boostCar, myCar, get driving() { return driving; }, enterCar, exitCar, openCarShop, controls,

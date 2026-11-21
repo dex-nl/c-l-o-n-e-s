@@ -3,8 +3,8 @@
 // De kaart is 5 stukjes breed en 2 hoog (stukje 1 linksboven, stukje 10 rechtsonder).
 import { MAP_PIECES, MAP_PIECES_TOTAL } from './quest.js';
 
-const NAMES = { woestijn: 'De Grote Woestijn', doolhof: 'Het Doolhof', vulkaan: 'De Vulkaan', onderwater: 'De Onderwaterwereld', ijs: 'De IJswereld', spook: 'Het Spookkasteel', jungle: 'De Junglewereld' };
-// Wat staat er op elk stukje? (de stukjes 7 t/m 10 komen nog, zie GAME.md)
+const NAMES = { woestijn: 'De Grote Woestijn', doolhof: 'Het Doolhof', vulkaan: 'De Vulkaan', onderwater: 'De Onderwaterwereld', ijs: 'De IJswereld', spook: 'Het Spookkasteel', jungle: 'De Junglewereld', ruimte: 'De Ruimtewereld' };
+// Wat staat er op elk stukje? (de stukjes 9 en 10 komen nog, zie GAME.md)
 const PIECES = Array.from({ length: MAP_PIECES_TOTAL }, (_, i) => ({ id: MAP_PIECES[i] || null, name: NAMES[MAP_PIECES[i]] }));
 const COLS = 5;
 
@@ -153,6 +153,26 @@ function drawJungle(g, x, y, w, h) {
 }
 
 
+function drawSpace(g, x, y, w, h) {
+  // donkerblauwe ruimte met sterretjes, een planeet met een ring en een ufo
+  g.fillStyle = '#1b1b4b'; g.fillRect(x, y, w, h);
+  g.fillStyle = '#ffffff';
+  for (let i = 0; i < 14; i++) g.fillRect(x + ((i * 37) % 100) / 100 * w, y + ((i * 61) % 100) / 100 * h, 2, 2);
+  const m = Math.min(w, h);
+  // planeet met ring
+  g.fillStyle = '#f4a261';
+  g.beginPath(); g.arc(x + w * 0.32, y + h * 0.62, m * 0.17, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = '#ffd8a8'; g.lineWidth = 3;
+  g.beginPath(); g.ellipse(x + w * 0.32, y + h * 0.62, m * 0.3, m * 0.08, -0.3, 0, Math.PI * 2); g.stroke();
+  // ufo
+  g.fillStyle = '#99e9f2';
+  g.beginPath(); g.arc(x + w * 0.7, y + h * 0.33, m * 0.08, Math.PI, 0); g.fill();
+  g.fillStyle = '#adb5bd';
+  g.beginPath(); g.ellipse(x + w * 0.7, y + h * 0.35, m * 0.18, m * 0.05, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = 'rgba(140,233,154,0.45)';
+  g.beginPath(); g.moveTo(x + w * 0.66, y + h * 0.38); g.lineTo(x + w * 0.6, y + h * 0.6); g.lineTo(x + w * 0.8, y + h * 0.6); g.lineTo(x + w * 0.74, y + h * 0.38); g.fill();
+}
+
 function drawDesert(g, x, y, w, h) {
   // zand
   g.fillStyle = '#f2d38f'; g.fillRect(x + 8, y + 8, w - 16, h - 16);
@@ -193,6 +213,7 @@ export function drawTreasureMap(canvas, pieces) {
     if (have && p.id === 'ijs') drawIce(g, x, y, pw, ph);
     if (have && p.id === 'spook') drawCastle(g, x, y, pw, ph);
     if (have && p.id === 'jungle') drawJungle(g, x, y, pw, ph);
+    if (have && p.id === 'ruimte') drawSpace(g, x, y, pw, ph);
     g.textAlign = 'center'; g.textBaseline = 'middle';
     if (!have) {
       g.fillStyle = 'rgba(90,80,60,0.6)'; g.font = `bold ${Math.round(ph * 0.4)}px sans-serif`;

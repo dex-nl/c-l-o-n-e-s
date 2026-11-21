@@ -267,6 +267,18 @@ body.title #hud, body.title #top-btns, body.title #joy-base, body.title #talk-bt
 #fly-btns button.down { transform: translateY(4px); box-shadow: 0 2px 0 #5a2a9c; background: #b388f0; }
 body.title #fly-btns { visibility: hidden; }
 
+/* Spring-knop in De Ruimtewereld (links van de Praat-knop) */
+#jump-btn {
+  position: fixed; right: calc(200px + env(safe-area-inset-right)); bottom: calc(50px + env(safe-area-inset-bottom)); z-index: 5;
+  width: 96px; height: 90px; border-radius: 24px; border: none; color: #fff; font-size: 34px; line-height: 1;
+  background: #5c7cfa; box-shadow: 0 6px 0 #364fc7; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+#jump-btn span { font-size: 16px; font-weight: 800; margin-top: 3px; }
+#jump-btn.hidden { display: none; }
+#jump-btn.down { transform: translateY(4px); box-shadow: 0 2px 0 #364fc7; background: #748ffc; }
+body.title #jump-btn { visibility: hidden; }
+
 /* Onder water: alleen omhoog en omlaag (geen kickflip of boost) */
 #fly-btns.swim #flip-btn, #fly-btns.swim #boost-btn { display: none; }
 #fly-btns.swim button { background: #1c7ed6; box-shadow: 0 6px 0 #0b4f8a; }
@@ -322,6 +334,8 @@ body.title #fly-btns { visibility: hidden; }
   #fly-btns { right: calc(138px + env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); gap: 8px; }
   #fly-btns button { width: 70px; height: 62px; font-size: 22px; border-radius: 18px; }
   #fly-btns button span { font-size: 12px; }
+  #jump-btn { right: calc(138px + env(safe-area-inset-right)); bottom: calc(22px + env(safe-area-inset-bottom)); width: 80px; height: 74px; font-size: 26px; border-radius: 20px; }
+  #jump-btn span { font-size: 13px; }
   #air-bar, #warm-bar { width: 100px; height: 12px; }
   #air, #warm { padding: 3px 9px; }
   #start-btn { font-size: 26px; padding: 12px 34px; margin-top: 8px; }

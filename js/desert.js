@@ -40,6 +40,8 @@ export const ICE_PORTAL = { x: 17, z: 0.4 };
 export const CASTLE_PORTAL = { x: -9, z: 10 };
 // De groene poort naar De Junglewereld, rechts bij de ingang van de woestijn (verschijnt als Spookkoning Sjaak verslagen is)
 export const JUNGLE_PORTAL = { x: 9, z: 10 };
+// De sterrenpoort naar De Ruimtewereld, rechts van het grote pad (verschijnt als Reuzenaap Rokko verslagen is)
+export const SPACE_PORTAL = { x: 8, z: -20 };
 // (geheim: zie GAME.md)
 const PEBBLE = { x: 29.8, z: -18.6 };
 
@@ -99,6 +101,7 @@ export function createDesert(group) {
     ...SUN_STONES.map((s) => ({ x: s.x, z: s.z, r: 9 })), { x: 0, z: 24, r: 8 },
     { x: 24, z: -12, r: 9 }, { x: -50, z: -58, r: 12 }, { x: 50, z: -58, r: 11 }, { x: 42, z: 14, r: 9 },
     { x: MAZE_PORTAL.x, z: MAZE_PORTAL.z, r: 6 }, { x: VOLCANO_PORTAL.x, z: VOLCANO_PORTAL.z, r: 6 },
+    { x: SPACE_PORTAL.x, z: SPACE_PORTAL.z, r: 3 },
   ];
   const free = (x, z, r) => !avoid.some((a) => Math.hypot(a.x - x, a.z - z) < a.r + r);
 
@@ -469,6 +472,10 @@ export function createDesert(group) {
   junglePortal.group.userData.keep = true;
   junglePortal.group.visible = false;
   updaters.push(junglePortal.update);
+  const spacePortal = makePortal(group, SPACE_PORTAL.x, SPACE_PORTAL.z, 0, 'RUIMTEWERELD', '#5c7cfa');
+  spacePortal.group.userData.keep = true;
+  spacePortal.group.visible = false;
+  updaters.push(spacePortal.update);
 
   // ---------- Terug naar het dorp: een regenboogpoort ----------
   const portal = makePortal(group, 0, 29.4, 0, 'HET DORP', '#2d6a4f');
@@ -499,8 +506,8 @@ export function createDesert(group) {
     music: 'woestijn',
     env: { sky: [0x5aa9e6, 0xfbe3b0], fog: [0xf6ddb0, 40, 110], hemi: [0xfff4dc, 0xd9a35a, 1.25], sun: [0xfff0c8, 2.6], cam: [0, 9, 11] },
     stormFog: [0xe2b874, 6, 26],
-    spawns: { fromDorp: { x: 0, z: 22, rot: Math.PI }, fromPiramide: { x: 0, z: DOOR_Z + 3.6, rot: 0 }, fromDoolhof: { x: MAZE_PORTAL.x, z: MAZE_PORTAL.z + 3.4, rot: 0 }, fromVulkaan: { x: VOLCANO_PORTAL.x, z: VOLCANO_PORTAL.z + 3.4, rot: 0 }, fromZee: { x: SEA_PORTAL.x, z: SEA_PORTAL.z + 3.4, rot: 0 }, fromIjs: { x: ICE_PORTAL.x, z: ICE_PORTAL.z + 3.4, rot: 0 }, fromSpook: { x: CASTLE_PORTAL.x, z: CASTLE_PORTAL.z + 3.4, rot: 0 }, fromJungle: { x: JUNGLE_PORTAL.x, z: JUNGLE_PORTAL.z + 3.4, rot: 0 } },
-    mazePortal: { ...MAZE_PORTAL, visible: false }, volcanoPortal: { ...VOLCANO_PORTAL, visible: false }, seaPortal: { ...SEA_PORTAL, visible: false }, icePortal: { ...ICE_PORTAL, visible: false }, castlePortal: { ...CASTLE_PORTAL, visible: false }, junglePortal: { ...JUNGLE_PORTAL, visible: false }, pebble,
+    spawns: { fromDorp: { x: 0, z: 22, rot: Math.PI }, fromPiramide: { x: 0, z: DOOR_Z + 3.6, rot: 0 }, fromDoolhof: { x: MAZE_PORTAL.x, z: MAZE_PORTAL.z + 3.4, rot: 0 }, fromVulkaan: { x: VOLCANO_PORTAL.x, z: VOLCANO_PORTAL.z + 3.4, rot: 0 }, fromZee: { x: SEA_PORTAL.x, z: SEA_PORTAL.z + 3.4, rot: 0 }, fromIjs: { x: ICE_PORTAL.x, z: ICE_PORTAL.z + 3.4, rot: 0 }, fromSpook: { x: CASTLE_PORTAL.x, z: CASTLE_PORTAL.z + 3.4, rot: 0 }, fromJungle: { x: JUNGLE_PORTAL.x, z: JUNGLE_PORTAL.z + 3.4, rot: 0 }, fromRuimte: { x: SPACE_PORTAL.x, z: SPACE_PORTAL.z + 3.4, rot: 0 } },
+    mazePortal: { ...MAZE_PORTAL, visible: false }, volcanoPortal: { ...VOLCANO_PORTAL, visible: false }, seaPortal: { ...SEA_PORTAL, visible: false }, icePortal: { ...ICE_PORTAL, visible: false }, castlePortal: { ...CASTLE_PORTAL, visible: false }, junglePortal: { ...JUNGLE_PORTAL, visible: false }, spacePortal: { ...SPACE_PORTAL, visible: false }, pebble,
     exit: { x: 0, z: 29.2 },
     door: { x: 0, z: DOOR_Z + 0.9 },
     doorOpen: false,
@@ -576,6 +583,14 @@ export function createDesert(group) {
     if (yes && !has) zone.labels.push({ x: JUNGLE_PORTAL.x, z: JUNGLE_PORTAL.z + 3, text: 'Junglewereld', jungle: true });
     if (!yes && has) zone.labels = zone.labels.filter((l) => !l.jungle);
   };
+  // de sterrenpoort laten zien (of niet)
+  zone.setSpacePortal = (yes) => {
+    zone.spacePortal.visible = yes;
+    spacePortal.group.visible = yes;
+    const has = zone.labels.some((l) => l.space);
+    if (yes && !has) zone.labels.push({ x: SPACE_PORTAL.x, z: SPACE_PORTAL.z + 3, text: 'Ruimtewereld', space: true });
+    if (!yes && has) zone.labels = zone.labels.filter((l) => !l.space);
+  };
 
   zone.setPebbleOn = (on) => { pebM.color.set(on ? 0xc7f9cc : 0x9b8f72); pebM.emissive.set(on ? 0x2d6a4f : 0x000000); };
   // een zonnesteen laten schijnen
@@ -632,7 +647,7 @@ export function createDesert(group) {
   zone.merged = mergeStatic(group, {
     probe: (t) => updaters.forEach((f) => f(t, 0.016)),
     reset: () => updaters.forEach((f) => f(0, 0)),
-    skip: [camel.mesh, door, sand, ...stoneLive, portal.group, mazePortal.group, volcanoPortal.group, seaPortal.group, icePortal.group, castlePortal.group, junglePortal.group, peb],
+    skip: [camel.mesh, door, sand, ...stoneLive, portal.group, mazePortal.group, volcanoPortal.group, seaPortal.group, icePortal.group, castlePortal.group, junglePortal.group, spacePortal.group, peb],
   });
   zone.collidePoint = (p, r) => collide(p, r, zone);
   return zone;

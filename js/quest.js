@@ -16,12 +16,14 @@
 //   Hoofdstuk 8: Het Spookkasteel (de paarse poort verschijnt in de woestijn als de ijsdraak verslagen is)
 //                -> 'kaart6' (stukje 6 gevonden: breng het naar Bolt) -> 'schat6' (op naar De Junglewereld!)
 //   Hoofdstuk 9: De Junglewereld (de groene poort verschijnt in de woestijn als de spookkoning verslagen is)
-//                -> 'kaart7' (stukje 7 gevonden: breng het naar Bolt) -> 'schat7' (wordt vervolgd!)
+//                -> 'kaart7' (stukje 7 gevonden: breng het naar Bolt) -> 'schat7' (op naar De Ruimtewereld!)
+//   Hoofdstuk 10: De Ruimtewereld (de sterrenpoort verschijnt in de woestijn als de reuzenaap verslagen is)
+//                -> 'kaart8' (stukje 8 gevonden: breng het naar Bolt) -> 'schat8' (wordt vervolgd!)
 export const NPC_NAME = 'Professor Bolt';
 export const GEARS_NEEDED = 3;
 export const TEAM_SIZE = 3; // zoveel clones heb je nodig voordat Bolt over het Slijmbos vertelt
-export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat', 'kaart2', 'schat2', 'kaart3', 'schat3', 'kaart4', 'schat4', 'kaart5', 'schat5', 'kaart6', 'schat6', 'kaart7', 'schat7'];
-export const MAP_PIECES = ['woestijn', 'doolhof', 'vulkaan', 'onderwater', 'ijs', 'spook', 'jungle']; // de stukjes van de schatkaart die er al zijn (er komen er 10, zie GAME.md)
+export const QUEST_ORDER = ['nieuw', 'bezig', 'klaar', 'aan', 'zwaard', 'grot', 'batterij', 'held', 'woestijn', 'piramide', 'kaart', 'schat', 'kaart2', 'schat2', 'kaart3', 'schat3', 'kaart4', 'schat4', 'kaart5', 'schat5', 'kaart6', 'schat6', 'kaart7', 'schat7', 'kaart8', 'schat8'];
+export const MAP_PIECES = ['woestijn', 'doolhof', 'vulkaan', 'onderwater', 'ijs', 'spook', 'jungle', 'ruimte']; // de stukjes van de schatkaart die er al zijn (er komen er 10, zie GAME.md)
 export const MAP_PIECES_TOTAL = 10;
 export const SUN_STONE_IDS = ['west', 'oost', 'tempel']; // de zonnestenen in de woestijn (zie desert.js)
 
@@ -86,6 +88,7 @@ export function questText(state, zoneId) {
   if (zoneId === 'ijs') return iceText(state);
   if (zoneId === 'spook') return castleText(state);
   if (zoneId === 'jungle') return jungleText(state);
+  if (zoneId === 'ruimte') return spaceText(state);
   switch (q.state) {
     case 'nieuw': return '💡 Tip: loop naar de uitvinder bij de <b>clonemachine</b>';
     case 'bezig': {
@@ -151,7 +154,12 @@ export function questText(state, zoneId) {
       if (zoneId === 'spook' || zoneId === 'ijs' || zoneId === 'onderwater' || zoneId === 'vulkaan' || zoneId === 'doolhof' || zoneId === 'piramide') return '🌴 Ga terug naar de woestijn: daar is een groene poort naar <b>De Junglewereld</b>!';
       return '🌴 Zoek stukje 7: ga naar <b>De Junglewereld</b> (de groene poort in de woestijn)';
     case 'kaart7': return '📜 Breng stukje 7 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
-    case 'schat7': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
+    case 'schat7':
+      if (zoneId === 'woestijn') return '🚀 Ga door de sterrenpoort (rechts van het grote pad, midden in de woestijn) naar <b>De Ruimtewereld</b>';
+      if (zoneId === 'jungle' || zoneId === 'spook' || zoneId === 'ijs' || zoneId === 'onderwater' || zoneId === 'vulkaan' || zoneId === 'doolhof' || zoneId === 'piramide') return '🚀 Ga terug naar de woestijn: daar is een sterrenpoort naar <b>De Ruimtewereld</b>!';
+      return '🚀 Zoek stukje 8: ga naar <b>De Ruimtewereld</b> (de sterrenpoort in de woestijn)';
+    case 'kaart8': return '📜 Breng stukje 8 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
+    case 'schat8': return `📜 Schatkaart: <b>${(state.mapPieces || []).length} van ${MAP_PIECES_TOTAL}</b> stukjes. Wordt vervolgd!`;
     default: return `⭐ Held van het dorp! Clones: <b>${n}/${max}</b>. Wat wordt je volgende avontuur?`;
   }
 }
@@ -213,10 +221,19 @@ function jungleText(state) {
   return '🦍 Ga naar de <b>Arenatempel</b> en versla <b>Reuzenaap Rokko</b>!';
 }
 
+// In De Ruimtewereld: wat moet je doen?
+function spaceText(state) {
+  const r = state.ruimte || {};
+  if ((state.mapPieces || []).includes('ruimte')) return '📜 Breng stukje 8 van de <b>schatkaart</b> naar <b>Professor Bolt</b>';
+  if (r.alien) return '📜 Pak het stukje <b>schatkaart</b> op het Moederschip-platform!';
+  if (r.ufo) return '👽 De ufo is kapot! Versla nu <b>Alien Astro</b> op het Moederschip-platform!';
+  return '🚀 Spring van planeet naar planeet (🚀-knop of J) naar het <b>Moederschip</b> en versla <b>Ufo Udo</b>!';
+}
+
 // Heeft Professor Bolt iets nieuws te vertellen? (dan staat er een ! boven zijn hoofd)
 export function boltHasNews(state) {
   const q = state.quest;
-  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || q.state === 'kaart6' || q.state === 'kaart7'
+  return q.state === 'nieuw' || q.state === 'klaar' || q.state === 'batterij' || (q.state === 'held' && isCityDone(state)) || q.state === 'kaart' || q.state === 'kaart2' || q.state === 'kaart3' || q.state === 'kaart4' || q.state === 'kaart5' || q.state === 'kaart6' || q.state === 'kaart7' || q.state === 'kaart8'
     || (q.state === 'bezig' && q.gears.length >= GEARS_NEEDED)
     || (q.state === 'aan' && state.clones >= TEAM_SIZE);
 }
@@ -549,9 +566,26 @@ function boltLines(q, clones, state) {
         'Stukje 7! Uit De Junglewereld! Je bent een echte jungleheld!',
         'Kijk: bomen, een tempel en een aap. En de stippellijn loopt weer verder...',
         'Nu heb je 7 van de 10 stukjes. En de machine kan weer 1 clone meer maken!',
-        'Waar zou stukje 8 liggen? Wordt vervolgd!',
+        'En kijk: de stippellijn loopt omhoog... naar de STERREN! Stukje 8 ligt in De Ruimtewereld!',
+        'In de woestijn, rechts van het grote pad, is een sterrenpoort verschenen. Pak je ruimtehelm!',
+        'Daar is weinig zwaartekracht: je zweeft en je kunt superhoog springen. Neem al je clones mee!',
       ];
     case 'schat7':
+      return [
+        'In De Ruimtewereld zweven planeetjes in de lege ruimte. Druk op 🚀 SPRING (of J) om van planeet naar planeet te springen!',
+        'Val je in de ruimte? Dan word je teruggezet, maar dat kost wel een hartje. Spring dus goed!',
+        'Op het Meteorietenveld vallen meteorieten: oranje rondje = wegwezen! En laser-aliens schieten: rode streep = springen!',
+        'Op het Moederschip zweeft Ufo Udo. Hij vliegt hoog: spring om hem te raken! Na zijn trekstraal is hij even moe.',
+        'Ik heb gehoord dat er iemand in die ufo zit... Pas maar op!',
+      ];
+    case 'kaart8':
+      return [
+        'Stukje 8! Uit De Ruimtewereld! Je bent een echte astronaut!',
+        'Kijk: sterren, een planeet met een ring en een ufo. En de stippellijn loopt weer verder...',
+        'Nu heb je 8 van de 10 stukjes. En de machine kan weer 1 clone meer maken!',
+        'Nog maar 2 stukjes... Waar zou stukje 9 liggen? Wordt vervolgd!',
+      ];
+    case 'schat8':
       return [
         `Hoe gaat het met de schatkaart? Nog ${MAP_PIECES_TOTAL - (state.mapPieces || []).length} stukjes te gaan!`,
         'Ik ben benieuwd waar het volgende stukje ligt... Misschien heeft Dex een idee?',

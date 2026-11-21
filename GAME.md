@@ -141,16 +141,39 @@ Het spel van Dex (11 jaar).
   - **Kokosnoten**: groene rondjes op de grond, daar landen kokosnoten. Ga opzij!
   - **Sprong**: kijk naar zijn schaduw: daar landt hij met een KLAP.
   - Bij 3/4, 1/2 en 1/4 van zijn leven roept hij jungle-slijmpjes (die geven een hartje). Bij de helft wordt hij **boos**: sneller en hardere klappen.
-- Versla hem samen met je clones: dan krijg je **stukje 7 van 10** van de schatkaart (en 1 clone meer, dus 17). Breng het naar Professor Bolt: *"Hoofdstuk 9 uitgespeeld!"* Wordt vervolgd...
+- Versla hem samen met je clones: dan krijg je **stukje 7 van 10** van de schatkaart (en 1 clone meer, dus 17). Breng het naar Professor Bolt: *"Hoofdstuk 9 uitgespeeld!"* Op naar De Ruimtewereld!
 - De **Wolkenflitser mag niet in de jungle** (dan vlieg je over de lianen en de aap heen). Met de geheime auto-code in de jungle wacht hij in De Stad. De jungle heeft een eigen vrolijk liedje.
+
+### Hoofdstuk 10: De Ruimtewereld 🚀👽 (idee van Dex!)
+- Heb je **Reuzenaap Rokko** verslagen? Dan verschijnt in de woestijn een blauwe **sterrenpoort** (rechts van het grote pad, midden in de woestijn). Op de kaart staat **De Ruimtewereld**.
+- Je staat op kleine **planeten** in de ruimte, met sterren en verre planeten om je heen.
+- **Weinig zwaartekracht** 🪐: met de knop **🚀 Spring** (of J / Shift op het toetsenbord) zweef je heel hoog en lang. Je glijdt ook een beetje door.
+- **Springen over het niets**: van planeet naar planeet over kleine ruimtestenen. Mis je? Dan zweef je weg en kom je terug op de laatste veilige plek, maar dat kost **1 hartje**.
+- **Meteorieten** ☄️: op de ringplaneet vallen meteorieten. Een rood rondje op de grond = daar landt er een. Ga opzij!
+- **Laser-aliens** 👾: ze zweven rond en schieten lasers. Eerst zie je een **rode streep** (een waarschuwing), daarna komt de laser. Ga opzij of **spring eroverheen**!
+- Overal zijn **ruimte-slijmpjes** (paars). Er liggen 3 schatkisten: 40 (maanplaneet), 50 (ringplaneet) en 60 (alienplaneet).
+- De eindbaas is een gevecht in **twee delen** op het grote ruimteschip:
+  1. **Ufo Udo** 🛸 (**120 levens**), een grote vliegende schotel. Hij zweeft hoog: **spring** om hem te raken!
+     - **Laserwaaier**: 3 (en als hij boos is 5) rode strepen, dan lasers. Spring eroverheen of ga opzij.
+     - **Trekstraal**: een groene straal trekt je naar hem toe en geeft een schok. Loop er hard van weg!
+     - Na de trekstraal is hij **moe**: hij zakt omlaag en krijgt **dubbele schade**. Nu slaan!
+     - **Meteorietenregen**: rode rondjes overal. Bij 2/3 en 1/3 van zijn leven roept hij laser-aliens. Bij de helft wordt hij **boos**.
+  2. Is de ufo kapot? Dan klimt **Alien Astro** 👽 (**150 levens**) eruit!
+     - **Blaster**: hij schiet lasers recht op je af.
+     - **Flits**: een paars rondje = daar teleporteert hij naartoe met een klap. Daarna is hij even **duizelig** (dubbele schade!).
+     - **Ruimtesprong**: hij springt heel hoog en landt met een **schokgolf**. Spring eroverheen!
+     - Bij 3/4, 1/2 en 1/4 van zijn leven roept hij een laser-alien. Bij de helft wordt hij **boos**.
+- Pas als ook Alien Astro verslagen is, krijg je **stukje 8 van 10** van de schatkaart (en 1 clone meer, dus 18). Breng het naar Professor Bolt: *"Hoofdstuk 10 uitgespeeld!"* Wordt vervolgd...
+- Samen zijn de twee bazen veel sterker dan Rokko (270 levens tegen 180), en vallen kost een hartje: de moeilijkste wereld tot nu toe (level 9 in `difficulty.js`).
+- De **Wolkenflitser mag niet in de ruimte** (hij wacht in De Stad). De ruimte heeft een eigen liedje.
 
 ### Meer clones 🧬
 - Linksboven zie je hoeveel clones je hebt: **🧬 Clones 3/10**.
 - Elk stukje schatkaart geeft **1 clone meer**: *"🧬 Je kunt nu 1 clone meer maken!"*
-- De getallen: aan het begin 5, met de Superbatterij 10, met stukje 1 = 11, stukje 2 = 12, stukje 3 = 13, stukje 4 = 14, stukje 5 = 15, stukje 6 = 16, stukje 7 = 17, ... alle 10 stukjes = 20.
+- De getallen: aan het begin 5, met de Superbatterij 10, met stukje 1 = 11, stukje 2 = 12, stukje 3 = 13, stukje 4 = 14, stukje 5 = 15, stukje 6 = 16, stukje 7 = 17, stukje 8 = 18, ... alle 10 stukjes = 20.
 
 ### Moeilijkheid
-- Elke nieuwe wereld is een beetje moeilijker. Dat staat op één plek: `js/difficulty.js` (bos 1, woestijn 2, piramide 2,2, doolhof 3, vulkaan 4, onderwater 5, ijs 6, spookkasteel 7, jungle 8). Slijmpjes krijgen meer leven en zijn iets sneller, bazen slaan harder en er vallen minder hartjes. Met je clones blijft het altijd te halen.
+- Elke nieuwe wereld is een beetje moeilijker. Dat staat op één plek: `js/difficulty.js` (bos 1, woestijn 2, piramide 2,2, doolhof 3, vulkaan 4, onderwater 5, ijs 6, spookkasteel 7, jungle 8, ruimte 9). Slijmpjes krijgen meer leven en zijn iets sneller, bazen slaan harder en er vallen minder hartjes. Met je clones blijft het altijd te halen.
 
 ### Samen spelen 🤝 (idee van Dex!)
 - Rechtsboven zit de knop **🤝 Samen spelen** (op een iPhone alleen 🤝). Daar kies je:
@@ -301,10 +324,11 @@ Het spel van Dex (11 jaar).
 - [x] Hoofdstuk 7: De IJswereld met glad ijs, wakken, sneeuwstormen, iglo's, sneeuwpoppen, ijsmonsters, IJsdraak IJzel en stukje 5 van de schatkaart (idee van Dex)
 - [x] Hoofdstuk 8: Het Spookkasteel met spoken die door muren vliegen, ridders, valluiken, sleutels, hendels, een geheime deur, Spookkoning Sjaak en stukje 6 van de schatkaart (idee van Dex)
 - [x] Hoofdstuk 9: De Junglewereld met lianen, verborgen tempels, jungle-slijmpjes, Reuzenaap Rokko en stukje 7 van de schatkaart (idee van Dex)
-- [ ] De andere 3 stukjes van de schatkaart (zie hieronder, Dex kiest!)
+- [x] Hoofdstuk 10: De Ruimtewereld met weinig zwaartekracht, springen van planeet naar planeet, meteorieten, laser-aliens, Ufo Udo, Alien Astro en stukje 8 van de schatkaart (idee van Dex)
+- [ ] De andere 2 stukjes van de schatkaart (zie hieronder, Dex kiest!)
 
 ## De schatkaart: 10 stukjes 🗺️
-Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. Stukje 1 tot en met 7 zijn klaar, de rest zijn ideeën (Dex mag ze veranderen!):
+Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. Stukje 1 tot en met 8 zijn klaar, de rest zijn ideeën (Dex mag ze veranderen!):
 1. ✅ De Grote Woestijn: Schorpioen Sjors
 2. ✅ Het Doolhof: Bladkoning Bram
 3. ✅ De Vulkaan: springende stenen, stijgende lava en Vuurdraak Vonk
@@ -312,11 +336,12 @@ Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. St
 5. ✅ De IJswereld: glad ijs, sneeuwstormen, iglo's, sneeuwpoppen en IJsdraak IJzel
 6. ✅ Het Spookkasteel: spoken door de muren, ridders, valluiken, sleutels, hendels, een geheime deur en Spookkoning Sjaak
 7. ✅ De Junglewereld: lianen, verborgen tempels en Reuzenaap Rokko
-8. De Wolkenstad: vliegen met de Wolkenflitser van wolk naar wolk
+8. ✅ De Ruimtewereld: weinig zwaartekracht, planeten, meteorieten, laser-aliens, Ufo Udo en Alien Astro
 9. Het Piratenschip: de schatkaart van de piraat zelf, kanonnen
 10. Het Schateiland: alle stukjes samen... en de verborgen schat!
 
 ## Ideeën voor later (Dex kiest!)
+- De Wolkenstad: vliegen met de Wolkenflitser van wolk naar wolk (was eerst het idee voor stukje 8).
 - Clones commando's geven: "wacht hier", "volg mij", "val aan".
 - Clones met eigen kleuren of namen.
 - Een nieuwe kerker: teken hem met letters in `js/cave.js` (# is muur, . is vloer).
@@ -325,4 +350,4 @@ Elk stukje ligt in een eigen wereld, en elke wereld is een beetje moeilijker. St
 - Dag en nacht, met lantaarns in het dorp.
 - Een boot op de vijver, of een eiland.
 - Een racebaan of een garage om je auto te verven.
-- De verborgen schat zoeken met een kaart in 10 stukjes: waar liggen stukje 8 tot en met 10? (zie de lijst hierboven)
+- De verborgen schat zoeken met een kaart in 10 stukjes: waar liggen stukje 9 en 10? (zie de lijst hierboven)

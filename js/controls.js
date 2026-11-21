@@ -21,6 +21,8 @@ export class Controls {
       if (this.flyMode && (k === ' ' || k === 'shift')) { this.keys.add(k); e.preventDefault(); return; }
       if (['e', ' ', 'enter'].includes(k)) { if (!e.repeat) this.onAction(); e.preventDefault(); return; }
       if (k === 'c') { if (!e.repeat) this.onClone(); return; }
+      // Springen in De Ruimtewereld: J of Shift (main.js kijkt of je in de ruimte bent)
+      if ((k === 'j' || k === 'shift') && !this.flyMode && !this.swimMode) { if (!e.repeat) onKey('j'); return; }
       if (k === 'r' && this.flyMode) { if (!e.repeat) onKey('r'); e.preventDefault(); return; } // boost
       if (k === 'f' && this.flyMode) { if (!e.repeat) onKey('f'); e.preventDefault(); return; } // kickflip
       if (['m', 'b', 'i', 'h', 'escape'].includes(k)) { if (!e.repeat) onKey(k); return; }

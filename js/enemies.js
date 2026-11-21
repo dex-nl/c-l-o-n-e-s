@@ -20,8 +20,10 @@ const KINDS = {
   // IJsmonster (ijswereld): een koud blauw slijmpje met ijspunten op zijn kop. Taai en snel!
   ijs: { color: 0xa5d8ff, size: 0.72, hp: 4, speed: 3.6, aggro: 10, loot: 3, glow: 0x123a5c },
   jungle: { color: 0x40c057, size: 0.75, hp: 4, speed: 3.7, aggro: 10, loot: 3, glow: 0x1b4d2a },
+  // Ruimteslijmpje (ruimtewereld): paars en een beetje lichtgevend. Nog sneller!
+  ruimte: { color: 0x9775fa, size: 0.75, hp: 4, speed: 3.9, aggro: 10.5, loot: 3, glow: 0x2b1a5c },
 };
-export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e, bladkoning: 0x3fa34d, lava: 0xff6a1f, ijs: 0xa5d8ff, jungle: 0x40c057 };
+export const SLIME_COLORS = { groen: 0x7bd389, blauw: 0x5aa9e6, koning: 0x4cc96f, mummie: 0xe9d8a6, heg: 0x2d9b4e, bladkoning: 0x3fa34d, lava: 0xff6a1f, ijs: 0xa5d8ff, jungle: 0x40c057, ruimte: 0x9775fa };
 const REST = 0.45, HOP = 0.5; // even stilzitten, dan een sprongetje
 
 // Vormen en kleuren die alle slijmpjes delen (scheelt geheugen)
