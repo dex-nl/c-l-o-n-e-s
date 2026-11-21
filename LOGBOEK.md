@@ -202,3 +202,26 @@
 - De Wolkenflitser mag niet in het kasteel. Eigen liedje. Samen spelen werkt ook in het kasteel.
 - Save naar versie 12 (`castle`: koning, kistjes, sleutels, deuren, hendels, geheime deur). Oude saves en Voortgang meenemen blijven werken. Nieuwe cache-versie `clones-v5`.
 - Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat, met touch). Nog niet getest op een echte iPad, iPhone of MacBook.
+
+## 9 november 2026: Hoofdstuk 9, De Junglewereld (idee van Dex)
+- Gemaakt met een AI-helper op de tak `junglewereld`. **Papa merget het als het goed is.**
+- Dex koos "junglewereld met lianen, tempels en een reuzenaap" en wilde die maken.
+- Nieuw: De Junglewereld, wereld 7. De groene poort verschijnt rechts bij de ingang van de woestijn als Spookkoning Sjaak verslagen is.
+- Lianen om over de rivier en een kloof te zwaaien (groene ringetjes + Praat/Lezen).
+- Twee verborgen tempels: oost met een kist, west met een standbeeld dat een geheime steen opent (grote kist).
+- Jungle-slijmpjes, 3 schatkisten (30, 35, 55 geheim).
+- Eindbaas Reuzenaap Rokko (180 levens): borsttrommel-schokgolf, kokosnoten, sprong-landing, hulpslijmpjes. Hij geeft stukje 7 van de schatkaart (17 clones). Moeilijker dan het spookkasteel (level 8 in `difficulty.js`).
+- De Wolkenflitser mag niet in de jungle. Eigen liedje. Samen spelen werkt ook in de jungle.
+- Save naar versie 13 (`jungle`: aap, kistjes, geheime tempel). Oude saves en Voortgang meenemen blijven werken. Nieuwe cache-versie `clones-v6`.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat, met touch). Nog niet getest op een echte iPad, iPhone of MacBook.
+
+## 21 november 2026: Hoofdstuk 10, De Ruimtewereld (idee van Dex)
+- Gemaakt met een AI-helper op de tak `ruimtewereld` (bovenop `junglewereld`). **Papa merget het als het goed is.**
+- Dex vroeg om nog een level: een ruimtewereld met planeten en aliens.
+- Nieuw: De Ruimtewereld, wereld 8. De blauwe sterrenpoort verschijnt midden in de woestijn als Reuzenaap Rokko verslagen is.
+- Weinig zwaartekracht: met de nieuwe knop 🚀 Spring (of J / Shift) zweef je van planeet naar planeet. Vallen in het niets kost 1 hartje.
+- Meteorieten met rode rondjes, laser-aliens met een rode waarschuwingsstreep, paarse ruimte-slijmpjes, 3 schatkisten (40, 50, 60).
+- Eindbaas in twee delen (wens van Dex): eerst de vliegende schotel Ufo Udo (120 levens, laserwaaier, trekstraal, meteorietenregen), daarna klimt Alien Astro eruit (150 levens, blaster, flits-teleport, ruimtesprong met schokgolf). Pas na Alien Astro krijg je stukje 8 van de schatkaart (18 clones). Moeilijker dan de jungle (level 9 in `difficulty.js`).
+- De Wolkenflitser mag niet in de ruimte. Eigen liedje. Het idee "Wolkenstad" staat nu bij de ideeën voor later.
+- Save naar versie 14 (`ruimte`: ufo, alien, kistjes). Oude saves en Voortgang meenemen blijven werken. Nieuwe cache-versie `clones-v7`.
+- Getest in een browser op de computer (iPad-, iPhone- en MacBook-formaat, met touch), ook een heel baasgevecht door een testrobotje. Nog niet getest op een echte iPad, iPhone of MacBook.

@@ -112,6 +112,9 @@ export const sfx = {
   rumble() { noise(0, 1.6, 0.35, 120, 60); tone(55, 0, 1.6, 'sawtooth', 0.08, 40); },
   faint() { [523, 466, 392, 330, 262].forEach((f, i) => tone(f, i * 0.15, 0.2, 'triangle', 0.15)); },
   whoosh() { noise(0, 0.4, 0.15, 300, 2500); },
+  laser() { tone(1400, 0, 0.16, 'square', 0.06, 300); }, // piew!
+  zap() { noise(0, 0.35, 0.25, 3000, 400); tone(900, 0, 0.3, 'sawtooth', 0.08, 120); }, // trekstraal zapt
+  jump() { tone(260, 0, 0.35, 'sine', 0.15, 780); }, // boing in de ruimte
   bump() { tone(110, 0, 0.12, 'sine', 0.25, 70); noise(0, 0.08, 0.08, 400, 200); }, // zachte bots
   toet() { tone(523, 0, 0.12, 'square', 0.07); tone(523, 0.18, 0.16, 'square', 0.07); }, // vriendelijk toeteren
   bubble() { tone(500, 0, 0.1, 'sine', 0.12, 1100); tone(700, 0.08, 0.12, 'sine', 0.1, 1500); }, // luchtbel
@@ -206,6 +209,24 @@ const SONGS = {
     melody: [
       'A5 ~ C6 ~ E6 ~ D#6 E6', 'G#5 ~ B5 ~ E6 ~ - -', 'A5 ~ C6 ~ E6 ~ A6 ~', 'F6 ~ D6 ~ A5 ~ - -',
       'E6 ~ C6 ~ A5 ~ C6 E6', 'F6 ~ E6 ~ C6 ~ A5 ~', 'G#5 ~ B5 ~ D6 ~ B5 ~', 'A5 ~ ~ ~ - - - -',
+    ],
+  },
+  // De Junglewereld: vrolijk en avontuurlijk (alsof je door de bomen rent)
+  jungle: {
+    bpm: 118, lead: 'square', drums: true,
+    chords: ['C', 'G', 'Am', 'F', 'C', 'G', 'Dm', 'G'],
+    melody: [
+      'C5 E5 G5 ~ C6 ~ B5 A5', 'G5 ~ E5 ~ C5 ~ - -', 'A5 ~ C6 ~ E6 ~ D6 C6', 'F5 ~ A5 ~ C6 ~ - -',
+      'G5 ~ B5 ~ D6 ~ G6 ~', 'E6 ~ C6 ~ G5 ~ C6 ~', 'F5 ~ A5 ~ D6 ~ A5 ~', 'G5 ~ B5 ~ D6 ~ - -',
+    ],
+  },
+  // De Ruimtewereld: zwevend en een beetje mysterieus (piepjes van verre sterren)
+  ruimte: {
+    bpm: 104, lead: 'triangle', drums: true,
+    chords: ['Am', 'F', 'C', 'G', 'Am', 'F', 'Dm', 'E'],
+    melody: [
+      'A5 ~ C6 ~ E6 ~ D6 C6', 'A5 ~ ~ ~ F5 ~ - -', 'G5 ~ C6 ~ E6 ~ G6 ~', 'D6 ~ ~ ~ B5 ~ - -',
+      'E6 ~ D6 C6 A5 ~ C6 ~', 'F6 ~ E6 ~ C6 ~ A5 ~', 'D6 ~ F6 ~ A6 ~ F6 D6', 'E6 ~ ~ ~ G#5 ~ - -',
     ],
   },
   baas: {

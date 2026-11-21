@@ -10,7 +10,9 @@ export const WORLD_LEVEL = {
   onderwater: 5, // De Onderwaterwereld (hoofdstuk 6): nog moeilijker dan de vulkaan
   ijs: 6, // De IJswereld (hoofdstuk 7): nog moeilijker dan onder water
   spook: 7, // Het Spookkasteel (hoofdstuk 8): nog moeilijker dan de ijswereld
-  // volgende werelden: 8, 9, ...
+  jungle: 8, // De Junglewereld (hoofdstuk 9): nog moeilijker dan het spookkasteel
+  ruimte: 9, // De Ruimtewereld (hoofdstuk 10): nog moeilijker dan de jungle
+  // volgende werelden: 10, 11, ...
 };
 
 export const levelOf = (zoneId) => WORLD_LEVEL[zoneId] ?? 1;
@@ -20,10 +22,10 @@ export function difficulty(zoneId) {
   const L = levelOf(zoneId), up = L - 1;
   return {
     level: L,
-    hp: 1 + up * 0.45,          // leven van slijmpjes (woestijn x1,45 / doolhof x1,9 / vulkaan x2,35 / onderwater x2,8 / ijs x3,25 / spook x3,7)
+    hp: 1 + up * 0.45,          // leven van slijmpjes (woestijn x1,45 / doolhof x1,9 / vulkaan x2,35 / onderwater x2,8 / ijs x3,25 / spook x3,7 / jungle x4,15 / ruimte x4,6)
     speed: 1 + up * 0.08,       // snelheid van slijmpjes
     aggro: 1 + up * 0.12,       // van hoe ver ze je zien
-    bossHp: 1 + up * 0.5,       // leven van bazen (Sjors x1,6 in de piramide / doolhof x2 / vulkaan x2,5 / onderwater x3 / ijs x3,5 / spook x4)
+    bossHp: 1 + up * 0.5,       // leven van bazen (Sjors x1,6 in de piramide / doolhof x2 / vulkaan x2,5 / onderwater x3 / ijs x3,5 / spook x4 / jungle x4,5 / ruimte x5)
     bossDamage: L >= 2 ? 2 : 1, // zware klappen van bazen (hartjes)
     heartDrop: 0.3 / L,         // kans op een hartje van een verslagen slijmpje
   };
